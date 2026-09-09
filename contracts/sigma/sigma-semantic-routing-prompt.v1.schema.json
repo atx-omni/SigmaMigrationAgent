@@ -1,0 +1,169 @@
+{
+  "$defs": {
+    "OmniSemanticReconstructionRoutingPromptOption": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "const": "The lift-and-shift path: preserve accepted semantics through direct Omni reconstruction over accepted existing warehouse relations, without requiring data-layer changes.",
+          "title": "Description",
+          "type": "string"
+        },
+        "label": {
+          "const": "Omni semantic reconstruction",
+          "title": "Label",
+          "type": "string"
+        },
+        "mode": {
+          "const": "omni_semantic_reconstruction",
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "label",
+        "description"
+      ],
+      "title": "OmniSemanticReconstructionRoutingPromptOption",
+      "type": "object"
+    },
+    "WarehouseFirstSemanticRoutingPromptOption": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "const": "The fully modeled path: preserve accepted semantics while moving approved shared and persistent transformation logic into the governed data layer before Omni.",
+          "title": "Description",
+          "type": "string"
+        },
+        "label": {
+          "const": "Warehouse-first refactor",
+          "title": "Label",
+          "type": "string"
+        },
+        "mode": {
+          "const": "warehouse_first_refactor",
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "label",
+        "description"
+      ],
+      "title": "WarehouseFirstSemanticRoutingPromptOption",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "blocks_source_evidence_acquisition": {
+      "const": false,
+      "default": false,
+      "title": "Blocks Source Evidence Acquisition",
+      "type": "boolean"
+    },
+    "blocks_target_design": {
+      "const": true,
+      "default": true,
+      "title": "Blocks Target Design",
+      "type": "boolean"
+    },
+    "default_mode": {
+      "default": null,
+      "title": "Default Mode",
+      "type": "null"
+    },
+    "next_required_contract": {
+      "const": "sigma-semantic-routing-decision-request.v1",
+      "default": "sigma-semantic-routing-decision-request.v1",
+      "title": "Next Required Contract",
+      "type": "string"
+    },
+    "options": {
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "mode": {
+                "const": "warehouse_first_refactor"
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "maxContains": 1,
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "mode": {
+                "const": "omni_semantic_reconstruction"
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "maxContains": 1,
+          "minContains": 1
+        }
+      ],
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "omni_semantic_reconstruction": "#/$defs/OmniSemanticReconstructionRoutingPromptOption",
+            "warehouse_first_refactor": "#/$defs/WarehouseFirstSemanticRoutingPromptOption"
+          },
+          "propertyName": "mode"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/WarehouseFirstSemanticRoutingPromptOption"
+          },
+          {
+            "$ref": "#/$defs/OmniSemanticReconstructionRoutingPromptOption"
+          }
+        ]
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Options",
+      "type": "array"
+    },
+    "question": {
+      "const": "Which implementation path should this Sigma semantic layer use: warehouse-first refactoring before Omni, or direct reconstruction in Omni?",
+      "title": "Question",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "sigma-semantic-routing-prompt.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "shared_guardrail": {
+      "const": "Both paths target bounded semantic equivalence with explicit exceptions and the same closed-denominator QA; neither guarantees one-to-one semantic, behavioral, visual, or workflow parity.",
+      "title": "Shared Guardrail",
+      "type": "string"
+    },
+    "state": {
+      "const": "awaiting_human_choice",
+      "default": "awaiting_human_choice",
+      "title": "State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "question",
+    "shared_guardrail",
+    "options"
+  ],
+  "title": "SigmaSemanticRoutingPrompt",
+  "type": "object"
+}

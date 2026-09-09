@@ -1,0 +1,800 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/domo-to-omni-run-manifest.schema.json",
+  "title": "Domo-to-Omni migration run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "run_id",
+    "run_purpose",
+    "status",
+    "source",
+    "policies",
+    "authorities",
+    "revision_set",
+    "work_package_ids",
+    "evidence",
+    "decisions",
+    "gates",
+    "timestamps"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "domo-to-omni.run.v1"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$"
+    },
+    "run_purpose": {
+      "enum": ["customer_migration", "dry_run", "synthetic_regression"]
+    },
+    "status": {
+      "enum": [
+        "intake",
+        "capability_preflight",
+        "portfolio_inventoried",
+        "scope_approved",
+        "acquired",
+        "inventoried",
+        "dependency_closed",
+        "semantic_profiled",
+        "equivalence_assessed",
+        "consolidation_approved",
+        "topic_ready",
+        "dashboard_planned",
+        "architecture_approved",
+        "build_authorized",
+        "data_ready",
+        "model_ready",
+        "dashboard_ready",
+        "qa_accepted",
+        "dbt_promotion_authorized",
+        "dbt_promoted_and_read_back",
+        "omni_revalidated",
+        "omni_promotion_authorized",
+        "omni_promoted_and_read_back",
+        "production_revalidated",
+        "docs_ready",
+        "parallel_run",
+        "cutover_authorized",
+        "cutover_accepted",
+        "hypercare",
+        "hypercare_accepted",
+        "source_decommission_authorized",
+        "source_decommissioned",
+        "blocked",
+        "cancelled"
+      ]
+    },
+    "phase": {
+      "description": "Durable lifecycle position. Preserve this field when health is blocked or cancelled.",
+      "enum": [
+        "intake",
+        "capability_preflight",
+        "portfolio_inventoried",
+        "scope_approved",
+        "acquired",
+        "inventoried",
+        "dependency_closed",
+        "semantic_profiled",
+        "equivalence_assessed",
+        "consolidation_approved",
+        "topic_ready",
+        "dashboard_planned",
+        "architecture_approved",
+        "build_authorized",
+        "data_ready",
+        "model_ready",
+        "dashboard_ready",
+        "qa_accepted",
+        "dbt_promotion_authorized",
+        "dbt_promoted_and_read_back",
+        "omni_revalidated",
+        "omni_promotion_authorized",
+        "omni_promoted_and_read_back",
+        "production_revalidated",
+        "docs_ready",
+        "parallel_run",
+        "cutover_authorized",
+        "cutover_accepted",
+        "hypercare",
+        "hypercare_accepted",
+        "source_decommission_authorized",
+        "source_decommissioned"
+      ]
+    },
+    "health": {
+      "enum": ["active", "blocked", "cancelled", "complete"]
+    },
+    "migration_units": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/migrationUnit" }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "tenant_ref", "entry_scope", "acquisition"],
+      "properties": {
+        "system": { "const": "domo" },
+        "tenant_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "entry_scope": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["object_type", "source_id"],
+            "properties": {
+              "object_type": {
+                "enum": [
+                  "page",
+                  "card",
+                  "workflow",
+                  "dashboard",
+                  "dataset",
+                  "dataflow",
+                  "magic_etl",
+                  "sql_dataflow",
+                  "app",
+                  "app_studio_app",
+                  "custom_app",
+                  "domo_everywhere_embed",
+                  "workbench_job",
+                  "connector_account",
+                  "schedule",
+                  "alert",
+                  "publication"
+                ]
+              },
+              "source_id": { "$ref": "#/$defs/nonEmptyString" },
+              "title": { "$ref": "#/$defs/nonEmptyString" }
+            }
+          }
+        },
+        "acquisition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "acquired_at",
+            "source_fingerprint",
+            "evidence_bundle_ref",
+            "credential_refs",
+            "coverage_status",
+            "coverage_gaps"
+          ],
+          "properties": {
+            "mode": { "enum": ["not_started", "saved_api", "manual_files", "hybrid"] },
+            "acquired_at": {
+              "oneOf": [
+                { "type": "string", "format": "date-time" },
+                { "type": "null" }
+              ]
+            },
+            "source_fingerprint": { "$ref": "#/$defs/nullableSha256" },
+            "evidence_bundle_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+            "credential_refs": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/secretRef" }
+            },
+            "coverage_status": { "enum": ["not_requested", "complete", "partial", "blocked"] },
+            "coverage_gaps": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/nonEmptyString" }
+            }
+          }
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["warehouse", "dbt", "omni"],
+      "properties": {
+        "warehouse": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["platform", "account_ref", "credential_ref", "database", "development_schema"],
+          "properties": {
+            "platform": { "const": "snowflake" },
+            "account_ref": { "$ref": "#/$defs/nonSecretRef" },
+            "credential_ref": { "$ref": "#/$defs/secretRef" },
+            "database": { "$ref": "#/$defs/nonEmptyString" },
+            "development_schema": { "$ref": "#/$defs/nonEmptyString" }
+          }
+        },
+        "dbt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository_ref", "credential_ref", "project_name", "branch"],
+          "properties": {
+            "repository_ref": { "$ref": "#/$defs/nonSecretRef" },
+            "credential_ref": { "$ref": "#/$defs/secretRef" },
+            "project_name": { "$ref": "#/$defs/nonEmptyString" },
+            "branch": { "$ref": "#/$defs/nonEmptyString" }
+          }
+        },
+        "omni": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization_ref",
+            "credential_ref",
+            "connection_id",
+            "model_id",
+            "development_branch",
+            "content_parent_ref",
+            "content_operation",
+            "content_environment",
+            "target_document_ref",
+            "document_create_readback_ref"
+          ],
+          "properties": {
+            "organization_ref": { "$ref": "#/$defs/nonSecretRef" },
+            "credential_ref": { "$ref": "#/$defs/secretRef" },
+            "connection_id": { "$ref": "#/$defs/nonEmptyString" },
+            "model_id": { "$ref": "#/$defs/nonEmptyString" },
+            "development_branch": { "$ref": "#/$defs/nonEmptyString" },
+            "content_parent_ref": { "$ref": "#/$defs/nonSecretRef" },
+            "content_operation": { "enum": ["create_new", "update_existing"] },
+            "content_environment": {
+              "enum": ["restricted_quarantine", "isolated_non_production"]
+            },
+            "target_document_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+            "document_create_readback_ref": { "$ref": "#/$defs/nullableNonSecretRef" }
+          }
+        }
+      }
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant_partition_ref", "egress_policy_ref", "retention_policy_ref", "audit_policy_ref"],
+      "properties": {
+        "tenant_partition_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "egress_policy_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "retention_policy_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "audit_policy_ref": { "$ref": "#/$defs/nonSecretRef" }
+      }
+    },
+    "authorities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_policy", "active_authorizations"],
+      "properties": {
+        "default_policy": { "const": "read_only_and_proposal_only" },
+        "active_authorizations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "authorization_id",
+              "actor_ref",
+              "action",
+              "scope_refs",
+              "approved_at",
+              "expires_at",
+              "artifact_fingerprint",
+              "validation_cycle_id",
+              "evidence_ref"
+            ],
+            "properties": {
+              "authorization_id": { "$ref": "#/$defs/nonEmptyString" },
+              "actor_ref": { "$ref": "#/$defs/nonSecretRef" },
+              "action": {
+                "enum": [
+                  "acquire_source",
+                  "create_dbt_branch_changes",
+                  "merge_dbt",
+                  "materialize_dbt",
+                  "create_omni_model_branch_changes",
+                  "create_omni_model_branch",
+                  "refresh_omni_schema",
+                  "set_omni_branch_dbt_environment",
+                  "create_omni_document_in_quarantine",
+                  "create_omni_content_draft",
+                  "change_security",
+                  "change_operations",
+                  "merge_model_branch",
+                  "publish_content",
+                  "cutover",
+                  "decommission_source"
+                ]
+              },
+              "scope_refs": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "$ref": "#/$defs/nonSecretRef" }
+              },
+              "approved_at": { "type": "string", "format": "date-time" },
+              "expires_at": { "type": "string", "format": "date-time" },
+              "artifact_fingerprint": { "$ref": "#/$defs/sha256" },
+              "validation_cycle_id": { "$ref": "#/$defs/id" },
+              "evidence_ref": { "$ref": "#/$defs/nonSecretRef" }
+            }
+          }
+        }
+      }
+    },
+    "revision_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validation_cycle_id",
+        "source_bundle_fingerprint",
+        "dbt_commit_sha",
+        "dbt_materialization_ref",
+        "omni_model_fingerprint",
+        "omni_document_revision_ref",
+        "promotion_bundle_fingerprint"
+      ],
+      "properties": {
+        "validation_cycle_id": { "$ref": "#/$defs/id" },
+        "source_bundle_fingerprint": { "$ref": "#/$defs/nullableSha256" },
+        "dbt_commit_sha": { "$ref": "#/$defs/nullableSha256" },
+        "dbt_materialization_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "omni_model_fingerprint": { "$ref": "#/$defs/nullableSha256" },
+        "omni_document_revision_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "promotion_bundle_fingerprint": { "$ref": "#/$defs/nullableSha256" }
+      }
+    },
+    "work_package_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "kind",
+          "ref",
+          "sha256",
+          "captured_at",
+          "classification",
+          "sensitivity",
+          "redaction_status",
+          "retention_policy_ref"
+        ],
+        "properties": {
+          "evidence_id": { "$ref": "#/$defs/nonEmptyString" },
+          "kind": {
+            "enum": [
+              "source_metadata",
+              "source_query_result",
+              "source_visual",
+              "target_artifact",
+              "target_query_result",
+              "target_visual",
+              "validation_result",
+              "approval",
+              "write_receipt",
+              "readback"
+            ]
+          },
+          "ref": { "$ref": "#/$defs/nonSecretRef" },
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "captured_at": { "type": "string", "format": "date-time" },
+          "classification": { "enum": ["customer_evidence", "development_evidence", "synthetic_fixture"] },
+          "sensitivity": { "enum": ["public", "internal", "confidential", "restricted"] },
+          "redaction_status": { "enum": ["not_required", "applied", "verified"] },
+          "retention_policy_ref": { "$ref": "#/$defs/nonSecretRef" }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision_id", "subject_refs", "status", "question", "proposals", "evidence_refs"],
+        "properties": {
+          "decision_id": { "$ref": "#/$defs/nonEmptyString" },
+          "subject_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/nonSecretRef" }
+          },
+          "status": { "enum": ["open", "proposed", "approved", "rejected", "waived"] },
+          "question": { "$ref": "#/$defs/nonEmptyString" },
+          "proposals": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/nonEmptyString" }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/nonSecretRef" }
+          },
+          "human_resolution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["actor_ref", "resolved_at", "decision", "artifact_fingerprint"],
+            "properties": {
+              "actor_ref": { "$ref": "#/$defs/nonSecretRef" },
+              "resolved_at": { "type": "string", "format": "date-time" },
+              "decision": { "$ref": "#/$defs/nonEmptyString" },
+              "artifact_fingerprint": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": { "enum": ["approved", "rejected", "waived"] }
+              },
+              "required": ["status"]
+            },
+            "then": {
+              "required": ["human_resolution"]
+            }
+          }
+        ]
+      }
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate_id", "state", "validation_cycle_id", "required_evidence_refs", "checked_at"],
+        "properties": {
+          "gate_id": {
+            "enum": [
+              "source_completeness",
+              "semantic_profile_complete",
+              "target_semantic_profile_ready",
+              "equivalence_assessed",
+              "consolidation_approved",
+              "grain_fanout_validated",
+              "security_disposition_approved",
+              "freshness_ownership_accepted",
+              "dashboard_plan_ready",
+              "architecture",
+              "build_authorization",
+              "data",
+              "model",
+              "content",
+              "qa_suite_accepted",
+              "query_parity",
+              "visual_interaction",
+              "security",
+              "operations",
+              "documentation_training",
+              "dbt_promotion",
+              "dbt_readback",
+              "omni_revalidation",
+              "omni_promotion",
+              "omni_readback",
+              "production_validation",
+              "parallel_run",
+              "cutover",
+              "hypercare",
+              "source_decommission"
+            ]
+          },
+          "state": { "enum": ["pending", "passed", "blocked", "waived"] },
+          "validation_cycle_id": { "$ref": "#/$defs/id" },
+          "required_evidence_refs": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/nonSecretRef" }
+          },
+          "checked_at": { "type": "string", "format": "date-time" },
+          "checked_by_ref": { "$ref": "#/$defs/nonSecretRef" },
+          "waiver_decision_id": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "gate_id": {
+                  "enum": [
+                    "semantic_profile_complete",
+                    "target_semantic_profile_ready",
+                    "equivalence_assessed",
+                    "consolidation_approved",
+                    "grain_fanout_validated",
+                    "security_disposition_approved",
+                    "freshness_ownership_accepted",
+                    "dashboard_plan_ready",
+                    "qa_suite_accepted",
+                    "security",
+                    "production_validation"
+                  ]
+                }
+              },
+              "required": ["gate_id"]
+            },
+            "then": {
+              "properties": {
+                "state": { "enum": ["pending", "passed", "blocked"] }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "state": { "enum": ["passed", "blocked", "waived"] }
+              },
+              "required": ["state"]
+            },
+            "then": {
+              "required": ["checked_by_ref"]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "state": { "const": "waived" }
+              },
+              "required": ["state"]
+            },
+            "then": {
+              "required": ["waiver_decision_id"]
+            }
+          }
+        ]
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["created_at", "updated_at"],
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "acquired",
+              "inventoried",
+              "dependency_closed",
+              "architecture_approved",
+              "dashboard_planned",
+              "build_authorized",
+              "data_ready",
+              "model_ready",
+              "dashboard_ready",
+              "qa_accepted",
+              "dbt_promotion_authorized",
+              "dbt_promoted_and_read_back",
+              "omni_revalidated",
+              "omni_promotion_authorized",
+              "omni_promoted_and_read_back",
+              "production_revalidated",
+              "docs_ready",
+              "parallel_run",
+              "cutover_authorized",
+              "cutover_accepted",
+              "hypercare",
+              "hypercare_accepted",
+              "source_decommission_authorized",
+              "source_decommissioned"
+            ]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "acquisition": {
+                "properties": {
+                  "mode": { "enum": ["saved_api", "manual_files", "hybrid"] },
+                  "acquired_at": { "type": "string", "format": "date-time" },
+                  "source_fingerprint": { "$ref": "#/$defs/sha256" },
+                  "evidence_bundle_ref": { "$ref": "#/$defs/nonSecretRef" }
+                }
+              }
+            }
+          },
+          "revision_set": {
+            "properties": {
+              "source_bundle_fingerprint": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "architecture_approved",
+              "dashboard_planned",
+              "build_authorized",
+              "data_ready",
+              "model_ready",
+              "dashboard_ready",
+              "qa_accepted",
+              "dbt_promotion_authorized",
+              "dbt_promoted_and_read_back",
+              "omni_revalidated",
+              "omni_promotion_authorized",
+              "omni_promoted_and_read_back",
+              "production_revalidated",
+              "docs_ready",
+              "parallel_run",
+              "cutover_authorized",
+              "cutover_accepted",
+              "hypercare",
+              "hypercare_accepted",
+              "source_decommission_authorized",
+              "source_decommissioned"
+            ]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": { "required": ["target"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "qa_accepted",
+              "dbt_promotion_authorized",
+              "dbt_promoted_and_read_back",
+              "omni_revalidated",
+              "omni_promotion_authorized",
+              "omni_promoted_and_read_back",
+              "production_revalidated",
+              "docs_ready",
+              "parallel_run",
+              "cutover_authorized",
+              "cutover_accepted",
+              "hypercare",
+              "hypercare_accepted",
+              "source_decommission_authorized",
+              "source_decommissioned"
+            ]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "migration_units": {
+            "minItems": 1,
+            "items": {
+              "required": [
+                "qa_acceptance_suite_ref",
+                "qa_suite_validation_ref"
+              ],
+              "properties": {
+                "qa_acceptance_suite_ref": { "$ref": "#/$defs/nonSecretRef" },
+                "qa_suite_validation_ref": { "$ref": "#/$defs/nonSecretRef" },
+                "status": { "const": "validated" }
+              }
+            }
+          }
+        },
+        "required": ["migration_units"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "production_revalidated",
+              "parallel_run",
+              "cutover_authorized",
+              "cutover_accepted",
+              "hypercare",
+              "hypercare_accepted",
+              "source_decommission_authorized",
+              "source_decommissioned"
+            ]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "migration_units": {
+            "items": {
+              "required": ["production_validation_report_ref"],
+              "properties": {
+                "production_validation_report_ref": {
+                  "$ref": "#/$defs/nonSecretRef"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "migrationUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "migration_unit_id",
+        "source_object_refs",
+        "dashboard_plan_ref",
+        "status"
+      ],
+      "properties": {
+        "migration_unit_id": { "$ref": "#/$defs/id" },
+        "source_object_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonSecretRef" }
+        },
+        "topic_blueprint_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonSecretRef" }
+        },
+        "dashboard_plan_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "qa_acceptance_suite_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "qa_suite_validation_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "production_validation_report_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "status": {
+          "enum": ["planned", "accepted", "built", "validated", "blocked"]
+        }
+      }
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$"
+    },
+    "nonSecretRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z][A-Za-z0-9+.-]*://[^?#\\s]+$",
+      "not": {
+        "pattern": "([Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]|[Pp][Aa][Ss][Ss][Ww][Dd]|[Ss][Ee][Cc][Rr][Ee][Tt]|[Tt][Oo][Kk][Ee][Nn]|[Aa][Pp][Ii][_-]?[Kk][Ee][Yy]|[Pp][Rr][Ii][Vv][Aa][Tt][Ee][_-]?[Kk][Ee][Yy])\\s*[:=]"
+      }
+    },
+    "secretRef": {
+      "type": "string",
+      "pattern": "^secret-ref://[A-Za-z0-9._/-]+$",
+      "maxLength": 512
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "nullableSha256": {
+      "anyOf": [
+        { "$ref": "#/$defs/sha256" },
+        { "type": "null" }
+      ]
+    },
+    "nullableNonSecretRef": {
+      "anyOf": [
+        { "$ref": "#/$defs/nonSecretRef" },
+        { "type": "null" }
+      ]
+    }
+  }
+}

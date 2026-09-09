@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/qa-fixture.v1.schema.json",
+  "title": "Typed Domo-to-Omni QA fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "fixture_id",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "source_snapshot_ref",
+    "source_objects",
+    "fixture",
+    "baseline_state",
+    "created_at",
+    "created_by_agent",
+    "fixture_hash",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.qa-fixture.v1" },
+    "fixture_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "wave_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "migration_unit_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "source_snapshot_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "source_objects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectRef"
+      }
+    },
+    "fixture": {
+      "oneOf": [
+        { "$ref": "#/$defs/queryResultFixture" },
+        { "$ref": "#/$defs/visualFixture" },
+        { "$ref": "#/$defs/interactionFixture" },
+        { "$ref": "#/$defs/securityPersonaFixture" },
+        { "$ref": "#/$defs/dataProfileFixture" },
+        { "$ref": "#/$defs/operationsFixture" }
+      ]
+    },
+    "baseline_state": { "enum": ["defined", "captured", "blocked"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "created_by_agent": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "fixture_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "provenance": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/provenance"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "$defs": {
+    "queryResultFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture_type",
+        "query_definition_ref",
+        "parameter_refs",
+        "filter_state_ref",
+        "timezone",
+        "sort_state_ref",
+        "row_limit",
+        "expected_schema_ref",
+        "expected_result_ref",
+        "expected_result_hash",
+        "tolerance"
+      ],
+      "properties": {
+        "fixture_type": { "const": "query_result" },
+        "query_definition_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "parameter_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "filter_state_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "timezone": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "sort_state_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "row_limit": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "expected_schema_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_result_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_result_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "tolerance": { "$ref": "#/$defs/tolerance" }
+      }
+    },
+    "visualFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture_type", "source_capture_ref", "source_capture_hash", "viewport", "render_state_ref", "comparison_policy_ref"],
+      "properties": {
+        "fixture_type": { "const": "visual" },
+        "source_capture_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "source_capture_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height", "device_scale_factor"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 },
+            "device_scale_factor": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "render_state_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "comparison_policy_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "interactionFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture_type", "initial_state_ref", "actions", "expected_state_ref", "expected_state_hash"],
+      "properties": {
+        "fixture_type": { "const": "interaction" },
+        "initial_state_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sequence", "action", "target_ref", "value_ref"],
+            "properties": {
+              "sequence": { "type": "integer", "minimum": 1 },
+              "action": { "enum": ["select", "filter", "drill", "navigate", "export", "reset"] },
+              "target_ref": {
+                "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+              },
+              "value_ref": {
+                "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+              }
+            }
+          }
+        },
+        "expected_state_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_state_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "securityPersonaFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture_type", "persona_ref", "identity_mapping_ref", "source_access_evidence_ref", "expected_access", "expected_visible_field_refs", "expected_hidden_field_refs"],
+      "properties": {
+        "fixture_type": { "const": "security_persona" },
+        "persona_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "identity_mapping_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "source_access_evidence_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_access": { "enum": ["allow", "deny", "filtered"] },
+        "expected_visible_field_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "expected_hidden_field_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        }
+      }
+    },
+    "dataProfileFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture_type", "dataset_ref", "profile_definition_ref", "expected_profile_ref", "expected_profile_hash", "tolerance"],
+      "properties": {
+        "fixture_type": { "const": "data_profile" },
+        "dataset_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "profile_definition_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_profile_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "tolerance": { "$ref": "#/$defs/tolerance" }
+      }
+    },
+    "operationsFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture_type", "operation_ref", "observation_window", "expected_behavior_ref", "expected_behavior_hash"],
+      "properties": {
+        "fixture_type": { "const": "operations" },
+        "operation_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "observation_window": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["starts_at", "ends_at"],
+          "properties": {
+            "starts_at": { "type": "string", "format": "date-time" },
+            "ends_at": { "type": "string", "format": "date-time" }
+          }
+        },
+        "expected_behavior_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "expected_behavior_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "tolerance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "absolute", "relative_percent", "null_equivalence", "ordering_required"],
+      "properties": {
+        "mode": { "enum": ["exact", "numeric", "policy_ref"] },
+        "absolute": { "type": "number", "minimum": 0 },
+        "relative_percent": { "type": "number", "minimum": 0 },
+        "null_equivalence": { "type": "boolean" },
+        "ordering_required": { "type": "boolean" }
+      }
+    }
+  }
+}

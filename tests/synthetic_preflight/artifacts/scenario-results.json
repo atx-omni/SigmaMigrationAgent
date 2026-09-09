@@ -1,0 +1,2440 @@
+{
+  "provenance": {
+    "human_approvals": "test doubles only; not real approval",
+    "live_tenant_evidence": false,
+    "migration_accepted": false,
+    "provider": "deterministic test double; no live AI evaluation",
+    "publish_authorized": false,
+    "synthetic": true,
+    "warning": "Non-base cases simulate the live-request branch through MockTransport, NOT real evidence."
+  },
+  "scenarios": {
+    "base_synthetic": {
+      "blockers": [
+        "live tenant evidence has not been collected"
+      ],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "bound",
+      "status": "blocked",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "fractional_version_rejected": {
+      "blockers": [
+        "acquisition:data_model_version_binding:source_version_mismatch",
+        "capability:versions"
+      ],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "manual_required",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "unavailable",
+      "status": "blocked",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "malicious_source_text": {
+      "blockers": [],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "bound",
+      "status": "ready_for_human_review",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "missing_model_identity": {
+      "blockers": [
+        "acquisition:data_model_specification_identity_binding:selected_object_identity_mismatch",
+        "capability:selected_object_identity"
+      ],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_partial",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "unavailable",
+      "status": "blocked",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "numeric_version_7_0": {
+      "blockers": [],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "bound",
+      "status": "ready_for_human_review",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "opaque_pagination": {
+      "blockers": [],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "bound",
+      "status": "ready_for_human_review",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "withheld_columns_endpoint": {
+      "blockers": [
+        "capability:formulas"
+      ],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "bound",
+      "status": "blocked",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "withheld_materialization_endpoint": {
+      "blockers": [
+        "capability:materialization_schedules"
+      ],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_full",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "bound",
+      "status": "blocked",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    },
+    "wrong_model_identity": {
+      "blockers": [
+        "acquisition:data_model_specification_identity_binding:selected_object_identity_mismatch",
+        "capability:selected_object_identity"
+      ],
+      "capability_dispositions": {
+        "actions": "manual_required",
+        "controls": "verified_partial",
+        "data_model_specification": "verified_partial",
+        "embeds": "verified_partial",
+        "formatting": "manual_required",
+        "formulas": "verified_partial",
+        "input_tables": "verified_partial",
+        "layout": "manual_required",
+        "lineage": "verified_partial",
+        "materialization_schedules": "verified_partial",
+        "pagination": "verified_full",
+        "principal_visibility": "verified_partial",
+        "saved_views": "verified_partial",
+        "schedules": "verified_partial",
+        "security": "verified_partial",
+        "selected_object_identity": "verified_partial",
+        "sources": "verified_partial",
+        "tenant_principal_binding": "verified_full",
+        "versions": "verified_partial",
+        "workbook_structure": "verified_full"
+      },
+      "model_specification_state": "unavailable",
+      "status": "blocked",
+      "transport": {
+        "requests": [
+          {
+            "method": "POST",
+            "path": "/v2/auth/token",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/whoami",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/version-history",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/spec",
+            "query": {
+              "documentVersion": "7",
+              "format": "json"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/sources",
+            "query": {
+              "pageSize": "500",
+              "pageToken": "opaque-source/+retail==2"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "dm-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/materializationSchedules",
+            "query": {
+              "pageSize": "500"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages",
+            "query": {
+              "limit": "1000",
+              "page": "opaque-page/+retail==2",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-overview/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/pages/page-synth-operations/elements",
+            "query": {
+              "limit": "1000",
+              "tag": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/sources",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/elements",
+            "query": {
+              "limit": "1000",
+              "tagName": "synthetic-pilot"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/columns",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/controls",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/queries",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/lineage",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/grants",
+            "query": {
+              "inodeId": "wb-synth-retail-2026",
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2.1/workbooks/wb-synth-retail-2026/schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/materialization-schedules",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags/synthetic-pilot/bookmarks",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/embeds",
+            "query": {
+              "limit": "1000"
+            }
+          },
+          {
+            "method": "GET",
+            "path": "/v2/dataModels/dm-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026",
+            "query": {}
+          },
+          {
+            "method": "GET",
+            "path": "/v2/workbooks/wb-synth-retail-2026/tags",
+            "query": {
+              "limit": "1000"
+            }
+          }
+        ],
+        "unmatched_routes": []
+      }
+    }
+  }
+}

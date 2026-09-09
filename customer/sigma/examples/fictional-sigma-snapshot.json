@@ -1,0 +1,50 @@
+{
+  "_demo": {
+    "fictional": true,
+    "purpose": "Offline source-extraction orientation only. No customer data or live evidence.",
+    "organization": "Fictional Paper Moon Shop"
+  },
+  "_omnikit_acquisition": {
+    "contract": "sigma-api-v2"
+  },
+  "connections": [
+    {
+      "connectionId": "fictional-connection",
+      "name": "Fictional Warehouse",
+      "type": "bigQuery"
+    }
+  ],
+  "dataModels": [
+    {
+      "dataModelId": "fictional-orders-model",
+      "name": "Fictional Orders",
+      "spec": {
+        "dataModelId": "fictional-orders-model",
+        "documentVersion": 1,
+        "pages": [
+          {
+            "id": "fictional-model-page",
+            "name": "Fictional Orders",
+            "elements": [
+              {
+                "id": "fictional-orders-table",
+                "kind": "table",
+                "name": "Fictional Orders",
+                "source": {
+                  "kind": "warehouse-table",
+                  "connectionId": "fictional-connection",
+                  "path": ["fictional_database", "fictional_shop", "orders"]
+                },
+                "columns": [
+                  {"id": "fictional-order-id", "name": "Order ID"},
+                  {"id": "fictional-order-amount", "name": "Order Amount"}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "workbooks": []
+}

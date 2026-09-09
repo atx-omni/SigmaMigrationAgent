@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/coverage-ledger.v1.schema.json",
+  "title": "Per-object source evidence coverage ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "ledger_id",
+    "run_id",
+    "scope_id",
+    "as_of",
+    "entries",
+    "summary",
+    "ledger_hash",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.coverage-ledger.v1" },
+    "ledger_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "as_of": { "type": "string", "format": "date-time" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/coverageEntry" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "total_objects", "ready_objects", "incomplete_objects", "excluded_objects", "blocking_object_ids"],
+      "properties": {
+        "status": { "enum": ["complete", "partial", "blocked"] },
+        "total_objects": { "type": "integer", "minimum": 0 },
+        "ready_objects": { "type": "integer", "minimum": 0 },
+        "incomplete_objects": { "type": "integer", "minimum": 0 },
+        "excluded_objects": { "type": "integer", "minimum": 0 },
+        "blocking_object_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "complete" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "incomplete_objects": { "const": 0 },
+              "blocking_object_ids": { "maxItems": 0 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "blocked" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": { "blocking_object_ids": { "minItems": 1 } }
+          }
+        }
+      ]
+    },
+    "ledger_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "$defs": {
+    "coverageEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage_entry_id",
+        "object",
+        "required_for_scope",
+        "evidence_state",
+        "facets",
+        "evidence_refs",
+        "manual_capture_request_refs",
+        "blockers",
+        "build_eligibility",
+        "object_fingerprint",
+        "security"
+      ],
+      "properties": {
+        "coverage_entry_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "object": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectRef"
+        },
+        "required_for_scope": { "type": "boolean" },
+        "evidence_state": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/evidenceState"
+        },
+        "facets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["facet", "status", "evidence_refs"],
+            "properties": {
+              "facet": {
+                "enum": [
+                  "metadata",
+                  "definition",
+                  "schema",
+                  "lineage",
+                  "formula",
+                  "filter_context",
+                  "visual_formatting",
+                  "interaction_behavior",
+                  "security_behavior",
+                  "schedule_behavior",
+                  "application_behavior",
+                  "result_fixture"
+                ]
+              },
+              "status": { "enum": ["complete", "partial", "metadata_only", "missing", "not_applicable"] },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+                }
+              }
+            }
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "manual_capture_request_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "build_eligibility": { "enum": ["ready", "not_ready", "not_applicable"] },
+        "object_fingerprint": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "security": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "build_eligibility": { "const": "ready" } },
+            "required": ["build_eligibility"]
+          },
+          "then": {
+            "properties": {
+              "required_for_scope": { "const": true },
+              "evidence_state": { "const": "extracted_complete" },
+              "facets": {
+                "items": {
+                  "properties": { "status": { "enum": ["complete", "not_applicable"] } }
+                }
+              },
+              "evidence_refs": { "minItems": 1 },
+              "manual_capture_request_refs": { "maxItems": 0 },
+              "blockers": { "maxItems": 0 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "evidence_state": {
+                "enum": ["extracted_partial", "metadata_only", "manual_capture_required", "blocked"]
+              }
+            },
+            "required": ["evidence_state"]
+          },
+          "then": {
+            "properties": { "build_eligibility": { "not": { "const": "ready" } } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "required_for_scope": { "const": false } },
+            "required": ["required_for_scope"]
+          },
+          "then": {
+            "properties": { "build_eligibility": { "const": "not_applicable" } }
+          }
+        }
+      ]
+    }
+  }
+}

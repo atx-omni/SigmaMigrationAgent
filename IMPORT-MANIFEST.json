@@ -1,0 +1,808 @@
+{
+  "source_baseline": "912e56d80431b50738397605d346ff5bf6c1b1be",
+  "recovery_archive_sha256": "e0cfcabe9412bfb11f3e786fee0cc023bfb3d5b6bbea3d030b20ae568431ae66",
+  "shared_code_origin": "atx-omni/DomoMigrationAgent and exploreomni/omni-migrator; see retained PROVENANCE.json",
+  "import_is_not_release_acceptance": true,
+  "files": [
+    {
+      "path": "agents/sigma/README.md",
+      "source_sha256": "a31bb8b921909f66e9801e4b69d6242a76610b79d9b2ca079e171eca6aa3e75a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/dbt-analytics-engineer.md",
+      "source_sha256": "04b7dc2efa0000f957392f99e8c7bba1583054c622689d26a5aafa5b0db594b4",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/documentation-training.md",
+      "source_sha256": "5e9193d0bf31562a11e107d00a27dd3eee409e307206b76ac6fe37a6619ba940",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/independent-qa.md",
+      "source_sha256": "760c667f1a79ba4174435342c36d2400693b8000658cdd8e7d7cb1fb18174471",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/omni-bi-developer.md",
+      "source_sha256": "314caf7e03af70184443153776fbc5873bd8ba6654b1bc1868ca95fca9a563cd",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/omni-modeler.md",
+      "source_sha256": "ba25ef873dc12a5b06122a88cd607769fceac815f2ce5eb8ec3c274657883425",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/registry.json",
+      "source_sha256": "1f6d9821745b9ef492ae3ba716867d52063d12ab9b94dc83c22ebac0aade1932",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/semantic-consolidation.md",
+      "source_sha256": "bb9208101aad3aa4106327b8d3464ff6978eace523f2f33031bb4adc8ecbe72d",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/sigma-analytics-formula.md",
+      "source_sha256": "48f737e6121811aec157b0a9ce503c1dfa317a482e061442215983b0a14d4708",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/sigma-bi-workbook.md",
+      "source_sha256": "eb7b8193353eacc0a05441b6e26db722c3fbe8ca0d16ecd95e2eb8b76f797c8a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/sigma-inventory-admin.md",
+      "source_sha256": "2864b8ffb53741667ba5fde2a19a591053e373c0ef7943820c579eb1e5219b0a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "agents/sigma/sigma-to-omni-architect.md",
+      "source_sha256": "efad591bde3e3dcaf41c3cbf54b206ba443d6d61bc31b3c10e7f677e6309c73f",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/agent-work-package.schema.json",
+      "source_sha256": "7d61bab3e6a29c2ea6f06bcdbbedeb1cfeb13787526be7df76d25996918a557c",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/artifact-envelope.v1.schema.json",
+      "source_sha256": "36254ac51e7d8e0a1b1a22bc580077770b1c94b5d9bafb52ed159b71b4f204f0",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/capability-preflight.v1.schema.json",
+      "source_sha256": "d0809da129e5321dec04354365342a180f64cab3b1c0c3272d6b247f5c28d6ab",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/common-definitions.v1.schema.json",
+      "source_sha256": "fb85bf7c7e282751e1420c8b4a804d845fc20e6065475ef8cc753c29cc9fe318",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/consolidation-decision.v1.schema.json",
+      "source_sha256": "ab01e5b75d36bd2ed5420dc4d1030429ceedc5e06d21224aa056cd978a191b7e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/coverage-ledger.v1.schema.json",
+      "source_sha256": "4a45607a6c64227d474e58a8e868234d25bcb150c5935ec0a59ac2b0872ff966",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/dashboard-rebuild-plan.v1.schema.json",
+      "source_sha256": "139af2183e45680b483c73e60647c2e1f91c3c6e7394b2ce901b397d39a9b37e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/documentation-package.v1.schema.json",
+      "source_sha256": "4704f0abd5a79b70e83b41212a4f300268b9a4482f52fd78958b47ee52ab4957",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/domo-inventory-observation.v1.schema.json",
+      "source_sha256": "647da7cbebcf1fcca75798dd6471bc766c750787e7884d116fed2995045fd3c2",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/domo-portfolio-inventory.v1.schema.json",
+      "source_sha256": "abf66fc5cd6a5c8775637cfa9ee216220fb0dc49c429b37bc0eebadf5013dad5",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/domo-to-omni-run-manifest.schema.json",
+      "source_sha256": "e05288d56be4944c9b568171f09ced17879d10a80119d2cd6c155986b787d1da",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/equivalence-assessment.v1.schema.json",
+      "source_sha256": "5108538e320e2c7e8fc5865793fa4a037f93ff6de39e9acbf5f4b81bbcbed821",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/evidence-bundle.v1.schema.json",
+      "source_sha256": "92adb222cd1e57e8e4eaa9cd26dfcba11ad32c91ff46bc67f7c155a3ed982932",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/external-redesign-handoff.v1.schema.json",
+      "source_sha256": "555cbc7adb2590aba40809db100b0a3c28c4d831460b43c7851b3c66a70f998d",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/inventory-snapshot.v1.schema.json",
+      "source_sha256": "9130a854cd7cdfc6159268746d7bd05557300918eb44cc1b1bff5f57abe35f16",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/manual-capture-request.v1.schema.json",
+      "source_sha256": "7f2668fc55c075c86ea2b5a368fad6b7657bbbcb9baedd9415721ca0a1e46a69",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/migration-intake.v1.schema.json",
+      "source_sha256": "4e3de9476ec5595bfa12557ad17c5434b452c90ffa9a8ec62945672ac3ea43ec",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/migration-lifecycle.v1.schema.json",
+      "source_sha256": "ace9f5266d71ac947c2f21c257fe5b6056ee2a6ad59791bb07ea86c58ee94c6a",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/migration-scope.v1.schema.json",
+      "source_sha256": "c579aa0fef0e5cb5686c1401a239303627fa12a8e25e71efbaaf440df2016691",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/production-validation-report.v1.schema.json",
+      "source_sha256": "90205e8dfd3fe4c63649e08490b832d58ced9e0c884a2d4045ddc3fa8029d246",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/qa-acceptance-suite.v1.schema.json",
+      "source_sha256": "5ff4cdca4e9ae2132d9fc19ccfa05c1ed618b397101af5fa3c6629db6f224899",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/qa-fixture.v1.schema.json",
+      "source_sha256": "4cfe316ec1d4786055be6425e98db65bef268d612a630b9985fde336727978b9",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/qa-fixture.v2.schema.json",
+      "source_sha256": "d7e4b04d00ea7ed53af1e8e988595c3cfa2376414d9e5ce15984d9f0d03a9aea",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/qa-result.v1.schema.json",
+      "source_sha256": "fa00f85069ef3ba52fa44156e4c1214c234633495cb7d5fc4319a370dfadfc68",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/qa-result.v2.schema.json",
+      "source_sha256": "4a4b48e4b77d86c7df53a3db4608412fdb1217a1c1d726b9b937598c5a6ae8b6",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/qa-target-operation-outcome.v1.schema.json",
+      "source_sha256": "d1378bafdfa5f5efeaf022aaf082dfa0bfe142d36db118501083d2337165c921",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/repository-inventory.v1.schema.json",
+      "source_sha256": "620cb2298ff50548e4fabe542879d8e8f0bea0b1c1fc65f091cadcc8b2fcefe6",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/semantic-profile-coverage.v1.schema.json",
+      "source_sha256": "37e9173614c3d5a15b6b2d167610766eb96876b96d67128f1fe9e07b0cd62b4d",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/semantic-profile.v1.schema.json",
+      "source_sha256": "b5910d814168a9193ef828b41b4b19ba83758f6567af7e0bab488cbb1cb2f83d",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/sigma/examples/sigma-capability-spike-request.v1.example.json",
+      "source_sha256": "a9f7b6fd47aa10a0e3d8e39043a3ac53797793ec5e6d4d7cfa96c672074bbeab",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/examples/sigma-semantic-routing-decision-request.v1.omni-reconstruction.example.json",
+      "source_sha256": "eeb6a3a228bf930feb250666170c07a0140988cdcda68c49585324585205cc90",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/examples/sigma-semantic-routing-decision-request.v1.warehouse-first.example.json",
+      "source_sha256": "19dfe6d4036117b89807ec67f1ba3afc962a5a819dc1b4999bd5b7a827a1708a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-api-capability-matrix.v1.schema.json",
+      "source_sha256": "4132d8019e7965d0e4dce8889062955808614f2342458a128205a1914630cbaf",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-behavior-manifest.v1.schema.json",
+      "source_sha256": "cee5b38a7de005867cc2bfd54a23b02d9592f88433f3fe89511ea2537ae882cf",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-capability-spike-bundle.v1.schema.json",
+      "source_sha256": "45f0c630b7ac4a00368c927403b8f1f4b0d5cb36126c8acadec1ac0ce7b78810",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-capability-spike-request.v1.schema.json",
+      "source_sha256": "dfdaa3bc89f74e1175639426a272718c83db8662fec74c1a96e00f4cc3e11d41",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-data-model-snapshot.v1.schema.json",
+      "source_sha256": "3cfc84d918756d4dc3978c791182f9bb8255f17f3d6966c3b59b05164d83e40a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-observation.v1.schema.json",
+      "source_sha256": "47a0e7835791c2c5e4b51308dc8c1fddae8b461919a16aa7ea521fb1817eaba1",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-run-manifest.v1.schema.json",
+      "source_sha256": "dac78b48b66e9f6cf46fe81143d04432992af7021e6e6d58476126a17acbb775",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-semantic-routing-decision-request.v1.schema.json",
+      "source_sha256": "ee8c90bd7ad7e8cf5d79831af84c79b3bc663684d5e6e06fffb221042d431150",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-semantic-routing-decision.v1.schema.json",
+      "source_sha256": "0c1aabedcd34352dc0a380765203adf819f8a5e5daa8e8d6d71ff2887272d90d",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-semantic-routing-prompt.v1.schema.json",
+      "source_sha256": "c063492cf9a6cce3f095a43b243172bcb31eeace23102b8ccba0da1e8e07ccaa",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/sigma/sigma-workbook-graph.v1.schema.json",
+      "source_sha256": "77e5ad0abc15c6e27002808aa81c3cf607e5b04d685c1d19c68ef5e85ff9168c",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "contracts/source-object-graph.v1.schema.json",
+      "source_sha256": "8bbf562c6d4c87cc40d4dac158d3940504b57613b795fe98143d5eb181b7e9ab",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "contracts/topic-blueprint.v1.schema.json",
+      "source_sha256": "25aa0845b40e45724a711b57ba695e739f487ede87626b6bb691a1e689df64bc",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "docs/sigma-customer-release-handoff.md",
+      "source_sha256": "4d7aeb64312bdba652944abdba9be107502a50cc780ffec34113faa27b1ecd47",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "docs/sigma-phase0-capability-spike.md",
+      "source_sha256": "e2d77a2af441e1ba269913586855e50ad64344b22b0acb4e4222a0949be2d793",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "docs/sigma-phase0-requirements-status.md",
+      "source_sha256": "0ebed2f912ee958e0c8f44bbab6f309eca91dec5dc12b2840a34e1fe65441718",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "docs/sigma-review-implementation-status.md",
+      "source_sha256": "496aafb8bae9792d4f69eb824f291323ec41a681bf4b64a534e6cf7e9c64311c",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "docs/sigma-supervised-workflow.md",
+      "source_sha256": "8d97537687a9de9a8f9c68f7ab38d64a5cf290242af8f52c4a55129cb1580317",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/LICENSE",
+      "source_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/PROVENANCE.json",
+      "source_sha256": "01dd24a1b5f211d3ae03454af6f8dd9d6244cb0e1dc7ec8f9df6062df15f06cc",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/contracts/omnikit.migration.bundle.v1.schema.json",
+      "source_sha256": "7cfc0b8af2eabc5c71daec0481111088a15b5828741e68adc4bcf2ba33204dc2",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/__init__.py",
+      "source_sha256": "91447944015cec709e8aa7655f7e9d64e1e4508e7023a57fe3746911c0fc6fed",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/ai/__init__.py",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/ai/rulebook.py",
+      "source_sha256": "334c3497555b4368cb15c1872a00eef5d438bc569c7d1f2eea2dab6dc97891ab",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/bridge.py",
+      "source_sha256": "fd5f705d4458b0e623994c10df128c494668a60ec14a67c6327fdd698802d08c",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/__init__.py",
+      "source_sha256": "73d6b1ce00676e7d304606e5c0d289fd910ab1b22d0ebb5d19886edb6bba2d4a",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/canonical.py",
+      "source_sha256": "e5c1bfbac8a2840f265b2b84b27999f5e0ef3102f14760e8664b8abe17922411",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/contract_integrity.py",
+      "source_sha256": "979b45554a9b24524bb63e971869574072a15e9e5853933956fe02752ba06b63",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/documentation.py",
+      "source_sha256": "dd62c2440965994de56ca6e32a9336adecc0dd0eb90793e84c23766fa011a696",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/domo_inventory.py",
+      "source_sha256": "bfc81f0c9a48accbc877b1dab6f1eba485d7e046da6272e0b3fdfd516483859f",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/external_handoffs.py",
+      "source_sha256": "4c3503a4c84d781666f10bd1cf10a87c6883e84cdb60021f2e90989b7cfef26f",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/gates.py",
+      "source_sha256": "64b32561c3c1b2936f5a147c7e571f14b7b156afe117c01e071583169d0741ad",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/inventory_projection.py",
+      "source_sha256": "7fca17c14db87ae67f9c1b36b2def63d6d76249e0ee83fdb76d1f7fd3c60f92a",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/policy.py",
+      "source_sha256": "1b24c8aea48bf2f1965f436b951bef35eb314782bb197c7f9d790b98615f3ad9",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/records.py",
+      "source_sha256": "1bee426813f084241c37725269c2e3fd8ed837a82843f0fa8d3981daa94b622e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/control_plane/store.py",
+      "source_sha256": "e7b3c09084cd59c84b049d17e8f332fcd441fd02d9896ffcffcd166895ab003a",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/core/__init__.py",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/core/archive_safety.py",
+      "source_sha256": "b0e3ec1b97bb0a645cea774b1446dba66c7183b8f7b31704d6a3f40773d1980e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/core/connection_map.py",
+      "source_sha256": "6a118b829676958148743e2994856ff361a505f2875470413a89457eb53cd282",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/core/contracts.py",
+      "source_sha256": "f599c5ea1498bce44bc424c0e1d1328427dced6a619b5612df2e73e0c5179697",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/dashboards/__init__.py",
+      "source_sha256": "26bb05fa97eae8795a264f2da069ba2c271c5c2236836c80d30eb7947e9b657c",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/dashboards/rebuild_plan.py",
+      "source_sha256": "567805de3ed4acb27f7afa2ef758f7f9eea35c268e9a2ca836932f42f1602239",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/deterministic/__init__.py",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/deterministic/dashboard_maps.py",
+      "source_sha256": "bdd76df5c9ffab6255d63a27b4da061b1ff4c9b9bb9830cfc677b06f9ec53ead",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/deterministic/model_emitter.py",
+      "source_sha256": "23832fcb67a07334b3c9fb29a620104f3f61023eacb7325d4c7d7c1e8e711e01",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/deterministic/omni_enums.py",
+      "source_sha256": "b07eea9012c22f240afa846ae851522c96dbb61a60a8c7f32025503c6669216f",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/deterministic/sigma_translate.py",
+      "source_sha256": "85f0985263c3bae57214a136caeb1f631028320dfde2ebc181990a09e94b3530",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/deterministic/sql_cleanup.py",
+      "source_sha256": "9920ac6666d4c55d2cdf681ea318fbb0b1e5b88934851e65d85d4e1404343ec3",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/__init__.py",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/__init__.py",
+      "source_sha256": "adf9411a87e3a3d03512b17f636628152fda154ee8e8f488ff9e5f63fea3ebb7",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/api.py",
+      "source_sha256": "9bc184a98e4e3a60de8456a1cc109ca933b7f734c52cf8eb83700264ee4e0028",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/broker.py",
+      "source_sha256": "c44806d642eeda6d5dc341c8813010913a9c5104ea152a2e13f0af7ffdba6334",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/evidence.py",
+      "source_sha256": "00303708a4e301272ce7862cbe952b1c44e122514816f24f3fe699d4a3aa86e4",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/extractor.py",
+      "source_sha256": "2d4fa88079b330a973462e0fb3c208cde4a3f4698f8b6497e0d03d6e3f908309",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/manual.py",
+      "source_sha256": "136dfa33621a317dc493978b6562c7fc932318485a625b0b060c8aafb58a70d3",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/models.py",
+      "source_sha256": "b4a65590ae83dc0e8211a2f1d7a141aca50751379888fc1455213aa85524db6c",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/domo/reports.py",
+      "source_sha256": "eb06622e4123bfd901028b8ad4b11f5983aab5a1d28df9d0eb949bf5380050fc",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/__init__.py",
+      "source_sha256": "1c70bb5a4d0ee483eff0e492ac1190a73abde62a3c4483edd81bff72c01e38a9",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/api.py",
+      "source_sha256": "51eb077ef1810ad62c482b6967e90405fb1d4737caa06a3a77ed23253e6767eb",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/capability_contracts.py",
+      "source_sha256": "c757936e7ebe09fa8d75c2c2a673a14587aa92414fa4efc9070db17c879d9050",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/capability_spike.py",
+      "source_sha256": "d0b01d9b7973115a76543e8dc54a4b68391453e242cdf657115c561ca97f55a7",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/dashboard.py",
+      "source_sha256": "14f007be7752d8a37945ede5734a931473dba0b9808079244fe92f923592f007",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/extractor.py",
+      "source_sha256": "97f0ce207b7e528c4de776b8ccaedbb10172d7ede6c23df5d7d128e8d946716f",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/semantic_routing.py",
+      "source_sha256": "594e53bf9e5f40de14a31faa6c5ea77e8374e0f9d5bb9c83d5c3c05e520e7793",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/extractors/sigma/source_contracts.py",
+      "source_sha256": "f4826a5072543b3a9ce706fb4c133f91d5723b7232dfcfaa5aff100f27a0a262",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/ir/__init__.py",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/ir/identity.py",
+      "source_sha256": "49c1cd32df12f98401d8e97db4fbaf1fe02fd03865c43618f805b58cec68d4e6",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/ir/schema.py",
+      "source_sha256": "06049e86313c91c90265c4c6818bd30537cfe7999f5ff30fca6669de56837dd3",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/__init__.py",
+      "source_sha256": "72227b9114557a7ca23a13cce41430d27c77472a3b0d1efec00bde3c96053caa",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/planner.py",
+      "source_sha256": "21bc5c066dec32ace90e2bfac69b504ed6276b519a29fcc58f6e1e4db09bd092",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/provider.py",
+      "source_sha256": "bd2568020b457e06f3090460efe1c0fe5639b6a436252ce9cd7d34d6f5a6b081",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/runner.py",
+      "source_sha256": "430be0a7254981dc60c6712d64308bfb82d504b35267486e61d7503bd5df44a9",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/sigma_cli.py",
+      "source_sha256": "1ea95a400f5bfcbcd4a5048c4666f0d0abbaf17bfdd7b66c62462f1291590d60",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/sigma_planner.py",
+      "source_sha256": "485692d630cce4bf4ee34534876a8c7e078155988430327489e73aff1ed04b5a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/orchestration/sigma_workflow.py",
+      "source_sha256": "ecd1e27b09d9bdb68b68e2812a7d832004b1527bb995dc93ae9cf0747d4f0815",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/qa/__init__.py",
+      "source_sha256": "9a8b909415118d7baf8054cd0016da726fae0192d6a227f64134e1f1a92c838d",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/qa/acceptance.py",
+      "source_sha256": "7b4831fb58a7a7fccd66a5140053d295d59ceb28174970c5a972d2cd939505a0",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/qa/production.py",
+      "source_sha256": "f41b95464ea5a4b2713c6cda1bc1b0ed4347c6fc11cfb9bc3ee8e9885bea2edf",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/qa/store.py",
+      "source_sha256": "ef642ae6441d1c4cc7c26ab5d38968c78098ef68232d1f44a4414a2a2212d7b4",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/qa/target_outcomes.py",
+      "source_sha256": "0aebdb4c9ddc404f87f2bd56fb611b13e9c8c15f0dfd4d37d3a9d8faac37fb6e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/repositories/dbt/__init__.py",
+      "source_sha256": "61130c57a7c520fd8efe126fe98aee78268d8ca66be8d0f986c05ef4611c7c71",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/repositories/dbt/inventory.py",
+      "source_sha256": "5454c05a1a0c42832b0213122e79b55a043f4ffb0fca7676c7c0b49227db51e2",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/repositories/dbt/models.py",
+      "source_sha256": "978098fc8104c392026ebd33766905b08d9c92b64604e960c2dd1793bc19c7d0",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/rulebook/v2/common/sql-dialect.md",
+      "source_sha256": "30ad561791c2329d93b60624e7f28b9c1cd16cc12bd9592c21b4d3b4349a7f89",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/rulebook/v2/sigma/fields.md",
+      "source_sha256": "c7f9fc17f75fb46c04d5c6533b28cdb2f600080873575dfb86efe745e9f7044c",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/rulebook/v2/sigma/measures.md",
+      "source_sha256": "8c6d09d02a8b8cf513d266f1c466c97a32823cced528bd2926fa9452b8d9cc6a",
+      "ownership": "Sigma adapter"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/__init__.py",
+      "source_sha256": "4dad62b97d6f1187da6c1959071513427fd3734c8ccec2422a8636d3dd24cbc4",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/candidates.py",
+      "source_sha256": "e4d682012ce0a2a541016302d1ea2e04391fcf166c948b18bfe822e9cdd05bda",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/consolidation.py",
+      "source_sha256": "70c72c8d40c6c19e0a2537f99e268c1c4ba0142791864dd732408b65cc6fabeb",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/coverage.py",
+      "source_sha256": "d2491ade0603736854d13d84a86e9ec8d54b9dce793613237328267180da1841",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/equivalence.py",
+      "source_sha256": "533bbf160c33547d62b2e66fd3e1813010e31d3f014cf878a2f3203e6ebec97c",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/models.py",
+      "source_sha256": "9ac23d440f303ea5daefdd156920be234ea1f49851483d2bb60ca2bdadba7f3a",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/normalize.py",
+      "source_sha256": "b1e0eb469e199fd6719f2f6860e8ed7b17f31a2468e36c53081bb30fe4e91d42",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/profiles.py",
+      "source_sha256": "98fa5603091c8f7ad8421bdfd644b0227b4841f5da1f32047bbf9054c024d65e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/semantic/topic_blueprints.py",
+      "source_sha256": "5bfb8176f5b23d5fc53fe3f554b3c3615ac865c6ec7332a18d3a726748cac37a",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/__init__.py",
+      "source_sha256": "cb58dca69fe0d52697b44118f6ca0f335d41378ba077ee0f38ed641900d9d161",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/authorization_bridge.py",
+      "source_sha256": "cc88db0f253f07e4d3114f0fdd287752a5d1ef9d010bd0d0e14ccad1adab41a8",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/contracts.py",
+      "source_sha256": "2423f373c29ea82c15c421d75abe1bef345c4785283badcdc74e146f1ca0617f",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/dbt.py",
+      "source_sha256": "91b532eded833a943914089d2fffb31c1ddca48bfe460e58d797505505df35c1",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/execution.py",
+      "source_sha256": "0c54a321efe44057a2c17583f598154a64471793fc866f22bbcfb3744ff3cedc",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/omni.py",
+      "source_sha256": "16e1abeb0377ba00561f5568c17927420cc90f92836e3703beb0712f8ac21106",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/src/omni_migrator/targets/snowflake.py",
+      "source_sha256": "42f712da9b9aa81fc90167faddd6d26d1cdfba92b06146f6b2a89b37d116e12e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma.py",
+      "source_sha256": "bd2ac987e9d0f347fc28eac39909ab1a7f5b3e930af85f536e7fcf5a4dbf4891",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_agent_registry.py",
+      "source_sha256": "42d91d2c222acbbe793959cf994886a2ac2a2dc6203a3194b1947f0c883cdcdb",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_api.py",
+      "source_sha256": "0d4007b199e20d13103623e8508b5631aa85a1ee75714524540c0e33b5aa5a87",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_capability_spike.py",
+      "source_sha256": "7293a71c418e847fb23e000fa84e6146ea0914655ce0fb10fc5a354d7b776439",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_customer_package.py",
+      "source_sha256": "2e8d06ec50062c99cfc3c5f740207413084bf2cdd8a01eef8aba233db9e1ed6e",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_customer_starter.py",
+      "source_sha256": "5a491717b0785459ec67ebb8e8f1dcf396c298a1929a9f712334e10ca2cc1235",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_dashboard.py",
+      "source_sha256": "ef8f46e8f66a04e988048dbcc1d84f6bfd9db6b97d2cb0dc6e54e05ebfea8e44",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_end_to_end.py",
+      "source_sha256": "af2082b837b74cfb2f3b230be6828897d79249d6b757bb4df6803d9ddd12c83b",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_planner.py",
+      "source_sha256": "3f487bf2a8f57211b9a1ae3e8fd38e88b42de954d2bd6483a1c1b8c8fe00b04c",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_runtime.py",
+      "source_sha256": "cba1ded97e8ab1ee0c80ac0b72a140337629246fae303e5c26dd0778dabab8e4",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_semantic_routing.py",
+      "source_sha256": "5121d0ad4f5084ecfb3ca91a68193865adf40cb2ac946bf393e13e08dc4a14fd",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_source_contracts.py",
+      "source_sha256": "87cd00da1029a489e05eb9a26b1860836768111e466c71768b87f161c2874cc5",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_translate.py",
+      "source_sha256": "e3caa19542a52268ed00bcd9b882f36fa91e6ff66da00154e970ea17bf3c6713",
+      "ownership": "selected shared dependency"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_workflow.py",
+      "source_sha256": "dbfc0200fa38d530d201ddc87dc4f0152e3831f8c5d3f72f1755139c4f10879b",
+      "ownership": "selected shared dependency"
+    }
+  ]
+}

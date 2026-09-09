@@ -1,0 +1,46 @@
+{
+  "schema_version": "sigma-capability-spike-request.v1",
+  "run_id": "run.sigma.phase0.replace-me",
+  "scope_id": "scope.sigma.phase0.replace-me",
+  "organization_ref": "sigma-org-ref://replace-me",
+  "expected_organization_id": "replace-with-whoami-organization-id",
+  "api_base_url": "https://aws-api.sigmacomputing.com",
+  "approved_api_hosts": [
+    "aws-api.sigmacomputing.com"
+  ],
+  "principal_ref": "principal-ref://sigma-phase0-reader",
+  "expected_user_id": "replace-with-whoami-user-id",
+  "effective_account_type": "viewer",
+  "credential_ref": "secret-ref://sigma/phase0-reader",
+  "authorization_ref": "authorization-ref://sigma/read-only/replace-me",
+  "scope_approval_ref": "human-approval-ref://sigma/scope/replace-me",
+  "comparison_scope_refs": [
+    "sigma://workbooks/replace-workbook-id",
+    "sigma://dataModels/replace-data-model-id"
+  ],
+  "build_scope_refs": [
+    "sigma://workbooks/replace-workbook-id"
+  ],
+  "policy_version": "sigma-phase0-policy.v1",
+  "workbook_id": "replace-workbook-id",
+  "data_model_id": "replace-data-model-id",
+  "source_freeze": {
+    "strategy": "version_tag",
+    "source_reference": "sigma://workbooks/replace-workbook-id/tags/replace-tag",
+    "workbook_tag_name": "replace-tag",
+    "workbook_published_version": null,
+    "data_model_document_version": 1,
+    "approved_by_ref": "human-ref://migration-owner",
+    "approval_ref": "human-approval-ref://sigma/freeze/replace-me"
+  },
+  "manual_evidence_owner_ref": "human-ref://sigma-content-owner",
+  "privacy_approval_ref": "human-approval-ref://sigma/privacy/replace-me",
+  "sanitization_policy_ref": "sanitization-policy-ref://sigma/metadata-only/v1",
+  "retention_policy_ref": "retention-policy-ref://migration-metadata/replace-me",
+  "data_classification": "confidential",
+  "row_data_authorized": false,
+  "evidence_mode": "live_tenant",
+  "request_budget": 100,
+  "per_endpoint_request_budget": 20,
+  "approved_exclusions": []
+}

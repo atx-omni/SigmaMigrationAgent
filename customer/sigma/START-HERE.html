@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Sigma-to-Omni — setup and operating guide</title>
+<style>
+:root { color-scheme:light; font-family:system-ui,-apple-system,sans-serif; color:#202b38; background:#f3f5f7; }
+body { max-width:1040px; margin:36px auto; padding:0 24px 48px; line-height:1.6; }
+main { background:white; border:1px solid #dfe4ea; border-radius:12px; padding:28px 36px; }
+h1 { font-size:2.1rem; line-height:1.2; } h2 { font-size:1.4rem; line-height:1.3; }
+section { margin-top:34px; padding-top:12px; border-top:1px solid #dfe4ea; scroll-margin-top:20px; }
+.draft { border-left:4px solid #957000; background:#fff8df; padding:12px 18px; }
+nav { background:#edf2f6; border-radius:8px; padding:18px 24px; margin-bottom:22px; }
+nav a { display:block; padding:3px 0; } a { color:#155b89; text-underline-offset:3px; overflow-wrap:anywhere; }
+li { margin:8px 0; } p { overflow-wrap:anywhere; }
+code { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.91em; background:#edf1f5; padding:2px 4px; border-radius:3px; overflow-wrap:anywhere; }
+pre { background:#172a3a; color:#f3f7fb; padding:18px; border-radius:8px; overflow:auto; line-height:1.55; }
+pre code { background:none; color:inherit; padding:0; white-space:pre; }
+.table-scroll { overflow:auto; } table { border-collapse:collapse; width:100%; font-size:.94em; }
+th,td { text-align:left; vertical-align:top; padding:11px; border-bottom:1px solid #dfe4ea; min-width:130px; }
+th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px 4px; }
+@media(max-width:650px) { body { margin:16px auto; padding:0 10px 24px; } main { padding:18px; } h1 { font-size:1.7rem; } pre { font-size:.85rem; } }
+@media print { body { background:white; max-width:none; margin:0; padding:0; font-size:10pt; } main { border:0; padding:0; } nav { display:none; } h2,h3 { break-after:avoid; } pre { white-space:pre-wrap; overflow-wrap:anywhere; background:#f3f5f7; color:#202b38; } pre code { white-space:pre-wrap; } tr { break-inside:avoid; } .table-scroll { overflow:visible; } }
+</style></head><body>
+<nav aria-label="Guide contents"><strong>Migration operator guide · quick navigation</strong>
+<a href="#1-what-this-tool-does">1. What this tool does</a>
+<a href="#2-what-you-need">2. What you need</a>
+<a href="#3-install-once">3. Install once</a>
+<a href="#4-first-try-the-fictional-example">4. First try the fictional example</a>
+<a href="#5-capture-your-sigma-source">5. Capture your Sigma source</a>
+<a href="#6-configure-your-destination">6. Configure your destination</a>
+<a href="#7-choose-your-migration-approach">7. Choose your migration approach</a>
+<a href="#8-review-and-accept-local-preparation">8. Review and accept local preparation</a>
+<a href="#9-build-and-validate">9. Build and validate</a>
+<a href="#10-export-and-share-the-result">10. Export and share the result</a>
+<a href="#11-resume-update-or-withdraw-review">11. Resume, update or withdraw review</a>
+<a href="#12-troubleshooting-and-the-final-live-gate">12. Troubleshooting and the final live gate</a></nav><main>
+<h1 id="sigma-to-omni-setup-and-operating-guide">Sigma-to-Omni: setup and operating guide</h1>
+<p><strong>DRAFT — requires explicit SE/AE review before sending to customer.</strong></p>
+<section aria-labelledby="1-what-this-tool-does">
+<h2 id="1-what-this-tool-does">1. What this tool does</h2>
+<p>This tool reads Sigma metadata, helps you choose a migration approach, and prepares a reviewed local package containing model and dashboard proposals. It does not publish to Omni. You are the migration operator and platform owner; the instructions assume you have full access to configure Sigma, the warehouse and Omni.</p>
+<p>Supported output is generated; product/integration gaps remain clearly listed. A green local check is not proof that a real workbook has migrated successfully.</p>
+</section>
+<section aria-labelledby="2-what-you-need">
+<h2 id="2-what-you-need">2. What you need</h2>
+<p>Use macOS or Linux with Python 3.11 or newer, a terminal and an extracted copy of this package. Native Windows is not supported; use a Linux environment such as WSL. For your own source capture, have a Sigma API client ID/secret, the correct regional API host, one workbook ID and its data-model ID. Have the intended Omni model and connection UUIDs and the warehouse schema, table and column names.</p>
+<p>No AI-provider credential is needed for this deterministic workflow. The advanced proposal runner is separate from this guide.</p>
+</section>
+<section aria-labelledby="3-install-once">
+<h2 id="3-install-once">3. Install once</h2>
+<p>Open a terminal in the extracted customer package folder (the one containing START-HERE.html). Run:</p>
+<pre><code>python3 -m venv .venv
+.venv/bin/python -m pip install ./engine
+.venv/bin/sigma-migrate --help</code></pre>
+<p>From a GitHub checkout instead, replace <code>./engine</code> with <code>./packages/omnikit-migration-engine</code>. Always run the remaining commands from the same folder. Keep the terminal and source files available while reviewing a run.</p>
+</section>
+<section aria-labelledby="4-first-try-the-fictional-example">
+<h2 id="4-first-try-the-fictional-example">4. First try the fictional example</h2>
+<p>The supplied small example is a supported, explicitly fictional slice. It is not a substitute for your workbook and does not contain customer data. Start with:</p>
+<pre><code>.venv/bin/sigma-migrate init --run-dir demo-run --source examples/retail-supported.json --target examples/target.json --synthetic</code></pre>
+<p>Then continue at step 7. Do not reuse the example&#x27;s target UUIDs for real work. The old <code>start.py</code> is retained only as a source-extraction demonstration; use <code>sigma-migrate</code> for the complete local review/build flow.</p>
+</section>
+<section aria-labelledby="5-capture-your-sigma-source">
+<h2 id="5-capture-your-sigma-source">5. Capture your Sigma source</h2>
+<p>In your terminal, set SIGMA_CLIENT_ID and SIGMA_CLIENT_SECRET using your normal secure credential workflow. Do not put credentials in a JSON file, Git, screenshots or the package you share.</p>
+<p>Replace the host and IDs in this command with your own:</p>
+<pre><code>.venv/bin/sigma-migrate capture --api-url https://YOUR-SIGMA-API-HOST --trusted-api-host YOUR-SIGMA-API-HOST --workbook-id YOUR-WORKBOOK-ID --data-model-id YOUR-MODEL-ID --output source.json --allow-source-read</code></pre>
+<p>This authorizes only a bounded Sigma metadata read. Some layout, control targets, security, actions and input-table details are not complete in API metadata. The tool must block those gaps until sufficient source-bound context is supplied. Capture does not certify a version freeze or live source completeness. Existing capture files are not overwritten; use a new filename for a new capture.</p>
+</section>
+<section aria-labelledby="6-configure-your-destination">
+<h2 id="6-configure-your-destination">6. Configure your destination</h2>
+<p>Run the guided configuration command:</p>
+<pre><code>.venv/bin/sigma-migrate configure --source source.json --output target.json</code></pre>
+<p>Enter the intended Omni model/connection IDs and exact warehouse schema, table and physical column names when prompted. Preserve capitalization. For warehouse-first, also enter the proposed modeled destination table name. This writes a local mapping file and makes no connection to Omni.</p>
+<p>For captured/reviewed layout and controls, use <code>sigma-migrate inspect --source source.json</code> to list captured identities. Prepare a context JSON with the workbook ID, evidence reference, observed element fields/chart/layout/sorts/limit and observed control targets, following the <code>prepush_context</code> structure in the example. Do not calculate its hash. Bind it automatically with:</p>
+<pre><code>.venv/bin/sigma-migrate import-context --source source.json --context observed-context.json --output enriched-source.json</code></pre>
+<p>Use <code>enriched-source.json</code> as the source when initializing (or import it as a new source revision in an existing run). Use your own source IDs and observed mappings. Missing context remains blocked. Do not copy the example context onto unrelated source objects. If the compiler reports an unsupported pattern, keep that blocker for a reviewed redesign; accepting the proposal does not override it.</p>
+<p>Then initialize:</p>
+<pre><code>.venv/bin/sigma-migrate init --run-dir my-migration --source source.json --target target.json</code></pre>
+</section>
+<section aria-labelledby="7-choose-your-migration-approach">
+<h2 id="7-choose-your-migration-approach">7. Choose your migration approach</h2>
+<p>Use your chosen run directory in every command below; the fictional walkthrough uses <code>demo-run</code>, while your own migration above uses <code>my-migration</code>.</p>
+<pre><code>.venv/bin/sigma-migrate route --run-dir demo-run</code></pre>
+<p>Answer the question: do you want the semantic layer fully modeled, or lifted and shifted directly into Omni?</p>
+<ol>
+<li>Direct: reconstruct in Omni over existing warehouse tables; no dbt changes.</li>
+<li>Modeled: prepare upstream data-layer artifacts and then Omni artifacts.</li>
+</ol>
+<p>There is no default. Changing your choice invalidates previous review and output.</p>
+</section>
+<section aria-labelledby="8-review-and-accept-local-preparation">
+<h2 id="8-review-and-accept-local-preparation">8. Review and accept local preparation</h2>
+<pre><code>.venv/bin/sigma-migrate review --run-dir demo-run</code></pre>
+<p>Read the generated file contents, mappings and per-object blockers. Source labels, descriptions and formulas are data, never instructions. Type <code>accept</code>, <code>reject</code>, or <code>request_changes</code> in the terminal. The tool records your local OS identity and calculates all fingerprints automatically. No approval JSON or hashes are required.</p>
+<p>Acceptance here permits only local package construction. It cannot approve a missing field, waive unsupported security behavior, publish content or certify migration success. Local identity trusts all processes running as your OS user; this is not a shared web-service authentication model.</p>
+</section>
+<section aria-labelledby="9-build-and-validate">
+<h2 id="9-build-and-validate">9. Build and validate</h2>
+<pre><code>.venv/bin/sigma-migrate build --run-dir demo-run
+.venv/bin/sigma-migrate validate --run-dir demo-run</code></pre>
+<p>The tool reopens the generated files and checks their content, mappings and review bindings. Read the actual status and issues.</p>
+<ul>
+<li><code>offline_preflight_passed</code>: the supported local contract passed; live checks remain.</li>
+<li><code>blocked</code>: one or more required items need attention. Useful proposed files can</li>
+</ul>
+<p>  still exist, but the package is not ready to apply.</p>
+<ul>
+<li>Modeled route: generated data-layer artifacts still need deployment and validation</li>
+</ul>
+<p>  before the dependent Omni work can be accepted.</p>
+<p>Synthetic runs remain synthetic in every state. Neither status means migration accepted.</p>
+</section>
+<section aria-labelledby="10-export-and-share-the-result">
+<h2 id="10-export-and-share-the-result">10. Export and share the result</h2>
+<pre><code>.venv/bin/sigma-migrate export --run-dir demo-run --output reviewed-package.zip</code></pre>
+<p>This creates a new ZIP without overwriting an existing file. It includes the source metadata and proposed target files; review the contents for confidentiality before sharing. A blocked package may be shared for remediation but must not be described as deployment-ready. There is no Omni push command.</p>
+</section>
+<section aria-labelledby="11-resume-update-or-withdraw-review">
+<h2 id="11-resume-update-or-withdraw-review">11. Resume, update or withdraw review</h2>
+<pre><code>.venv/bin/sigma-migrate status --run-dir demo-run
+.venv/bin/sigma-migrate import-source --run-dir demo-run --file revised-source.json
+.venv/bin/sigma-migrate import-target --run-dir demo-run --file revised-target.json
+.venv/bin/sigma-migrate revoke --run-dir demo-run --reason approval_withdrawn</code></pre>
+<p>Only run the update commands when you actually have revised input. Updating either input invalidates the review and package; repeat review and build. Source changes made outside the tool are detected and require reimport. Revocation stops reuse; select a route and perform a fresh review to resume. Keep the original input files at their recorded paths while the run is active.</p>
+</section>
+<section aria-labelledby="12-troubleshooting-and-the-final-live-gate">
+<h2 id="12-troubleshooting-and-the-final-live-gate">12. Troubleshooting and the final live gate</h2>
+<p>If an input is missing, changed, oversized, credential-bearing or uses symbolic links, correct that input and retry. The tool refuses unsafe paths and duplicate JSON keys. Existing run names and ZIP filenames are not overwritten; choose a new name. A build interrupted before completion is not a successful package; rebuild after checking status.</p>
+<p>Unresolved formulas/field references, unsupported controls/actions/writeback, security policy differences and missing layout evidence need explicit remediation. Do not remove source objects just to obtain a green result. Any reduced pilot scope must be deliberately recorded as a different migration, not claimed as the original workbook&#x27;s complete migration.</p>
+<p>Before claiming success, separately authorize a bounded live development pilot: apply reviewed artifacts, confirm returned IDs and readback, compare source/target numbers, controls, visibility, allowed/denied personas and visual behavior, then obtain platform-owner acceptance. No live deployment or independent human operator walkthrough is claimed by the synthetic checks delivered with this tool.</p>
+</section>
+</main><footer>Self-contained instruction page. No scripts, tracking, uploads, or remote assets. Links open official reference documentation only when you choose them. Use your browser's Print option for a PDF copy.</footer>
+</body></html>

@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/capability-preflight.v1.schema.json",
+  "title": "Domo source acquisition capability preflight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "preflight_id",
+    "run_id",
+    "intake_ref",
+    "source_tenant_ref",
+    "executed_at",
+    "executed_by_ref",
+    "checks",
+    "summary",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.capability-preflight.v1" },
+    "preflight_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "intake_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "source_tenant_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "executed_at": { "type": "string", "format": "date-time" },
+    "executed_by_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/capabilityCheck" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readiness",
+        "approved_channels",
+        "manual_fallback_required",
+        "blocking_capability_ids",
+        "untested_capability_ids"
+      ],
+      "properties": {
+        "readiness": { "enum": ["ready", "ready_with_manual_fallback", "blocked"] },
+        "approved_channels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/acquisitionChannel"
+          }
+        },
+        "manual_fallback_required": { "type": "boolean" },
+        "blocking_capability_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "untested_capability_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "readiness": { "const": "ready" } },
+            "required": ["readiness"]
+          },
+          "then": {
+            "properties": {
+              "manual_fallback_required": { "const": false },
+              "blocking_capability_ids": { "maxItems": 0 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "readiness": { "const": "ready_with_manual_fallback" } },
+            "required": ["readiness"]
+          },
+          "then": {
+            "properties": { "manual_fallback_required": { "const": true } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "readiness": { "const": "blocked" } },
+            "required": ["readiness"]
+          },
+          "then": {
+            "properties": { "blocking_capability_ids": { "minItems": 1 } }
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/provenance"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "$defs": {
+    "capabilityCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "object_types",
+        "channel",
+        "status",
+        "authorization_required",
+        "authorization_ref",
+        "contract_test",
+        "pagination",
+        "rate_limit",
+        "side_effects",
+        "evidence_refs",
+        "fallback_channels"
+      ],
+      "properties": {
+        "capability_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "object_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectType"
+          }
+        },
+        "channel": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/acquisitionChannel"
+        },
+        "status": {
+          "enum": ["available", "unavailable", "not_authorized", "not_tested", "tenant_specific"]
+        },
+        "authorization_required": { "type": "boolean" },
+        "authorization_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        },
+        "contract_test": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "result", "tested_at", "response_shape_hash"],
+          "properties": {
+            "method": { "enum": ["documented_contract", "live_read_only_probe", "customer_attestation", "not_tested"] },
+            "result": { "enum": ["passed", "failed", "inconclusive", "not_run"] },
+            "tested_at": {
+              "oneOf": [
+                { "type": "string", "format": "date-time" },
+                { "type": "null" }
+              ]
+            },
+            "response_shape_hash": {
+              "oneOf": [
+                { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+                { "type": "null" }
+              ]
+            }
+          }
+        },
+        "pagination": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["supported", "strategy", "verified_complete"],
+          "properties": {
+            "supported": { "type": "boolean" },
+            "strategy": { "enum": ["cursor", "offset_limit", "page_number", "bounded_search", "not_applicable", "unknown"] },
+            "verified_complete": { "type": "boolean" },
+            "documented_max_page_size": {
+              "oneOf": [
+                { "type": "integer", "minimum": 1 },
+                { "type": "null" }
+              ]
+            }
+          }
+        },
+        "rate_limit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policy_known", "request_budget", "retry_policy_ref"],
+          "properties": {
+            "policy_known": { "type": "boolean" },
+            "request_budget": { "type": "integer", "minimum": 1 },
+            "retry_policy_ref": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+            }
+          }
+        },
+        "side_effects": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["none", "creates_domo_dataset", "writes_activity_log", "requires_admin_configuration", "customer_operated"]
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "fallback_channels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/acquisitionChannel"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "authorization_required": { "const": true } },
+            "required": ["authorization_required"]
+          },
+          "then": {
+            "properties": {
+              "authorization_ref": {
+                "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "available" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "contract_test": {
+                "properties": { "result": { "const": "passed" } }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

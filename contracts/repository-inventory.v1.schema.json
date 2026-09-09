@@ -1,0 +1,582 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.omnikit.dev/contracts/repository-inventory.v1.schema.json",
+  "title": "Pinned read-only dbt repository inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "inventory_id",
+    "run_id",
+    "repository",
+    "status",
+    "artifact_files",
+    "source_files",
+    "resources",
+    "lineage_edges",
+    "tests",
+    "constraints",
+    "exposures",
+    "semantic_assets",
+    "diagnostics",
+    "summary",
+    "inventory_hash",
+    "provenance",
+    "security",
+    "immutable"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.repository-inventory.v1" },
+    "inventory_id": { "$ref": "#/$defs/stableId" },
+    "run_id": { "$ref": "#/$defs/stableId" },
+    "repository": { "$ref": "#/$defs/repository" },
+    "status": { "enum": ["complete", "partial"] },
+    "artifact_files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "contains": {
+        "type": "object",
+        "required": ["artifact_type"],
+        "properties": { "artifact_type": { "const": "manifest" } }
+      },
+      "items": { "$ref": "#/$defs/artifactFile" }
+    },
+    "source_files": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sourceFile" }
+    },
+    "resources": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/resource" }
+    },
+    "lineage_edges": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/lineageEdge" }
+    },
+    "tests": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/test" }
+    },
+    "constraints": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/constraint" }
+    },
+    "exposures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/exposure" }
+    },
+    "semantic_assets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/semanticAsset" }
+    },
+    "diagnostics": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/diagnostic" }
+    },
+    "summary": { "$ref": "#/$defs/summary" },
+    "inventory_hash": { "$ref": "#/$defs/sha256" },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "security": { "$ref": "#/$defs/security" },
+    "immutable": { "const": true }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\u0000]+$"
+    },
+    "nullableString": {
+      "type": ["string", "null"]
+    },
+    "nullableSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository_ref",
+        "git_ref",
+        "commit_sha",
+        "identity_evidence_ref",
+        "project_name",
+        "project_id",
+        "dbt_version",
+        "worktree_state"
+      ],
+      "properties": {
+        "repository_ref": { "type": "string", "minLength": 1 },
+        "git_ref": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        "identity_evidence_ref": { "type": "string", "minLength": 1 },
+        "project_name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "project_id": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 256 },
+            { "type": "null" }
+          ]
+        },
+        "dbt_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "worktree_state": { "const": "clean" }
+      }
+    },
+    "artifactFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_type",
+        "relative_path",
+        "schema_version",
+        "content_hash",
+        "byte_count",
+        "generated_at",
+        "invocation_id"
+      ],
+      "properties": {
+        "artifact_type": {
+          "enum": ["manifest", "catalog", "run_results", "semantic_manifest"]
+        },
+        "relative_path": { "$ref": "#/$defs/relativePath" },
+        "schema_version": { "type": "string" },
+        "content_hash": { "$ref": "#/$defs/sha256" },
+        "byte_count": { "type": "integer", "minimum": 1 },
+        "generated_at": {
+          "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }]
+        },
+        "invocation_id": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 512 },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "artifact_type": { "const": "manifest" } } },
+          "then": {
+            "properties": {
+              "schema_version": {
+                "const": "https://schemas.getdbt.com/dbt/manifest/v12.json"
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "artifact_type": { "const": "catalog" } } },
+          "then": {
+            "properties": {
+              "schema_version": {
+                "const": "https://schemas.getdbt.com/dbt/catalog/v1.json"
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "artifact_type": { "const": "run_results" } } },
+          "then": {
+            "properties": {
+              "schema_version": {
+                "const": "https://schemas.getdbt.com/dbt/run-results/v6.json"
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "artifact_type": { "const": "semantic_manifest" } } },
+          "then": {
+            "properties": { "schema_version": { "const": "dbt-semantic-manifest/v1" } }
+          }
+        }
+      ]
+    },
+    "sourceFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relative_path",
+        "file_kind",
+        "content_hash",
+        "byte_count",
+        "referenced_by_unique_ids"
+      ],
+      "properties": {
+        "relative_path": { "$ref": "#/$defs/relativePath" },
+        "file_kind": {
+          "enum": [
+            "project_config",
+            "sql",
+            "yaml",
+            "macro",
+            "test",
+            "exposure",
+            "seed",
+            "python",
+            "markdown",
+            "other"
+          ]
+        },
+        "content_hash": { "$ref": "#/$defs/sha256" },
+        "byte_count": { "type": "integer", "minimum": 0 },
+        "referenced_by_unique_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "data_type", "description", "ordinal"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "data_type": { "$ref": "#/$defs/nullableString" },
+        "description": { "$ref": "#/$defs/nullableString" },
+        "ordinal": {
+          "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unique_id",
+        "resource_type",
+        "package_name",
+        "name",
+        "original_file_path",
+        "source_file_hash",
+        "definition_hash",
+        "compiled_code_hash",
+        "database",
+        "schema_name",
+        "alias",
+        "relation_name",
+        "compiled_relation_name",
+        "materialization",
+        "enabled",
+        "owner",
+        "domain",
+        "group",
+        "tags",
+        "depends_on_unique_ids",
+        "test_unique_ids",
+        "exposure_unique_ids",
+        "columns",
+        "run_status",
+        "execution_time_seconds",
+        "resource_hash"
+      ],
+      "properties": {
+        "unique_id": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "resource_type": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "package_name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "original_file_path": {
+          "oneOf": [{ "$ref": "#/$defs/relativePath" }, { "type": "null" }]
+        },
+        "source_file_hash": { "$ref": "#/$defs/nullableSha256" },
+        "definition_hash": { "$ref": "#/$defs/nullableSha256" },
+        "compiled_code_hash": { "$ref": "#/$defs/nullableSha256" },
+        "database": { "$ref": "#/$defs/nullableString" },
+        "schema_name": { "$ref": "#/$defs/nullableString" },
+        "alias": { "$ref": "#/$defs/nullableString" },
+        "relation_name": { "$ref": "#/$defs/nullableString" },
+        "compiled_relation_name": { "$ref": "#/$defs/nullableString" },
+        "materialization": { "$ref": "#/$defs/nullableString" },
+        "enabled": { "type": "boolean" },
+        "owner": { "$ref": "#/$defs/nullableString" },
+        "domain": { "$ref": "#/$defs/nullableString" },
+        "group": { "$ref": "#/$defs/nullableString" },
+        "tags": { "$ref": "#/$defs/stringSet" },
+        "depends_on_unique_ids": { "$ref": "#/$defs/stringSet" },
+        "test_unique_ids": { "$ref": "#/$defs/stringSet" },
+        "exposure_unique_ids": { "$ref": "#/$defs/stringSet" },
+        "columns": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/column" }
+        },
+        "run_status": { "$ref": "#/$defs/nullableString" },
+        "execution_time_seconds": {
+          "oneOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }]
+        },
+        "resource_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "lineageEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edge_id", "from_unique_id", "to_unique_id", "relationship", "edge_hash"],
+      "properties": {
+        "edge_id": { "type": "string", "pattern": "^edge\\.[a-f0-9]{20}$" },
+        "from_unique_id": { "type": "string", "minLength": 1 },
+        "to_unique_id": { "type": "string", "minLength": 1 },
+        "relationship": { "const": "depends_on" },
+        "edge_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unique_id",
+        "name",
+        "test_type",
+        "target_unique_ids",
+        "column_name",
+        "severity",
+        "status",
+        "original_file_path",
+        "source_file_hash",
+        "definition_hash"
+      ],
+      "properties": {
+        "unique_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "test_type": { "type": "string", "minLength": 1 },
+        "target_unique_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "column_name": { "$ref": "#/$defs/nullableString" },
+        "severity": { "$ref": "#/$defs/nullableString" },
+        "status": { "$ref": "#/$defs/nullableString" },
+        "original_file_path": {
+          "oneOf": [{ "$ref": "#/$defs/relativePath" }, { "type": "null" }]
+        },
+        "source_file_hash": { "$ref": "#/$defs/nullableSha256" },
+        "definition_hash": { "$ref": "#/$defs/nullableSha256" }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constraint_id",
+        "resource_unique_id",
+        "column_name",
+        "constraint_type",
+        "name",
+        "columns",
+        "expression_hash",
+        "warn_unenforced",
+        "warn_unsupported"
+      ],
+      "properties": {
+        "constraint_id": {
+          "type": "string",
+          "pattern": "^constraint\\.[a-f0-9]{20}$"
+        },
+        "resource_unique_id": { "type": "string", "minLength": 1 },
+        "column_name": { "$ref": "#/$defs/nullableString" },
+        "constraint_type": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "columns": { "$ref": "#/$defs/stringSet" },
+        "expression_hash": { "$ref": "#/$defs/nullableSha256" },
+        "warn_unenforced": { "type": ["boolean", "null"] },
+        "warn_unsupported": { "type": ["boolean", "null"] }
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unique_id",
+        "name",
+        "exposure_type",
+        "maturity",
+        "owner_name",
+        "owner_email_hash",
+        "url",
+        "depends_on_unique_ids",
+        "original_file_path",
+        "source_file_hash"
+      ],
+      "properties": {
+        "unique_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "exposure_type": { "type": "string", "minLength": 1 },
+        "maturity": { "$ref": "#/$defs/nullableString" },
+        "owner_name": { "$ref": "#/$defs/nullableString" },
+        "owner_email_hash": { "$ref": "#/$defs/nullableSha256" },
+        "url": { "$ref": "#/$defs/nullableString" },
+        "depends_on_unique_ids": { "$ref": "#/$defs/stringSet" },
+        "original_file_path": {
+          "oneOf": [{ "$ref": "#/$defs/relativePath" }, { "type": "null" }]
+        },
+        "source_file_hash": { "$ref": "#/$defs/nullableSha256" }
+      }
+    },
+    "semanticAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_id",
+        "asset_type",
+        "name",
+        "description",
+        "owner",
+        "domain",
+        "relation_name",
+        "related_resource_unique_ids",
+        "depends_on_asset_ids",
+        "definition_hash"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^semantic\\.[a-z_]+\\.[a-f0-9]{20}$"
+        },
+        "asset_type": { "enum": ["semantic_model", "metric", "saved_query"] },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "$ref": "#/$defs/nullableString" },
+        "owner": { "$ref": "#/$defs/nullableString" },
+        "domain": { "$ref": "#/$defs/nullableString" },
+        "relation_name": { "$ref": "#/$defs/nullableString" },
+        "related_resource_unique_ids": { "$ref": "#/$defs/stringSet" },
+        "depends_on_asset_ids": { "$ref": "#/$defs/stringSet" },
+        "definition_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "subject_refs"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z][a-z0-9_]{2,127}$" },
+        "severity": { "enum": ["info", "warning", "blocking"] },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "subject_refs": { "$ref": "#/$defs/stringSet" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_count",
+        "source_file_count",
+        "resource_count",
+        "model_count",
+        "source_count",
+        "test_count",
+        "constraint_count",
+        "exposure_count",
+        "semantic_asset_count",
+        "diagnostic_count"
+      ],
+      "properties": {
+        "artifact_count": { "type": "integer", "minimum": 1 },
+        "source_file_count": { "type": "integer", "minimum": 0 },
+        "resource_count": { "type": "integer", "minimum": 0 },
+        "model_count": { "type": "integer", "minimum": 0 },
+        "source_count": { "type": "integer", "minimum": 0 },
+        "test_count": { "type": "integer", "minimum": 0 },
+        "constraint_count": { "type": "integer", "minimum": 0 },
+        "exposure_count": { "type": "integer", "minimum": 0 },
+        "semantic_asset_count": { "type": "integer", "minimum": 0 },
+        "diagnostic_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acquisition_method",
+        "parser_version",
+        "executed_repository_code",
+        "acquired_at",
+        "source_artifact_refs"
+      ],
+      "properties": {
+        "acquisition_method": { "const": "read_only_dbt_artifacts" },
+        "parser_version": { "const": "dbt-repository-inventory-v1" },
+        "executed_repository_code": { "const": false },
+        "acquired_at": { "type": "string", "format": "date-time" },
+        "source_artifact_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "contains_sensitive_data",
+        "data_categories",
+        "redaction_state",
+        "tenant_partition_id",
+        "access_policy_ref",
+        "retention_policy_ref",
+        "egress_policy_ref"
+      ],
+      "properties": {
+        "classification": { "enum": ["public", "internal", "confidential", "restricted"] },
+        "contains_sensitive_data": { "type": "boolean" },
+        "data_categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "none",
+              "pii",
+              "phi",
+              "pci",
+              "financial",
+              "credentials",
+              "customer_confidential",
+              "regulated_other"
+            ]
+          }
+        },
+        "redaction_state": {
+          "enum": [
+            "not_required",
+            "redacted",
+            "tokenized",
+            "restricted_reference_only",
+            "pending"
+          ]
+        },
+        "tenant_partition_id": { "$ref": "#/$defs/stableId" },
+        "access_policy_ref": { "type": "string", "minLength": 1 },
+        "retention_policy_ref": { "type": "string", "minLength": 1 },
+        "egress_policy_ref": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

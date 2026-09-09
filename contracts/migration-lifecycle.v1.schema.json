@@ -1,0 +1,589 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/migration-lifecycle.v1.schema.json",
+  "title": "Parallel-run, cutover, hypercare and source decommission lifecycle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "lifecycle_id",
+    "run_id",
+    "scope_id",
+    "scope_ref",
+    "wave_ids",
+    "parallel_run",
+    "cutover",
+    "hypercare",
+    "source_decommission",
+    "lifecycle_hash",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.migration-lifecycle.v1" },
+    "lifecycle_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "wave_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+      }
+    },
+    "parallel_run": { "$ref": "#/$defs/parallelRun" },
+    "cutover": { "$ref": "#/$defs/cutover" },
+    "hypercare": { "$ref": "#/$defs/hypercare" },
+    "source_decommission": { "$ref": "#/$defs/sourceDecommission" },
+    "lifecycle_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "cutover": {
+            "properties": {
+              "status": { "enum": ["ready", "authorized", "executing", "accepted"] }
+            },
+            "required": ["status"]
+          }
+        },
+        "required": ["cutover"]
+      },
+      "then": {
+        "properties": {
+          "parallel_run": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "parallel_run": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          }
+        },
+        "required": ["parallel_run"]
+      },
+      "then": {
+        "properties": {
+          "cutover": {
+            "properties": {
+              "target_release_hash": {
+                "$ref": "#/$defs/envelopeSha256"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "hypercare": {
+            "properties": {
+              "status": { "enum": ["active", "completed", "extended"] }
+            },
+            "required": ["status"]
+          }
+        },
+        "required": ["hypercare"]
+      },
+      "then": {
+        "properties": {
+          "cutover": {
+            "properties": { "status": { "const": "accepted" } },
+            "required": ["status"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "source_decommission": {
+            "properties": {
+              "status": { "enum": ["authorized", "completed"] }
+            },
+            "required": ["status"]
+          }
+        },
+        "required": ["source_decommission"]
+      },
+      "then": {
+        "properties": {
+          "hypercare": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "parallelRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "owner_ref",
+        "source_environment_ref",
+        "target_environment_ref",
+        "planned_window",
+        "minimum_observation_cycles",
+        "observed_cycles",
+        "entry_criteria",
+        "exit_criteria",
+        "qa_result_refs",
+        "metric_evidence_refs",
+        "rollback_plan_ref",
+        "acceptance_decision"
+      ],
+      "properties": {
+        "status": { "enum": ["not_started", "active", "completed", "blocked"] },
+        "owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "source_environment_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "target_environment_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "planned_window": { "$ref": "#/$defs/timeWindow" },
+        "minimum_observation_cycles": { "type": "integer", "minimum": 1 },
+        "observed_cycles": { "type": "integer", "minimum": 0 },
+        "entry_criteria": { "$ref": "#/$defs/criteria" },
+        "exit_criteria": { "$ref": "#/$defs/criteria" },
+        "qa_result_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "metric_evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "rollback_plan_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "acceptance_decision": {
+          "oneOf": [
+            { "$ref": "#/$defs/lifecycleDecision" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "enum": ["active", "completed"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "entry_criteria": {
+                "items": {
+                  "properties": { "status": { "const": "passed" } }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "qa_result_refs": { "minItems": 1 },
+              "metric_evidence_refs": { "minItems": 1 },
+              "observed_cycles": { "minimum": 1 },
+              "exit_criteria": {
+                "items": {
+                  "properties": { "status": { "const": "passed" } }
+                }
+              },
+              "acceptance_decision": {
+                "allOf": [
+                  { "$ref": "#/$defs/lifecycleDecision" },
+                  {
+                    "properties": {
+                      "action": { "const": "accept_parallel_run" }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cutover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "owner_ref",
+        "planned_window",
+        "runbook_ref",
+        "rollback_plan_ref",
+        "approval_decision",
+        "acceptance_decision",
+        "source_snapshot_hash",
+        "target_release_hash",
+        "evidence_refs"
+      ],
+      "properties": {
+        "status": { "enum": ["planned", "ready", "authorized", "executing", "accepted", "rolled_back", "blocked"] },
+        "owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "planned_window": { "$ref": "#/$defs/timeWindow" },
+        "runbook_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "rollback_plan_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "approval_decision": {
+          "oneOf": [
+            { "$ref": "#/$defs/lifecycleDecision" },
+            { "type": "null" }
+          ]
+        },
+        "acceptance_decision": {
+          "oneOf": [
+            { "$ref": "#/$defs/lifecycleDecision" },
+            { "type": "null" }
+          ]
+        },
+        "source_snapshot_hash": {
+          "$ref": "#/$defs/envelopeSha256"
+        },
+        "target_release_hash": {
+          "oneOf": [
+            { "$ref": "#/$defs/envelopeSha256" },
+            { "type": "null" }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "enum": ["authorized", "executing", "accepted"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "approval_decision": {
+                "allOf": [
+                  { "$ref": "#/$defs/lifecycleDecision" },
+                  {
+                    "properties": {
+                      "action": { "const": "authorize_cutover" }
+                    }
+                  }
+                ]
+              },
+              "target_release_hash": {
+                "$ref": "#/$defs/envelopeSha256"
+              },
+              "evidence_refs": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "accepted" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "acceptance_decision": {
+                "allOf": [
+                  { "$ref": "#/$defs/lifecycleDecision" },
+                  {
+                    "properties": {
+                      "action": { "const": "accept_cutover" }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "hypercare": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "owner_ref",
+        "planned_window",
+        "support_model_ref",
+        "exit_criteria",
+        "incident_refs",
+        "metric_evidence_refs",
+        "acceptance_decision"
+      ],
+      "properties": {
+        "status": { "enum": ["planned", "active", "completed", "extended", "blocked"] },
+        "owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "planned_window": { "$ref": "#/$defs/timeWindow" },
+        "support_model_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "exit_criteria": { "$ref": "#/$defs/criteria" },
+        "incident_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "metric_evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "acceptance_decision": {
+          "oneOf": [
+            { "$ref": "#/$defs/lifecycleDecision" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "metric_evidence_refs": { "minItems": 1 },
+              "exit_criteria": {
+                "items": {
+                  "properties": { "status": { "const": "passed" } }
+                }
+              },
+              "acceptance_decision": {
+                "allOf": [
+                  { "$ref": "#/$defs/lifecycleDecision" },
+                  {
+                    "properties": {
+                      "action": { "const": "accept_hypercare" }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "sourceDecommission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "owner_ref", "source_object_ids", "approval_decision", "reversibility_window_days", "evidence_refs"],
+      "properties": {
+        "status": { "enum": ["deferred", "planned", "authorized", "completed", "blocked"] },
+        "owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "source_object_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "approval_decision": {
+          "oneOf": [
+            { "$ref": "#/$defs/lifecycleDecision" },
+            { "type": "null" }
+          ]
+        },
+        "reversibility_window_days": { "type": "integer", "minimum": 0 },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "enum": ["authorized", "completed"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "source_object_ids": { "minItems": 1 },
+              "approval_decision": {
+                "allOf": [
+                  { "$ref": "#/$defs/lifecycleDecision" },
+                  {
+                    "properties": {
+                      "action": { "const": "authorize_source_decommission" }
+                    }
+                  }
+                ]
+              },
+              "evidence_refs": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "completed" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": { "evidence_refs": { "minItems": 1 } }
+          }
+        }
+      ]
+    },
+    "lifecycleDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_id",
+        "decision_ref",
+        "action",
+        "decided_by_ref",
+        "decided_at",
+        "scope_ref",
+        "artifact_fingerprint",
+        "expires_at"
+      ],
+      "properties": {
+        "decision_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "decision_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "action": {
+          "enum": [
+            "accept_parallel_run",
+            "authorize_cutover",
+            "accept_cutover",
+            "accept_hypercare",
+            "authorize_source_decommission"
+          ]
+        },
+        "decided_by_ref": {
+          "type": "string",
+          "pattern": "^(human-ref|person-ref|person)://.+$"
+        },
+        "decided_at": { "type": "string", "format": "date-time" },
+        "scope_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "artifact_fingerprint": {
+          "$ref": "#/$defs/envelopeSha256"
+        },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "envelopeSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "timeWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["starts_at", "ends_at", "timezone"],
+      "properties": {
+        "starts_at": { "type": "string", "format": "date-time" },
+        "ends_at": { "type": "string", "format": "date-time" },
+        "timezone": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "criterion_id",
+          "description",
+          "evidence_required",
+          "status",
+          "evidence_refs"
+        ],
+        "properties": {
+          "criterion_id": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          },
+          "description": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "evidence_required": { "type": "boolean" },
+          "status": { "enum": ["pending", "passed", "blocked"] },
+          "evidence_refs": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "evidence_required": { "const": true },
+                "status": { "const": "passed" }
+              },
+              "required": ["evidence_required", "status"]
+            },
+            "then": {
+              "properties": { "evidence_refs": { "minItems": 1 } }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

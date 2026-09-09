@@ -1,0 +1,427 @@
+{
+  "$defs": {
+    "ArtifactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "content_hash"
+      ],
+      "title": "ArtifactInput",
+      "type": "object"
+    },
+    "CustomSqlBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "connectionId": {
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+          "title": "Connectionid",
+          "type": "string"
+        },
+        "customSqlId": {
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+          "title": "Customsqlid",
+          "type": "string"
+        },
+        "type": {
+          "const": "custom-sql",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "customSqlId",
+        "connectionId"
+      ],
+      "title": "CustomSqlBinding",
+      "type": "object"
+    },
+    "DataModelElementBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "dataModelId": {
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+          "title": "Datamodelid",
+          "type": "string"
+        },
+        "elementId": {
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+          "title": "Elementid",
+          "type": "string"
+        },
+        "type": {
+          "const": "data-model",
+          "title": "Type",
+          "type": "string"
+        },
+        "versionTagId": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Versiontagid"
+        }
+      },
+      "required": [
+        "type",
+        "dataModelId",
+        "elementId"
+      ],
+      "title": "DataModelElementBinding",
+      "type": "object"
+    },
+    "DataModelSnapshotPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "data_model_id": {
+          "title": "Data Model Id",
+          "type": "string"
+        },
+        "documented_omissions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Documented Omissions",
+          "type": "array"
+        },
+        "sanitized_specification": {
+          "additionalProperties": true,
+          "title": "Sanitized Specification",
+          "type": "object"
+        },
+        "source_bindings": {
+          "default": [],
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "custom-sql": "#/$defs/CustomSqlBinding",
+                "data-model": "#/$defs/DataModelElementBinding",
+                "dataset": "#/$defs/ModelDatasetBinding",
+                "table": "#/$defs/ModelTableBinding"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/DataModelElementBinding"
+              },
+              {
+                "$ref": "#/$defs/ModelTableBinding"
+              },
+              {
+                "$ref": "#/$defs/ModelDatasetBinding"
+              },
+              {
+                "$ref": "#/$defs/CustomSqlBinding"
+              }
+            ]
+          },
+          "title": "Source Bindings",
+          "type": "array"
+        },
+        "source_bindings_version_context": {
+          "const": "bracketed_unversioned",
+          "default": "bracketed_unversioned",
+          "title": "Source Bindings Version Context",
+          "type": "string"
+        },
+        "source_freeze": {
+          "$ref": "#/$defs/SourceFreeze"
+        },
+        "specification_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Specification Sha256",
+          "type": "string"
+        },
+        "specification_state": {
+          "enum": [
+            "bound",
+            "unavailable"
+          ],
+          "title": "Specification State",
+          "type": "string"
+        },
+        "specification_unavailability_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "acquisition_unavailable",
+                "identity_mismatch",
+                "version_mismatch"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specification Unavailability Reason"
+        },
+        "untrusted_source_content": {
+          "const": true,
+          "default": true,
+          "title": "Untrusted Source Content",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "data_model_id",
+        "source_freeze",
+        "specification_state",
+        "sanitized_specification",
+        "specification_sha256",
+        "documented_omissions"
+      ],
+      "title": "DataModelSnapshotPayload",
+      "type": "object"
+    },
+    "ModelDatasetBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "datasetId": {
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+          "title": "Datasetid",
+          "type": "string"
+        },
+        "type": {
+          "const": "dataset",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "datasetId"
+      ],
+      "title": "ModelDatasetBinding",
+      "type": "object"
+    },
+    "ModelTableBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "tableId": {
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,2047}$",
+          "title": "Tableid",
+          "type": "string"
+        },
+        "type": {
+          "const": "table",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "tableId"
+      ],
+      "title": "ModelTableBinding",
+      "type": "object"
+    },
+    "SourceFreeze": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_ref": {
+          "title": "Approval Ref",
+          "type": "string"
+        },
+        "approved_by_ref": {
+          "title": "Approved By Ref",
+          "type": "string"
+        },
+        "data_model_document_version": {
+          "minimum": 1,
+          "title": "Data Model Document Version",
+          "type": "integer"
+        },
+        "source_reference": {
+          "title": "Source Reference",
+          "type": "string"
+        },
+        "strategy": {
+          "enum": [
+            "published_version",
+            "version_tag",
+            "documented_alternative"
+          ],
+          "title": "Strategy",
+          "type": "string"
+        },
+        "workbook_published_version": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Workbook Published Version"
+        },
+        "workbook_tag_name": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "pattern": "^[^/\\\\?#%\\x00-\\x1f\\x7f]+$",
+          "title": "Workbook Tag Name"
+        }
+      },
+      "required": [
+        "strategy",
+        "source_reference",
+        "data_model_document_version",
+        "approved_by_ref",
+        "approval_ref"
+      ],
+      "title": "SourceFreeze",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "documented_fact",
+        "stated_evidence",
+        "observed_tenant_behavior",
+        "field_pattern",
+        "assumption",
+        "recommendation",
+        "unresolved_gap",
+        "synthetic_fixture"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "immutable": {
+      "const": true,
+      "default": true,
+      "title": "Immutable",
+      "type": "boolean"
+    },
+    "payload": {
+      "$ref": "#/$defs/DataModelSnapshotPayload"
+    },
+    "producer": {
+      "title": "Producer",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "sigma-data-model-snapshot.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "source_references": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source References",
+      "type": "array"
+    },
+    "superseded_by_artifact_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Superseded By Artifact Id"
+    },
+    "supersedes_artifact_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Artifact Id"
+    },
+    "supersession_state": {
+      "default": "current",
+      "enum": [
+        "current",
+        "superseded"
+      ],
+      "title": "Supersession State",
+      "type": "string"
+    },
+    "upstream_hashes": {
+      "items": {
+        "$ref": "#/$defs/ArtifactInput"
+      },
+      "title": "Upstream Hashes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "artifact_id",
+    "run_id",
+    "scope_id",
+    "created_at",
+    "producer",
+    "source_references",
+    "upstream_hashes",
+    "content_hash",
+    "classification",
+    "schema_version",
+    "payload"
+  ],
+  "title": "SigmaDataModelSnapshotArtifact",
+  "type": "object"
+}

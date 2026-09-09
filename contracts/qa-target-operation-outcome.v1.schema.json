@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/qa-target-operation-outcome.v1.schema.json",
+  "title": "Canonical QA target-operation outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "evidence_class",
+    "outcome_id",
+    "outcome_ref",
+    "target_environment_ref",
+    "target_environment_tier",
+    "operation_id",
+    "request_fingerprint",
+    "promoted_target_artifact",
+    "receipt_binding",
+    "readback_binding",
+    "observed_content_fingerprint",
+    "observed_target_revision",
+    "success_state",
+    "recorded_at",
+    "outcome_hash",
+    "authorizes_tenant_acceptance",
+    "authorizes_production_readiness",
+    "authorizes_promotion",
+    "authorizes_cutover",
+    "authorizes_decommissioning",
+    "immutable"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "domo-to-omni.qa-target-operation-outcome.v1"
+    },
+    "tenant_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "wave_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "migration_unit_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "validation_cycle_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "evidence_class": {
+      "$ref": "qa-fixture.v2.schema.json#/$defs/evidenceClass"
+    },
+    "outcome_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "outcome_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "target_environment_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "target_environment_tier": {
+      "enum": ["development", "staging", "production"]
+    },
+    "operation_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "request_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "promoted_target_artifact": {
+      "$ref": "qa-acceptance-suite.v1.schema.json#/$defs/artifactBinding"
+    },
+    "receipt_binding": {
+      "allOf": [
+        {
+          "$ref": "qa-acceptance-suite.v1.schema.json#/$defs/targetReceiptBinding"
+        },
+        {
+          "properties": {
+            "artifact": {
+              "properties": {
+                "artifact_type": { "const": "target_write_receipt" }
+              },
+              "required": ["artifact_type"]
+            }
+          },
+          "required": ["artifact"]
+        }
+      ]
+    },
+    "readback_binding": {
+      "allOf": [
+        {
+          "$ref": "qa-acceptance-suite.v1.schema.json#/$defs/targetReadbackBinding"
+        },
+        {
+          "properties": {
+            "artifact": {
+              "properties": {
+                "artifact_type": {
+                  "enum": [
+                    "document_readback",
+                    "dbt_test_evidence",
+                    "model_validation",
+                    "semantic_query_evidence",
+                    "target_visual_fixtures",
+                    "target_readback"
+                  ]
+                }
+              },
+              "required": ["artifact_type"]
+            }
+          },
+          "required": ["artifact"]
+        }
+      ]
+    },
+    "observed_content_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observed_target_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "success_state": { "const": "succeeded_and_matched" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "outcome_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "authorizes_tenant_acceptance": { "const": false },
+    "authorizes_production_readiness": { "const": false },
+    "authorizes_promotion": { "const": false },
+    "authorizes_cutover": { "const": false },
+    "authorizes_decommissioning": { "const": false },
+    "immutable": { "const": true }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidence_class": { "enum": ["synthetic_local", "development"] }
+        },
+        "required": ["evidence_class"]
+      },
+      "then": {
+        "properties": {
+          "target_environment_tier": { "const": "development" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "evidence_class": { "const": "staging" } },
+        "required": ["evidence_class"]
+      },
+      "then": {
+        "properties": {
+          "target_environment_tier": { "const": "staging" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "evidence_class": { "const": "production" } },
+        "required": ["evidence_class"]
+      },
+      "then": {
+        "properties": {
+          "target_environment_tier": { "const": "production" }
+        }
+      }
+    }
+  ]
+}

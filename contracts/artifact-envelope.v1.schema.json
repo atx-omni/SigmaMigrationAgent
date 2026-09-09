@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/artifact-envelope.v1.schema.json",
+  "title": "Versioned migration artifact envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "tenant_ref",
+    "run_id",
+    "artifact_id",
+    "artifact_type",
+    "revision",
+    "ref",
+    "content_sha256",
+    "producer_ref",
+    "producer_work_package_id",
+    "input_artifacts",
+    "validation_cycle_id",
+    "created_at",
+    "lineage_sha256",
+    "migration_unit_id",
+    "sensitivity",
+    "retention_policy_ref",
+    "immutable"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.artifact-envelope.v1" },
+    "tenant_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "artifact_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "artifact_type": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "revision": { "type": "integer", "minimum": 1 },
+    "ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "producer_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "producer_work_package_id": {
+      "oneOf": [
+        { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        { "type": "null" }
+      ]
+    },
+    "input_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifact_id", "revision", "content_sha256"],
+        "properties": {
+          "artifact_id": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          },
+          "revision": { "type": "integer", "minimum": 1 },
+          "content_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "validation_cycle_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "lineage_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "migration_unit_id": {
+      "oneOf": [
+        { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        { "type": "null" }
+      ]
+    },
+    "sensitivity": {
+      "enum": ["public", "internal", "confidential", "restricted", "highly_restricted"]
+    },
+    "retention_policy_ref": {
+      "oneOf": [
+        { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        { "type": "null" }
+      ]
+    },
+    "immutable": { "const": true }
+  }
+}

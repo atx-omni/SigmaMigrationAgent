@@ -1,0 +1,3005 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/atx-omni/DomoMigrationAgent/contracts/dashboard-rebuild-plan.v1.schema.json",
+  "$defs": {
+    "ApprovedBehaviorException": {
+      "additionalProperties": false,
+      "properties": {
+        "exception_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Exception Id",
+          "type": "string"
+        },
+        "approval_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Approval Ref",
+          "type": "string"
+        },
+        "approval_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Approval Hash",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "exception_id",
+        "approval_ref",
+        "approval_hash",
+        "rationale"
+      ],
+      "title": "ApprovedBehaviorException",
+      "type": "object"
+    },
+    "AssessmentValidationContext": {
+      "additionalProperties": false,
+      "description": "Full evidence context that makes an assessment reproducible and stale-able.",
+      "properties": {
+        "inventory_closure": {
+          "$ref": "#/$defs/InventoryClosureReference"
+        },
+        "source_graph": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "portfolio_inventory": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "repository_inventory": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "target_context": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "policy_bundle": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "approval_owner_policy": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "fixture_bundle": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "consumer_contract_set": {
+          "$ref": "#/$defs/ValidationArtifactReference"
+        },
+        "context_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Context Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "inventory_closure",
+        "source_graph",
+        "portfolio_inventory",
+        "repository_inventory",
+        "target_context",
+        "policy_bundle",
+        "approval_owner_policy",
+        "fixture_bundle",
+        "consumer_contract_set",
+        "context_hash"
+      ],
+      "title": "AssessmentValidationContext",
+      "type": "object"
+    },
+    "BehaviorResolution": {
+      "additionalProperties": false,
+      "properties": {
+        "resolution_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Resolution Id",
+          "type": "string"
+        },
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "behavior_kind": {
+          "enum": [
+            "app",
+            "embed",
+            "refresh",
+            "freshness",
+            "cache",
+            "schedule",
+            "alert",
+            "export",
+            "writeback",
+            "workflow_side_effect",
+            "unsupported_visual",
+            "formatting",
+            "layout",
+            "responsive",
+            "security",
+            "persona"
+          ],
+          "title": "Behavior Kind",
+          "type": "string"
+        },
+        "source_behavior_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Behavior Hash",
+          "type": "string"
+        },
+        "owner_ref": {
+          "pattern": "^(?:agent-ref|human-ref|person-ref|person):.+$",
+          "title": "Owner Ref",
+          "type": "string"
+        },
+        "disposition": {
+          "enum": [
+            "mapped",
+            "external_handoff",
+            "blocked",
+            "approved_exception"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "accepted",
+            "completed",
+            "blocked"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "target_ref": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Ref"
+        },
+        "handoff_ref": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Handoff Ref"
+        },
+        "blocker_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blocker Reason"
+        },
+        "approved_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApprovedBehaviorException"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "resolution_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Resolution Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resolution_id",
+        "source_behavior_id",
+        "behavior_kind",
+        "source_behavior_hash",
+        "owner_ref",
+        "disposition",
+        "status",
+        "approved_exception",
+        "evidence_refs",
+        "resolution_hash"
+      ],
+      "title": "BehaviorResolution",
+      "type": "object"
+    },
+    "CardRebuildMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_card_id": {
+          "minLength": 1,
+          "title": "Source Card Id",
+          "type": "string"
+        },
+        "source_card_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Card Revision Hash",
+          "type": "string"
+        },
+        "card_kind": {
+          "enum": [
+            "query",
+            "text",
+            "markdown",
+            "image",
+            "other"
+          ],
+          "title": "Card Kind",
+          "type": "string"
+        },
+        "source_query_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Query Ids",
+          "type": "array"
+        },
+        "source_placement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Placement Ids",
+          "type": "array"
+        },
+        "target_card_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Target Card Id",
+          "type": "string"
+        },
+        "target_card_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Target Card Ref",
+          "type": "string"
+        },
+        "content_ref": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Ref"
+        },
+        "content_completeness": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentCardCompleteness"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "behavior_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Behavior Resolution Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "mapping_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Mapping Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_card_id",
+        "source_card_revision_hash",
+        "card_kind",
+        "source_query_ids",
+        "source_placement_ids",
+        "target_card_id",
+        "target_card_ref",
+        "content_completeness",
+        "evidence_refs",
+        "mapping_hash"
+      ],
+      "title": "CardRebuildMapping",
+      "type": "object"
+    },
+    "ContentCardCompleteness": {
+      "additionalProperties": false,
+      "description": "Closed DSH-01 boundary for a text, markdown, or image Card.",
+      "properties": {
+        "source_card_id": {
+          "minLength": 1,
+          "title": "Source Card Id",
+          "type": "string"
+        },
+        "source_card_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Card Revision Hash",
+          "type": "string"
+        },
+        "source_card_evidence_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Source Card Evidence Ref",
+          "type": "string"
+        },
+        "source_card_evidence_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Card Evidence Hash",
+          "type": "string"
+        },
+        "target_card_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Target Card Id",
+          "type": "string"
+        },
+        "target_card_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Target Card Ref",
+          "type": "string"
+        },
+        "source_placement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Placement Ids",
+          "type": "array"
+        },
+        "placements": {
+          "items": {
+            "$ref": "#/$defs/ContentCardPlacementMapping"
+          },
+          "minItems": 1,
+          "title": "Placements",
+          "type": "array"
+        },
+        "formatting": {
+          "items": {
+            "$ref": "#/$defs/FormattingMapping"
+          },
+          "title": "Formatting",
+          "type": "array"
+        },
+        "formatting_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formatting Resolution Id"
+        },
+        "security": {
+          "items": {
+            "$ref": "#/$defs/SecurityMapping"
+          },
+          "title": "Security",
+          "type": "array"
+        },
+        "security_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Security Resolution Id"
+        },
+        "personas": {
+          "items": {
+            "$ref": "#/$defs/PersonaMapping"
+          },
+          "title": "Personas",
+          "type": "array"
+        },
+        "persona_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Persona Resolution Id"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/ContentCardOperationMapping"
+          },
+          "minItems": 1,
+          "title": "Operations",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "completeness_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Completeness Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_card_id",
+        "source_card_revision_hash",
+        "source_card_evidence_ref",
+        "source_card_evidence_hash",
+        "target_card_id",
+        "target_card_ref",
+        "source_placement_ids",
+        "placements",
+        "formatting",
+        "security",
+        "personas",
+        "operations",
+        "evidence_refs",
+        "completeness_hash"
+      ],
+      "title": "ContentCardCompleteness",
+      "type": "object"
+    },
+    "ContentCardOperationMapping": {
+      "additionalProperties": false,
+      "description": "Mapped, explicitly inapplicable, or resolved content-Card operation.",
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "source_card_id": {
+          "minLength": 1,
+          "title": "Source Card Id",
+          "type": "string"
+        },
+        "source_card_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Card Revision Hash",
+          "type": "string"
+        },
+        "operation_kind": {
+          "enum": [
+            "none",
+            "refresh",
+            "freshness",
+            "cache",
+            "schedule",
+            "alert",
+            "export",
+            "writeback",
+            "workflow_side_effect",
+            "embed",
+            "app"
+          ],
+          "title": "Operation Kind",
+          "type": "string"
+        },
+        "owner_ref": {
+          "pattern": "^(?:agent-ref|human-ref|person-ref|person):.+$",
+          "title": "Owner Ref",
+          "type": "string"
+        },
+        "disposition": {
+          "enum": [
+            "mapped",
+            "not_applicable",
+            "behavior_resolution"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "target_ref": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Ref"
+        },
+        "behavior_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Behavior Resolution Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "source_card_id",
+        "source_card_revision_hash",
+        "operation_kind",
+        "owner_ref",
+        "disposition",
+        "evidence_refs"
+      ],
+      "title": "ContentCardOperationMapping",
+      "type": "object"
+    },
+    "ContentCardPlacementMapping": {
+      "additionalProperties": false,
+      "description": "Exact source-placement reconstruction for one zero-query content Card.",
+      "properties": {
+        "source_card_id": {
+          "minLength": 1,
+          "title": "Source Card Id",
+          "type": "string"
+        },
+        "source_card_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Card Revision Hash",
+          "type": "string"
+        },
+        "source_placement_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Placement Id",
+          "type": "string"
+        },
+        "source_placement_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Placement Revision Hash",
+          "type": "string"
+        },
+        "source_placement_evidence_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Source Placement Evidence Ref",
+          "type": "string"
+        },
+        "source_placement_evidence_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Placement Evidence Hash",
+          "type": "string"
+        },
+        "target_card_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Target Card Id",
+          "type": "string"
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutMapping"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layout_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layout Resolution Id"
+        },
+        "responsive": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResponsiveMapping"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "responsive_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Responsive Resolution Id"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_card_id",
+        "source_card_revision_hash",
+        "source_placement_id",
+        "source_placement_revision_hash",
+        "source_placement_evidence_ref",
+        "source_placement_evidence_hash",
+        "target_card_id",
+        "layout",
+        "responsive",
+        "evidence_refs"
+      ],
+      "title": "ContentCardPlacementMapping",
+      "type": "object"
+    },
+    "ControlMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetTopicComponentRef"
+        },
+        "control_type": {
+          "enum": [
+            "select",
+            "multi_select",
+            "date_range",
+            "input",
+            "toggle"
+          ],
+          "title": "Control Type",
+          "type": "string"
+        },
+        "propagation": {
+          "enum": [
+            "all_cards",
+            "selected_cards",
+            "source_card_only"
+          ],
+          "title": "Propagation",
+          "type": "string"
+        },
+        "target_card_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Target Card Ids",
+          "type": "array"
+        },
+        "target_query_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Target Query Ids",
+          "type": "array"
+        },
+        "default_value_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Default Value Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target",
+        "control_type",
+        "propagation",
+        "target_card_ids",
+        "target_query_ids",
+        "default_value_ref"
+      ],
+      "title": "ControlMapping",
+      "type": "object"
+    },
+    "DashboardConsumerDecisionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "behavior": {
+          "enum": [
+            "preserved",
+            "approved_change"
+          ],
+          "title": "Behavior",
+          "type": "string"
+        },
+        "accepted_difference_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Accepted Difference Ref"
+        }
+      },
+      "required": [
+        "decision_id",
+        "behavior",
+        "accepted_difference_ref"
+      ],
+      "title": "DashboardConsumerDecisionBinding",
+      "type": "object"
+    },
+    "DashboardDecisionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "decision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Decision Hash",
+          "type": "string"
+        },
+        "input_fingerprint": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Input Fingerprint",
+          "type": "string"
+        },
+        "validation_cycle_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Validation Cycle Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "decision_id",
+        "decision_hash",
+        "input_fingerprint",
+        "validation_cycle_id"
+      ],
+      "title": "DashboardDecisionBinding",
+      "type": "object"
+    },
+    "DashboardPlanProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "producer_ref": {
+          "const": "agent-ref://domo_to_omni_architect",
+          "title": "Producer Ref",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "producer_ref",
+        "source_refs",
+        "evidence_refs"
+      ],
+      "title": "DashboardPlanProvenance",
+      "type": "object"
+    },
+    "DashboardPlanSecurityMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "enum": [
+            "internal",
+            "confidential",
+            "restricted"
+          ],
+          "title": "Classification",
+          "type": "string"
+        }
+      },
+      "required": [
+        "classification"
+      ],
+      "title": "DashboardPlanSecurityMetadata",
+      "type": "object"
+    },
+    "DashboardProfileBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Profile Hash",
+          "type": "string"
+        },
+        "system": {
+          "enum": [
+            "domo",
+            "dbt",
+            "snowflake",
+            "omni"
+          ],
+          "title": "System",
+          "type": "string"
+        },
+        "asset_id": {
+          "minLength": 1,
+          "title": "Asset Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile_id",
+        "profile_hash",
+        "system",
+        "asset_id"
+      ],
+      "title": "DashboardProfileBinding",
+      "type": "object"
+    },
+    "DashboardTopicBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "blueprint_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Blueprint Id",
+          "type": "string"
+        },
+        "blueprint_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Blueprint Hash",
+          "type": "string"
+        },
+        "accepted_topic_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Accepted Topic Ref",
+          "type": "string"
+        },
+        "accepted_topic_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Accepted Topic Hash",
+          "type": "string"
+        },
+        "readiness_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Readiness Ref",
+          "type": "string"
+        },
+        "readiness_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Readiness Hash",
+          "type": "string"
+        },
+        "topic_validation_fingerprint": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Topic Validation Fingerprint",
+          "type": "string"
+        },
+        "component_catalog_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Component Catalog Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "blueprint_id",
+        "blueprint_hash",
+        "accepted_topic_ref",
+        "accepted_topic_hash",
+        "readiness_ref",
+        "readiness_hash",
+        "topic_validation_fingerprint",
+        "component_catalog_hash"
+      ],
+      "title": "DashboardTopicBinding",
+      "type": "object"
+    },
+    "DrillMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "ordered_components": {
+          "items": {
+            "$ref": "#/$defs/TargetTopicComponentRef"
+          },
+          "minItems": 1,
+          "title": "Ordered Components",
+          "type": "array"
+        },
+        "terminal_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Terminal Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "ordered_components",
+        "terminal_ref"
+      ],
+      "title": "DrillMapping",
+      "type": "object"
+    },
+    "FieldSelectionMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetTopicComponentRef"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target"
+      ],
+      "title": "FieldSelectionMapping",
+      "type": "object"
+    },
+    "FilterContextMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "page",
+            "card",
+            "query"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "precedence": {
+          "minimum": 0,
+          "title": "Precedence",
+          "type": "integer"
+        },
+        "applies_to_filter_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Applies To Filter Ids",
+          "type": "array"
+        },
+        "context_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Context Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "scope",
+        "precedence",
+        "applies_to_filter_ids",
+        "context_ref"
+      ],
+      "title": "FilterContextMapping",
+      "type": "object"
+    },
+    "FilterMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetTopicComponentRef"
+        },
+        "operator": {
+          "minLength": 1,
+          "title": "Operator",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "row",
+            "pre_aggregate",
+            "post_aggregate",
+            "dashboard"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "value_mode": {
+          "enum": [
+            "literal_set",
+            "parameter",
+            "runtime",
+            "user_attribute"
+          ],
+          "title": "Value Mode",
+          "type": "string"
+        },
+        "value_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Value Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target",
+        "operator",
+        "stage",
+        "value_mode",
+        "value_ref"
+      ],
+      "title": "FilterMapping",
+      "type": "object"
+    },
+    "FormattingMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "format_kind": {
+          "enum": [
+            "number",
+            "currency",
+            "percent",
+            "date",
+            "text",
+            "visual"
+          ],
+          "title": "Format Kind",
+          "type": "string"
+        },
+        "target_format_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Target Format Ref",
+          "type": "string"
+        },
+        "preserves_value_semantics": {
+          "const": true,
+          "default": true,
+          "title": "Preserves Value Semantics",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "format_kind",
+        "target_format_ref"
+      ],
+      "title": "FormattingMapping",
+      "type": "object"
+    },
+    "GridPlacement": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "minimum": 0,
+          "title": "X",
+          "type": "integer"
+        },
+        "y": {
+          "minimum": 0,
+          "title": "Y",
+          "type": "integer"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "GridPlacement",
+      "type": "object"
+    },
+    "GroupingMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetTopicComponentRef"
+        },
+        "position": {
+          "minimum": 0,
+          "title": "Position",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target",
+        "position"
+      ],
+      "title": "GroupingMapping",
+      "type": "object"
+    },
+    "InteractionMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "interaction_type": {
+          "enum": [
+            "cross_filter",
+            "navigate",
+            "open_url",
+            "select",
+            "custom"
+          ],
+          "title": "Interaction Type",
+          "type": "string"
+        },
+        "source_card_id": {
+          "minLength": 1,
+          "title": "Source Card Id",
+          "type": "string"
+        },
+        "target_card_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Card Ids",
+          "type": "array"
+        },
+        "target_query_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Query Ids",
+          "type": "array"
+        },
+        "target_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Target Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "interaction_type",
+        "source_card_id",
+        "target_card_ids",
+        "target_query_ids",
+        "target_ref"
+      ],
+      "title": "InteractionMapping",
+      "type": "object"
+    },
+    "InventoryClosureReference": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Artifact Ref",
+          "type": "string"
+        },
+        "artifact_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Artifact Hash",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "incomplete"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_ref",
+        "artifact_hash",
+        "revision",
+        "status"
+      ],
+      "title": "InventoryClosureReference",
+      "type": "object"
+    },
+    "LayoutMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "source_placement_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Placement Id",
+          "type": "string"
+        },
+        "target_card_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Target Card Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/GridPlacement"
+        },
+        "target": {
+          "$ref": "#/$defs/GridPlacement"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "source_placement_id",
+        "target_card_id",
+        "source",
+        "target"
+      ],
+      "title": "LayoutMapping",
+      "type": "object"
+    },
+    "MeasureSelectionMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetTopicComponentRef"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target"
+      ],
+      "title": "MeasureSelectionMapping",
+      "type": "object"
+    },
+    "OperationMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "operation_kind": {
+          "enum": [
+            "refresh",
+            "freshness",
+            "cache",
+            "schedule",
+            "alert",
+            "export",
+            "writeback",
+            "workflow_side_effect",
+            "embed",
+            "app"
+          ],
+          "title": "Operation Kind",
+          "type": "string"
+        },
+        "owner_ref": {
+          "pattern": "^(?:agent-ref|human-ref|person-ref|person):.+$",
+          "title": "Owner Ref",
+          "type": "string"
+        },
+        "target_ref": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Ref"
+        },
+        "behavior_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Behavior Resolution Id"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "operation_kind",
+        "owner_ref"
+      ],
+      "title": "OperationMapping",
+      "type": "object"
+    },
+    "PageRebuildMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_page_id": {
+          "minLength": 1,
+          "title": "Source Page Id",
+          "type": "string"
+        },
+        "source_page_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Page Revision Hash",
+          "type": "string"
+        },
+        "target_dashboard_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Target Dashboard Ref",
+          "type": "string"
+        },
+        "source_card_order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Card Order",
+          "type": "array"
+        },
+        "target_card_order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Card Order",
+          "type": "array"
+        },
+        "source_placement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Placement Ids",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "mapping_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Mapping Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_page_id",
+        "source_page_revision_hash",
+        "target_dashboard_ref",
+        "source_card_order",
+        "target_card_order",
+        "source_placement_ids",
+        "evidence_refs",
+        "mapping_hash"
+      ],
+      "title": "PageRebuildMapping",
+      "type": "object"
+    },
+    "PersonaMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "persona_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Persona Ref",
+          "type": "string"
+        },
+        "access": {
+          "enum": [
+            "allowed",
+            "denied"
+          ],
+          "title": "Access",
+          "type": "string"
+        },
+        "derived_field_access": {
+          "enum": [
+            "visible",
+            "masked",
+            "hidden",
+            "not_applicable"
+          ],
+          "title": "Derived Field Access",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "persona_ref",
+        "access",
+        "derived_field_access"
+      ],
+      "title": "PersonaMapping",
+      "type": "object"
+    },
+    "QueryBehaviorDenominator": {
+      "additionalProperties": false,
+      "properties": {
+        "field_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Field Ids",
+          "type": "array"
+        },
+        "measure_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Measure Ids",
+          "type": "array"
+        },
+        "grouping_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Grouping Ids",
+          "type": "array"
+        },
+        "sort_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sort Ids",
+          "type": "array"
+        },
+        "filter_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Filter Ids",
+          "type": "array"
+        },
+        "filter_context_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Filter Context Ids",
+          "type": "array"
+        },
+        "control_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Control Ids",
+          "type": "array"
+        },
+        "interaction_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Interaction Ids",
+          "type": "array"
+        },
+        "drill_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Drill Ids",
+          "type": "array"
+        },
+        "visualization_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Visualization Ids",
+          "type": "array"
+        },
+        "formatting_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Formatting Ids",
+          "type": "array"
+        },
+        "layout_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Layout Ids",
+          "type": "array"
+        },
+        "responsive_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Responsive Ids",
+          "type": "array"
+        },
+        "security_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Security Ids",
+          "type": "array"
+        },
+        "persona_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Persona Ids",
+          "type": "array"
+        },
+        "operation_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Operation Ids",
+          "type": "array"
+        },
+        "denominator_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Denominator Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field_ids",
+        "measure_ids",
+        "grouping_ids",
+        "sort_ids",
+        "filter_ids",
+        "filter_context_ids",
+        "control_ids",
+        "interaction_ids",
+        "drill_ids",
+        "visualization_ids",
+        "formatting_ids",
+        "layout_ids",
+        "responsive_ids",
+        "security_ids",
+        "persona_ids",
+        "operation_ids",
+        "denominator_hash"
+      ],
+      "title": "QueryBehaviorDenominator",
+      "type": "object"
+    },
+    "QueryDisposition": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "blocked",
+            "approved_exception"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "owner_ref": {
+          "pattern": "^(?:agent-ref|human-ref|person-ref|person):.+$",
+          "title": "Owner Ref",
+          "type": "string"
+        },
+        "blocker_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Blocker Reason"
+        },
+        "approved_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApprovedBehaviorException"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "disposition_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Disposition Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "disposition",
+        "owner_ref",
+        "blocker_reason",
+        "approved_exception",
+        "evidence_refs",
+        "disposition_hash"
+      ],
+      "title": "QueryDisposition",
+      "type": "object"
+    },
+    "QueryRebuildMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "query_id": {
+          "minLength": 1,
+          "title": "Query Id",
+          "type": "string"
+        },
+        "query_revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Query Revision Hash",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "mapped",
+            "blocked",
+            "approved_exception"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "topic_blueprint_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Topic Blueprint Id"
+        },
+        "target_card_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Card Id"
+        },
+        "consumer_contract": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TopicConsumerContract"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "query_disposition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QueryDisposition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldSelectionMapping"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "measures": {
+          "items": {
+            "$ref": "#/$defs/MeasureSelectionMapping"
+          },
+          "title": "Measures",
+          "type": "array"
+        },
+        "groupings": {
+          "items": {
+            "$ref": "#/$defs/GroupingMapping"
+          },
+          "title": "Groupings",
+          "type": "array"
+        },
+        "sorts": {
+          "items": {
+            "$ref": "#/$defs/SortMapping"
+          },
+          "title": "Sorts",
+          "type": "array"
+        },
+        "filters": {
+          "items": {
+            "$ref": "#/$defs/FilterMapping"
+          },
+          "title": "Filters",
+          "type": "array"
+        },
+        "filter_contexts": {
+          "items": {
+            "$ref": "#/$defs/FilterContextMapping"
+          },
+          "title": "Filter Contexts",
+          "type": "array"
+        },
+        "controls": {
+          "items": {
+            "$ref": "#/$defs/ControlMapping"
+          },
+          "title": "Controls",
+          "type": "array"
+        },
+        "interactions": {
+          "items": {
+            "$ref": "#/$defs/InteractionMapping"
+          },
+          "title": "Interactions",
+          "type": "array"
+        },
+        "drills": {
+          "items": {
+            "$ref": "#/$defs/DrillMapping"
+          },
+          "title": "Drills",
+          "type": "array"
+        },
+        "visualizations": {
+          "items": {
+            "$ref": "#/$defs/VisualizationMapping"
+          },
+          "title": "Visualizations",
+          "type": "array"
+        },
+        "formatting": {
+          "items": {
+            "$ref": "#/$defs/FormattingMapping"
+          },
+          "title": "Formatting",
+          "type": "array"
+        },
+        "layouts": {
+          "items": {
+            "$ref": "#/$defs/LayoutMapping"
+          },
+          "title": "Layouts",
+          "type": "array"
+        },
+        "responsive": {
+          "items": {
+            "$ref": "#/$defs/ResponsiveMapping"
+          },
+          "title": "Responsive",
+          "type": "array"
+        },
+        "security": {
+          "items": {
+            "$ref": "#/$defs/SecurityMapping"
+          },
+          "title": "Security",
+          "type": "array"
+        },
+        "personas": {
+          "items": {
+            "$ref": "#/$defs/PersonaMapping"
+          },
+          "title": "Personas",
+          "type": "array"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/OperationMapping"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "mapping_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Mapping Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query_id",
+        "query_revision_hash",
+        "outcome",
+        "consumer_contract",
+        "query_disposition",
+        "fields",
+        "measures",
+        "groupings",
+        "sorts",
+        "filters",
+        "filter_contexts",
+        "controls",
+        "interactions",
+        "drills",
+        "visualizations",
+        "formatting",
+        "layouts",
+        "responsive",
+        "security",
+        "personas",
+        "operations",
+        "mapping_hash"
+      ],
+      "title": "QueryRebuildMapping",
+      "type": "object"
+    },
+    "ResponsiveMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "behavior": {
+          "enum": [
+            "fixed",
+            "stack",
+            "reflow",
+            "hide"
+          ],
+          "title": "Behavior",
+          "type": "string"
+        },
+        "breakpoint_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Breakpoint Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "behavior",
+        "breakpoint_refs"
+      ],
+      "title": "ResponsiveMapping",
+      "type": "object"
+    },
+    "SecurityMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target_security_domain": {
+          "minLength": 1,
+          "title": "Target Security Domain",
+          "type": "string"
+        },
+        "target_policy_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Policy Refs",
+          "type": "array"
+        },
+        "behavior": {
+          "enum": [
+            "preserved",
+            "approved_change"
+          ],
+          "title": "Behavior",
+          "type": "string"
+        },
+        "accepted_difference_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Accepted Difference Ref"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target_security_domain",
+        "target_policy_refs",
+        "behavior",
+        "accepted_difference_ref"
+      ],
+      "title": "SecurityMapping",
+      "type": "object"
+    },
+    "SortMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetTopicComponentRef"
+        },
+        "direction": {
+          "enum": [
+            "ascending",
+            "descending"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "nulls": {
+          "enum": [
+            "first",
+            "last",
+            "source_default"
+          ],
+          "title": "Nulls",
+          "type": "string"
+        },
+        "priority": {
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "target",
+        "direction",
+        "nulls",
+        "priority"
+      ],
+      "title": "SortMapping",
+      "type": "object"
+    },
+    "SourceArtifactRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "object_type": {
+          "enum": [
+            "page",
+            "card",
+            "query"
+          ],
+          "title": "Object Type",
+          "type": "string"
+        },
+        "object_id": {
+          "minLength": 1,
+          "title": "Object Id",
+          "type": "string"
+        },
+        "revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Revision Hash",
+          "type": "string"
+        },
+        "evidence_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Evidence Ref",
+          "type": "string"
+        },
+        "evidence_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Evidence Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "object_type",
+        "object_id",
+        "revision_hash",
+        "evidence_ref",
+        "evidence_hash"
+      ],
+      "title": "SourceArtifactRevision",
+      "type": "object"
+    },
+    "SourceBehaviorBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Behavior Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "field",
+            "measure",
+            "grouping",
+            "sort",
+            "filter",
+            "filter_context",
+            "control",
+            "interaction",
+            "drill",
+            "visualization",
+            "formatting",
+            "layout",
+            "responsive",
+            "security",
+            "persona",
+            "operation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Revision Hash",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "behavior_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Behavior Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "behavior_id",
+        "kind",
+        "revision_hash",
+        "evidence_refs",
+        "behavior_hash"
+      ],
+      "title": "SourceBehaviorBinding",
+      "type": "object"
+    },
+    "SourceCardDenominator": {
+      "additionalProperties": false,
+      "properties": {
+        "card": {
+          "$ref": "#/$defs/SourceArtifactRevision"
+        },
+        "query_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Query Ids",
+          "type": "array"
+        },
+        "exact_query_set_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Exact Query Set Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "card",
+        "query_ids",
+        "exact_query_set_hash"
+      ],
+      "title": "SourceCardDenominator",
+      "type": "object"
+    },
+    "SourceCardPlacement": {
+      "additionalProperties": false,
+      "properties": {
+        "placement_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Placement Id",
+          "type": "string"
+        },
+        "page_id": {
+          "minLength": 1,
+          "title": "Page Id",
+          "type": "string"
+        },
+        "card_id": {
+          "minLength": 1,
+          "title": "Card Id",
+          "type": "string"
+        },
+        "revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Revision Hash",
+          "type": "string"
+        },
+        "evidence_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Evidence Ref",
+          "type": "string"
+        },
+        "evidence_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Evidence Hash",
+          "type": "string"
+        },
+        "grid": {
+          "$ref": "#/$defs/GridPlacement"
+        },
+        "responsive_behavior": {
+          "enum": [
+            "fixed",
+            "stack",
+            "reflow",
+            "hide"
+          ],
+          "title": "Responsive Behavior",
+          "type": "string"
+        },
+        "breakpoint_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Breakpoint Refs",
+          "type": "array"
+        },
+        "placement_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Placement Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "placement_id",
+        "page_id",
+        "card_id",
+        "revision_hash",
+        "evidence_ref",
+        "evidence_hash",
+        "grid",
+        "responsive_behavior",
+        "breakpoint_refs",
+        "placement_hash"
+      ],
+      "title": "SourceCardPlacement",
+      "type": "object"
+    },
+    "SourceDashboardContext": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scope_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Scope Id",
+          "type": "string"
+        },
+        "migration_unit_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Migration Unit Id",
+          "type": "string"
+        },
+        "page_id": {
+          "minLength": 1,
+          "title": "Page Id",
+          "type": "string"
+        },
+        "validation_context_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Validation Context Hash",
+          "type": "string"
+        },
+        "inventory_closure_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Inventory Closure Ref",
+          "type": "string"
+        },
+        "inventory_closure_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Inventory Closure Hash",
+          "type": "string"
+        },
+        "source_graph_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Source Graph Ref",
+          "type": "string"
+        },
+        "source_graph_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Graph Hash",
+          "type": "string"
+        },
+        "coverage_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Coverage Ref",
+          "type": "string"
+        },
+        "coverage_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Coverage Hash",
+          "type": "string"
+        },
+        "evidence_bundle_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Evidence Bundle Ref",
+          "type": "string"
+        },
+        "evidence_bundle_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Evidence Bundle Hash",
+          "type": "string"
+        },
+        "dashboard_ir_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Dashboard Ir Ref",
+          "type": "string"
+        },
+        "dashboard_ir_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Dashboard Ir Hash",
+          "type": "string"
+        },
+        "experience_fixture_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Experience Fixture Ref",
+          "type": "string"
+        },
+        "experience_fixture_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Experience Fixture Hash",
+          "type": "string"
+        },
+        "query_fixture_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Query Fixture Ref",
+          "type": "string"
+        },
+        "query_fixture_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Query Fixture Hash",
+          "type": "string"
+        },
+        "closure_status": {
+          "const": "complete",
+          "default": "complete",
+          "title": "Closure Status",
+          "type": "string"
+        },
+        "source_query_validation_status": {
+          "const": "complete",
+          "default": "complete",
+          "title": "Source Query Validation Status",
+          "type": "string"
+        },
+        "source_card_order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Card Order",
+          "type": "array"
+        },
+        "source_placement_order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Placement Order",
+          "type": "array"
+        },
+        "context_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Context Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "scope_id",
+        "migration_unit_id",
+        "page_id",
+        "validation_context_hash",
+        "inventory_closure_ref",
+        "inventory_closure_hash",
+        "source_graph_ref",
+        "source_graph_hash",
+        "coverage_ref",
+        "coverage_hash",
+        "evidence_bundle_ref",
+        "evidence_bundle_hash",
+        "dashboard_ir_ref",
+        "dashboard_ir_hash",
+        "experience_fixture_ref",
+        "experience_fixture_hash",
+        "query_fixture_ref",
+        "query_fixture_hash",
+        "source_card_order",
+        "source_placement_order",
+        "context_hash"
+      ],
+      "title": "SourceDashboardContext",
+      "type": "object"
+    },
+    "SourceDashboardDenominator": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "$ref": "#/$defs/SourceDashboardContext"
+        },
+        "page": {
+          "$ref": "#/$defs/SourceArtifactRevision"
+        },
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/SourceCardDenominator"
+          },
+          "minItems": 1,
+          "title": "Cards",
+          "type": "array"
+        },
+        "placements": {
+          "items": {
+            "$ref": "#/$defs/SourceCardPlacement"
+          },
+          "minItems": 1,
+          "title": "Placements",
+          "type": "array"
+        },
+        "queries": {
+          "items": {
+            "$ref": "#/$defs/SourceQueryDenominator"
+          },
+          "title": "Queries",
+          "type": "array"
+        },
+        "special_behaviors": {
+          "items": {
+            "$ref": "#/$defs/SourceSpecialBehavior"
+          },
+          "title": "Special Behaviors",
+          "type": "array"
+        },
+        "denominator_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Denominator Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context",
+        "page",
+        "cards",
+        "placements",
+        "queries",
+        "special_behaviors",
+        "denominator_hash"
+      ],
+      "title": "SourceDashboardDenominator",
+      "type": "object"
+    },
+    "SourceQueryDenominator": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "$ref": "#/$defs/SourceArtifactRevision"
+        },
+        "card_id": {
+          "minLength": 1,
+          "title": "Card Id",
+          "type": "string"
+        },
+        "placement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Placement Ids",
+          "type": "array"
+        },
+        "source_consumer_id": {
+          "minLength": 1,
+          "title": "Source Consumer Id",
+          "type": "string"
+        },
+        "source_profile_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Profile Id",
+          "type": "string"
+        },
+        "source_profile_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Source Profile Hash",
+          "type": "string"
+        },
+        "source_profile_asset_id": {
+          "minLength": 1,
+          "title": "Source Profile Asset Id",
+          "type": "string"
+        },
+        "decision_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Decision Ids",
+          "type": "array"
+        },
+        "behaviors": {
+          "items": {
+            "$ref": "#/$defs/SourceBehaviorBinding"
+          },
+          "minItems": 1,
+          "title": "Behaviors",
+          "type": "array"
+        },
+        "behavior_denominator": {
+          "$ref": "#/$defs/QueryBehaviorDenominator"
+        }
+      },
+      "required": [
+        "query",
+        "card_id",
+        "placement_ids",
+        "source_consumer_id",
+        "source_profile_id",
+        "source_profile_hash",
+        "source_profile_asset_id",
+        "decision_ids",
+        "behaviors",
+        "behavior_denominator"
+      ],
+      "title": "SourceQueryDenominator",
+      "type": "object"
+    },
+    "SourceSpecialBehavior": {
+      "additionalProperties": false,
+      "properties": {
+        "behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Behavior Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "app",
+            "embed",
+            "refresh",
+            "freshness",
+            "cache",
+            "schedule",
+            "alert",
+            "export",
+            "writeback",
+            "workflow_side_effect",
+            "unsupported_visual",
+            "formatting",
+            "layout",
+            "responsive",
+            "security",
+            "persona"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "parent_type": {
+          "enum": [
+            "page",
+            "card",
+            "query"
+          ],
+          "title": "Parent Type",
+          "type": "string"
+        },
+        "parent_id": {
+          "minLength": 1,
+          "title": "Parent Id",
+          "type": "string"
+        },
+        "revision_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Revision Hash",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "behavior_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Behavior Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "behavior_id",
+        "kind",
+        "parent_type",
+        "parent_id",
+        "revision_hash",
+        "evidence_refs",
+        "behavior_hash"
+      ],
+      "title": "SourceSpecialBehavior",
+      "type": "object"
+    },
+    "TargetDashboardIntent": {
+      "additionalProperties": false,
+      "properties": {
+        "dashboard_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Dashboard Ref",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "collection_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Collection Ref",
+          "type": "string"
+        },
+        "content_action": {
+          "enum": [
+            "create_new",
+            "update_existing"
+          ],
+          "title": "Content Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dashboard_ref",
+        "title",
+        "collection_ref",
+        "content_action"
+      ],
+      "title": "TargetDashboardIntent",
+      "type": "object"
+    },
+    "TargetTopicComponentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "blueprint_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Blueprint Id",
+          "type": "string"
+        },
+        "component_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Component Id",
+          "type": "string"
+        },
+        "component_kind": {
+          "enum": [
+            "field",
+            "measure"
+          ],
+          "title": "Component Kind",
+          "type": "string"
+        },
+        "component_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Component Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "blueprint_id",
+        "component_id",
+        "component_kind",
+        "component_hash"
+      ],
+      "title": "TargetTopicComponentRef",
+      "type": "object"
+    },
+    "TopicConsumerContract": {
+      "additionalProperties": false,
+      "properties": {
+        "source_consumer_id": {
+          "minLength": 1,
+          "title": "Source Consumer Id",
+          "type": "string"
+        },
+        "target_consumer_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Target Consumer Ref",
+          "type": "string"
+        },
+        "topic_component_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Topic Component Refs",
+          "type": "array"
+        },
+        "decision_bindings": {
+          "items": {
+            "$ref": "#/$defs/DashboardConsumerDecisionBinding"
+          },
+          "minItems": 1,
+          "title": "Decision Bindings",
+          "type": "array"
+        },
+        "consumer_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Consumer Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_consumer_id",
+        "target_consumer_ref",
+        "topic_component_refs",
+        "decision_bindings",
+        "consumer_hash"
+      ],
+      "title": "TopicConsumerContract",
+      "type": "object"
+    },
+    "ValidationArtifactReference": {
+      "additionalProperties": false,
+      "description": "Immutable reference to one exact validation input revision.",
+      "properties": {
+        "artifact_ref": {
+          "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$",
+          "title": "Artifact Ref",
+          "type": "string"
+        },
+        "artifact_hash": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Artifact Hash",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_ref",
+        "artifact_hash",
+        "revision"
+      ],
+      "title": "ValidationArtifactReference",
+      "type": "object"
+    },
+    "VisualizationMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "source_behavior_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+          "title": "Source Behavior Id",
+          "type": "string"
+        },
+        "source_visual_type": {
+          "minLength": 1,
+          "title": "Source Visual Type",
+          "type": "string"
+        },
+        "target_visual_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Visual Type"
+        },
+        "behavior_resolution_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Behavior Resolution Id"
+        }
+      },
+      "required": [
+        "source_behavior_id",
+        "source_visual_type",
+        "target_visual_type"
+      ],
+      "title": "VisualizationMapping",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One complete dashboard reconstruction proposal; it grants no write authority.",
+  "properties": {
+    "contract_version": {
+      "const": "domo-to-omni.dashboard-rebuild-plan.v1",
+      "default": "domo-to-omni.dashboard-rebuild-plan.v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "plan_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "run_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "scope_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "migration_unit_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+      "title": "Migration Unit Id",
+      "type": "string"
+    },
+    "validation_cycle_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$",
+      "title": "Validation Cycle Id",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/SourceDashboardDenominator"
+    },
+    "target": {
+      "$ref": "#/$defs/TargetDashboardIntent"
+    },
+    "page_mapping": {
+      "$ref": "#/$defs/PageRebuildMapping"
+    },
+    "card_mappings": {
+      "items": {
+        "$ref": "#/$defs/CardRebuildMapping"
+      },
+      "minItems": 1,
+      "title": "Card Mappings",
+      "type": "array"
+    },
+    "topic_bindings": {
+      "items": {
+        "$ref": "#/$defs/DashboardTopicBinding"
+      },
+      "title": "Topic Bindings",
+      "type": "array"
+    },
+    "profile_bindings": {
+      "items": {
+        "$ref": "#/$defs/DashboardProfileBinding"
+      },
+      "title": "Profile Bindings",
+      "type": "array"
+    },
+    "decision_bindings": {
+      "items": {
+        "$ref": "#/$defs/DashboardDecisionBinding"
+      },
+      "title": "Decision Bindings",
+      "type": "array"
+    },
+    "validation_context": {
+      "$ref": "#/$defs/AssessmentValidationContext"
+    },
+    "query_mappings": {
+      "items": {
+        "$ref": "#/$defs/QueryRebuildMapping"
+      },
+      "title": "Query Mappings",
+      "type": "array"
+    },
+    "behavior_resolutions": {
+      "items": {
+        "$ref": "#/$defs/BehaviorResolution"
+      },
+      "title": "Behavior Resolutions",
+      "type": "array"
+    },
+    "proposal_only": {
+      "const": true,
+      "default": true,
+      "title": "Proposal Only",
+      "type": "boolean"
+    },
+    "authorizes_build": {
+      "const": false,
+      "default": false,
+      "title": "Authorizes Build",
+      "type": "boolean"
+    },
+    "authorizes_content_creation": {
+      "const": false,
+      "default": false,
+      "title": "Authorizes Content Creation",
+      "type": "boolean"
+    },
+    "authorizes_source_decommission": {
+      "const": false,
+      "default": false,
+      "title": "Authorizes Source Decommission",
+      "type": "boolean"
+    },
+    "plan_hash": {
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "title": "Plan Hash",
+      "type": "string"
+    },
+    "immutable": {
+      "const": true,
+      "default": true,
+      "title": "Immutable",
+      "type": "boolean"
+    },
+    "provenance": {
+      "$ref": "#/$defs/DashboardPlanProvenance"
+    },
+    "security_metadata": {
+      "$ref": "#/$defs/DashboardPlanSecurityMetadata"
+    }
+  },
+  "required": [
+    "plan_id",
+    "run_id",
+    "scope_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "source",
+    "target",
+    "page_mapping",
+    "card_mappings",
+    "topic_bindings",
+    "profile_bindings",
+    "decision_bindings",
+    "validation_context",
+    "query_mappings",
+    "behavior_resolutions",
+    "plan_hash",
+    "provenance",
+    "security_metadata"
+  ],
+  "title": "DashboardRebuildPlan",
+  "type": "object"
+}

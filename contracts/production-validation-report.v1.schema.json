@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/production-validation-report.v1.schema.json",
+  "title": "Canonical production QA revalidation report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "report_id",
+    "report_ref",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "evidence_class",
+    "suite",
+    "suite_validation",
+    "suite_validation_artifact",
+    "evidence_snapshot",
+    "accepted_evidence_bindings",
+    "qa_result_refs",
+    "production_evidence_set_hash",
+    "outcome",
+    "verifier_ref",
+    "producer_refs",
+    "validation_completed_at",
+    "created_at",
+    "authorizes_tenant_acceptance",
+    "authorizes_production_readiness",
+    "authorizes_promotion",
+    "authorizes_publication",
+    "authorizes_cutover",
+    "authorizes_decommissioning",
+    "immutable",
+    "report_hash"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "domo-to-omni.production-validation-report.v1"
+    },
+    "report_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "report_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "tenant_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "wave_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "migration_unit_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "validation_cycle_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "evidence_class": { "const": "production" },
+    "suite": { "$ref": "#/$defs/suiteBinding" },
+    "suite_validation": { "$ref": "#/$defs/suiteValidationRegistration" },
+    "suite_validation_artifact": {
+      "$ref": "qa-acceptance-suite.v1.schema.json#/$defs/artifactBinding"
+    },
+    "evidence_snapshot": { "$ref": "#/$defs/evidenceSnapshotBinding" },
+    "accepted_evidence_bindings": {
+      "$ref": "qa-acceptance-suite.v1.schema.json#/$defs/evidenceBindings"
+    },
+    "qa_result_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+      }
+    },
+    "production_evidence_set_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "outcome": { "const": "passed" },
+    "verifier_ref": { "$ref": "#/$defs/actorRef" },
+    "producer_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+      }
+    },
+    "validation_completed_at": { "type": "string", "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "authorizes_tenant_acceptance": { "const": false },
+    "authorizes_production_readiness": { "const": false },
+    "authorizes_promotion": { "const": false },
+    "authorizes_publication": { "const": false },
+    "authorizes_cutover": { "const": false },
+    "authorizes_decommissioning": { "const": false },
+    "immutable": { "const": true },
+    "report_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "actorRef": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 2048,
+      "pattern": "^(agent-ref|human-ref|person-ref|person):.+$"
+    },
+    "suiteBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suite_id",
+        "suite_hash",
+        "bindings_hash",
+        "evidence_snapshot_ref",
+        "evidence_snapshot_hash",
+        "evidence_snapshot_revision",
+        "verifier_ref",
+        "producer_refs",
+        "assembled_at",
+        "artifact"
+      ],
+      "properties": {
+        "suite_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "suite_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "bindings_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "evidence_snapshot_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "evidence_snapshot_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "evidence_snapshot_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verifier_ref": { "$ref": "#/$defs/actorRef" },
+        "producer_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "assembled_at": { "type": "string", "format": "date-time" },
+        "artifact": {
+          "$ref": "qa-acceptance-suite.v1.schema.json#/$defs/artifactBinding"
+        }
+      }
+    },
+    "evidenceSnapshotBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot_ref", "snapshot_hash", "revision"],
+      "properties": {
+        "snapshot_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "snapshot_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "suiteValidationRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tenant_ref",
+        "run_id",
+        "scope_id",
+        "wave_id",
+        "migration_unit_id",
+        "validation_cycle_id",
+        "evidence_class",
+        "suite_id",
+        "suite_hash",
+        "suite_artifact_ref",
+        "suite_artifact_content_sha256",
+        "evidence_snapshot_ref",
+        "evidence_snapshot_hash",
+        "evidence_snapshot_revision",
+        "verifier_ref",
+        "checked_by_ref",
+        "checked_at",
+        "status",
+        "qa_suite_ready",
+        "validation_fingerprint",
+        "registration_ref",
+        "registration_hash",
+        "authorizes_tenant_acceptance",
+        "authorizes_production_readiness",
+        "authorizes_promotion",
+        "authorizes_cutover",
+        "authorizes_decommissioning"
+      ],
+      "properties": {
+        "tenant_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "run_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "scope_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "wave_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "migration_unit_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "validation_cycle_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "evidence_class": { "const": "production" },
+        "suite_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "suite_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "suite_artifact_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "suite_artifact_content_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evidence_snapshot_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "evidence_snapshot_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "evidence_snapshot_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verifier_ref": { "$ref": "#/$defs/actorRef" },
+        "checked_by_ref": { "$ref": "#/$defs/actorRef" },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "status": { "const": "valid" },
+        "qa_suite_ready": { "const": true },
+        "validation_fingerprint": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "registration_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "registration_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "authorizes_tenant_acceptance": { "const": false },
+        "authorizes_production_readiness": { "const": false },
+        "authorizes_promotion": { "const": false },
+        "authorizes_cutover": { "const": false },
+        "authorizes_decommissioning": { "const": false }
+      }
+    }
+  }
+}

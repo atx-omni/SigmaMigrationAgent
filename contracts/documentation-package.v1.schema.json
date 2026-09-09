@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/documentation-package.v1.schema.json",
+  "title": "Accepted-artifact-only documentation package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "package_id",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "evidence_class",
+    "qa_suite_validation",
+    "production_validation_bindings",
+    "final_target_bindings",
+    "accepted_input_bindings",
+    "output_bindings",
+    "excluded_content",
+    "authority",
+    "created_by_ref",
+    "created_at",
+    "package_hash",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.documentation-package.v1" },
+    "package_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "tenant_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "run_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "scope_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "wave_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "evidence_class": {
+      "enum": ["synthetic_local", "development", "staging", "production"]
+    },
+    "qa_suite_validation": { "$ref": "#/$defs/qaSuiteValidationBinding" },
+    "production_validation_bindings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/productionValidationBinding" }
+    },
+    "final_target_bindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/finalTargetArtifactBinding" }
+    },
+    "accepted_input_bindings": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/acceptedArtifactBinding" },
+      "contains": {
+        "type": "object",
+        "properties": {
+          "artifact_type": { "const": "semantic_profile_coverage" }
+        },
+        "required": ["artifact_type"]
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "output_bindings": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/documentationOutputBinding" }
+    },
+    "excluded_content": { "$ref": "#/$defs/excludedContent" },
+    "authority": { "$ref": "#/$defs/authorityClaims" },
+    "created_by_ref": {
+      "type": "string",
+      "const": "agent-ref://documentation-training"
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "package_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "provenance": { "$ref": "common-definitions.v1.schema.json#/$defs/provenance" },
+    "security": { "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "evidence_class": { "const": "production" } },
+        "required": ["evidence_class"]
+      },
+      "then": {
+        "properties": { "production_validation_bindings": { "minItems": 1 } }
+      },
+      "else": {
+        "properties": { "production_validation_bindings": { "maxItems": 0 } }
+      }
+    }
+  ],
+  "$defs": {
+    "envelopeSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "artifactBinding": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "artifact_type",
+        "artifact_ref",
+        "revision",
+        "content_sha256",
+        "validation_cycle_id",
+        "migration_unit_id"
+      ],
+      "properties": {
+        "artifact_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_type": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "$ref": "#/$defs/envelopeSha256" },
+        "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" }
+      }
+    },
+    "acceptedArtifactBinding": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/artifactBinding" },
+        {
+          "type": "object",
+          "required": ["accepted_by_ref"],
+          "properties": {
+            "accepted_by_ref": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+            }
+          }
+        }
+      ]
+    },
+    "finalTargetArtifactBinding": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/acceptedArtifactBinding" },
+        {
+          "type": "object",
+          "properties": {
+            "artifact_type": {
+              "enum": [
+                "dbt_changes",
+                "dbt_test_evidence",
+                "data_reconciliation",
+                "target_write_receipt",
+                "omni_model_changes",
+                "model_validation",
+                "semantic_query_evidence",
+                "omni_content_artifact",
+                "document_readback",
+                "target_visual_fixtures",
+                "target_readback"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "qaSuiteValidationBinding": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/artifactBinding" },
+        {
+          "type": "object",
+          "required": [
+            "validation_ref",
+            "validation_hash",
+            "status",
+            "evidence_class"
+          ],
+          "properties": {
+            "artifact_type": { "const": "qa_suite_validation" },
+            "validation_ref": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+            },
+            "validation_hash": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+            },
+            "status": { "const": "validated" },
+            "evidence_class": {
+              "enum": ["synthetic_local", "development", "staging", "production"]
+            }
+          }
+        }
+      ]
+    },
+    "productionValidationBinding": {
+      "unevaluatedProperties": false,
+      "allOf": [
+        { "$ref": "#/$defs/artifactBinding" },
+        {
+          "type": "object",
+          "required": ["validation_ref", "validation_hash", "status"],
+          "properties": {
+            "artifact_type": { "const": "production_validation_report" },
+            "validation_ref": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+            },
+            "validation_hash": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+            },
+            "status": { "const": "passed" }
+          }
+        }
+      ]
+    },
+    "documentationOutputBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_type",
+        "artifact_id",
+        "artifact_ref",
+        "revision",
+        "content_sha256",
+        "input_artifact_refs",
+        "accepted_only",
+        "contains_copied_source_payload"
+      ],
+      "properties": {
+        "output_type": {
+          "enum": [
+            "change_map",
+            "source_target_lineage",
+            "user_guide",
+            "admin_runbook",
+            "training_package"
+          ]
+        },
+        "artifact_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "$ref": "#/$defs/envelopeSha256" },
+        "input_artifact_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "accepted_only": { "const": true },
+        "contains_copied_source_payload": { "const": false }
+      }
+    },
+    "excludedContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw_source_rows_included",
+        "query_result_rows_included",
+        "screenshots_included",
+        "secrets_or_credentials_included",
+        "unredacted_sensitive_content_included",
+        "references_and_hashes_only"
+      ],
+      "properties": {
+        "raw_source_rows_included": { "const": false },
+        "query_result_rows_included": { "const": false },
+        "screenshots_included": { "const": false },
+        "secrets_or_credentials_included": { "const": false },
+        "unredacted_sensitive_content_included": { "const": false },
+        "references_and_hashes_only": { "const": true }
+      }
+    },
+    "authorityClaims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorizes_promotion",
+        "authorizes_publication",
+        "authorizes_tenant_acceptance",
+        "authorizes_cutover",
+        "authorizes_source_decommission"
+      ],
+      "properties": {
+        "authorizes_promotion": { "const": false },
+        "authorizes_publication": { "const": false },
+        "authorizes_tenant_acceptance": { "const": false },
+        "authorizes_cutover": { "const": false },
+        "authorizes_source_decommission": { "const": false }
+      }
+    }
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/common-definitions.v1.schema.json",
+  "title": "Domo-to-Omni shared contract definitions",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "stableId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "sourceNativeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "nonSecretRef": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 2048,
+      "pattern": "^(?!secret:|vault:|credential:)[A-Za-z][A-Za-z0-9+.-]*:.+$"
+    },
+    "nullableNonSecretRef": {
+      "oneOf": [
+        { "$ref": "#/$defs/nonSecretRef" },
+        { "type": "null" }
+      ]
+    },
+    "acquisitionChannel": {
+      "enum": [
+        "domo_platform_api_oauth",
+        "domo_product_api_developer_token",
+        "domostats_connector",
+        "governance_connector",
+        "domo_cli",
+        "workbench_export",
+        "pro_code_zip_export",
+        "customer_operated_export",
+        "manual_capture",
+        "snowflake_read",
+        "dbt_branch",
+        "omni_api",
+        "control_plane"
+      ]
+    },
+    "evidenceState": {
+      "enum": [
+        "extracted_complete",
+        "extracted_partial",
+        "metadata_only",
+        "manual_capture_required",
+        "blocked"
+      ]
+    },
+    "sourceObjectType": {
+      "enum": [
+        "page",
+        "subpage",
+        "card",
+        "dataset",
+        "dataset_schema",
+        "dataflow",
+        "magic_etl",
+        "sql_dataflow",
+        "beast_mode",
+        "variable",
+        "pdp_policy",
+        "schedule",
+        "alert",
+        "workflow",
+        "app_studio_app",
+        "custom_app",
+        "domo_everywhere_embed",
+        "workbench_job",
+        "connector_account",
+        "file_asset",
+        "code_engine_package",
+        "publication",
+        "user",
+        "group",
+        "role",
+        "other"
+      ]
+    },
+    "sourceObjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_id", "object_type", "native_id"],
+      "properties": {
+        "object_id": { "$ref": "#/$defs/stableId" },
+        "object_type": { "$ref": "#/$defs/sourceObjectType" },
+        "native_id": { "$ref": "#/$defs/sourceNativeId" }
+      }
+    },
+    "securityMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "contains_sensitive_data",
+        "data_categories",
+        "redaction_state",
+        "tenant_partition_id",
+        "access_policy_ref",
+        "retention_policy_ref"
+      ],
+      "properties": {
+        "classification": {
+          "enum": ["public", "internal", "confidential", "restricted"]
+        },
+        "contains_sensitive_data": { "type": "boolean" },
+        "data_categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "none",
+              "pii",
+              "phi",
+              "pci",
+              "financial",
+              "credentials",
+              "customer_confidential",
+              "regulated_other"
+            ]
+          }
+        },
+        "redaction_state": {
+          "enum": ["not_required", "redacted", "tokenized", "restricted_reference_only", "pending"]
+        },
+        "tenant_partition_id": { "$ref": "#/$defs/stableId" },
+        "access_policy_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "retention_policy_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "egress_policy_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "source_pdp_context_ref": { "$ref": "#/$defs/nullableNonSecretRef" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "contains_sensitive_data": { "const": false } },
+            "required": ["contains_sensitive_data"]
+          },
+          "then": {
+            "properties": {
+              "data_categories": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": { "const": "none" }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "contains_sensitive_data": { "const": true } },
+            "required": ["contains_sensitive_data"]
+          },
+          "then": {
+            "properties": {
+              "data_categories": {
+                "not": { "contains": { "const": "none" } }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_system",
+        "tenant_ref",
+        "acquisition_channel",
+        "captured_at",
+        "actor_ref",
+        "request_id",
+        "content_hash"
+      ],
+      "properties": {
+        "source_system": {
+          "enum": ["domo", "snowflake", "dbt", "omni", "manual", "control_plane"]
+        },
+        "tenant_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "acquisition_channel": { "$ref": "#/$defs/acquisitionChannel" },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "actor_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "request_id": { "$ref": "#/$defs/stableId" },
+        "source_request_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "permission_context_ref": { "$ref": "#/$defs/nullableNonSecretRef" },
+        "extractor_version": { "$ref": "#/$defs/nonEmptyString" },
+        "content_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "decisionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "decision_ref", "decided_by_ref", "decided_at"],
+      "properties": {
+        "decision_id": { "$ref": "#/$defs/stableId" },
+        "decision_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "decided_by_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "decided_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/migration-scope.v1.schema.json",
+  "title": "Migration scope, wave and unit hierarchy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "scope_id",
+    "run_id",
+    "inventory_snapshot_ref",
+    "name",
+    "status",
+    "inclusion_rules",
+    "exclusion_rules",
+    "comparison_scope",
+    "migration_scope",
+    "cross_scope_exceptions",
+    "waves",
+    "architecture_decision_ref",
+    "scope_hash",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.migration-scope.v1" },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "inventory_snapshot_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "name": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "status": { "enum": ["proposed", "accepted", "in_progress", "completed", "blocked", "superseded"] },
+    "inclusion_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "exclusion_rules": {
+      "type": "array",
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "comparison_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/scopedSourceObjectRef"
+      }
+    },
+    "migration_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/scopedSourceObjectRef"
+      }
+    },
+    "cross_scope_exceptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/crossScopeException" }
+    },
+    "waves": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/wave" }
+    },
+    "architecture_decision_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+    },
+    "scope_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "provenance": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/provenance"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "enum": ["accepted", "in_progress", "completed"] } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "architecture_decision_ref": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "scopedSourceObjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_id", "object_type", "native_id", "source_fingerprint"],
+      "properties": {
+        "object_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "object_type": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectType"
+        },
+        "native_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sourceNativeId"
+        },
+        "source_fingerprint": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "crossScopeException": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exception_id",
+        "source_object",
+        "approval_ref",
+        "approved_by_ref",
+        "approved_at",
+        "reason",
+        "immutable",
+        "exception_hash"
+      ],
+      "properties": {
+        "exception_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "source_object": { "$ref": "#/$defs/scopedSourceObjectRef" },
+        "approval_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "approved_by_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "approved_at": { "type": "string", "format": "date-time" },
+        "reason": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "immutable": { "const": true },
+        "exception_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "wave": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wave_id",
+        "sequence",
+        "name",
+        "objective",
+        "status",
+        "depends_on_wave_ids",
+        "entry_criteria",
+        "exit_criteria",
+        "units",
+        "wave_hash"
+      ],
+      "properties": {
+        "wave_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "name": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "objective": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "status": { "enum": ["proposed", "ready", "in_progress", "completed", "blocked"] },
+        "depends_on_wave_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "entry_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "exit_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/migrationUnit" }
+        },
+        "wave_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "migrationUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "migration_unit_id",
+        "name",
+        "unit_type",
+        "status",
+        "disposition",
+        "source_objects",
+        "coverage_entry_refs",
+        "depends_on_unit_ids",
+        "required_agent_ids",
+        "business_owner_ref",
+        "acceptance_owner_ref",
+        "architecture_decision_ref",
+        "definition_of_done",
+        "unit_hash"
+      ],
+      "properties": {
+        "migration_unit_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "name": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "unit_type": {
+          "enum": ["dashboard", "workflow", "shared_data_product", "application", "security_domain", "operations", "retirement"]
+        },
+        "status": { "enum": ["proposed", "ready", "in_progress", "validated", "accepted", "blocked", "superseded"] },
+        "disposition": { "enum": ["migrate", "rebuild", "replatform", "manual_redesign", "retain", "retire"] },
+        "source_objects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectRef"
+          }
+        },
+        "coverage_entry_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "depends_on_unit_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "required_agent_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "inventory_intake",
+              "data_acquisition_ingestion",
+              "domo_to_omni_architect",
+              "domo_bi_developer",
+              "domo_analytics_engineer",
+              "semantic_consolidation",
+              "dbt_analytics_engineer",
+              "omni_modeler",
+              "omni_bi_developer",
+              "migration_qa",
+              "documentation_training"
+            ]
+          }
+        },
+        "business_owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "acceptance_owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "architecture_decision_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        },
+        "definition_of_done": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "unit_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "enum": ["ready", "in_progress", "validated", "accepted"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "architecture_decision_ref": {
+                "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

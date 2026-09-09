@@ -1,0 +1,643 @@
+{
+  "$defs": {
+    "ArtifactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "content_hash"
+      ],
+      "title": "ArtifactInput",
+      "type": "object"
+    },
+    "DeclaredSourceContextBinding": {
+      "additionalProperties": false,
+      "description": "Exact source artifact plus acceptance metadata awaiting trusted-store resolution.",
+      "properties": {
+        "acceptance_record_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Acceptance Record Revision",
+          "type": "string"
+        },
+        "acceptance_record_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Acceptance Record Sha256",
+          "type": "string"
+        },
+        "acceptance_ref": {
+          "pattern": "^human-approval-ref://\\S+$",
+          "title": "Acceptance Ref",
+          "type": "string"
+        },
+        "acceptance_verification_state": {
+          "const": "reference_only",
+          "default": "reference_only",
+          "title": "Acceptance Verification State",
+          "type": "string"
+        },
+        "accepted_at": {
+          "format": "date-time",
+          "title": "Accepted At",
+          "type": "string"
+        },
+        "accepted_by_ref": {
+          "pattern": "^human-ref://\\S+$",
+          "title": "Accepted By Ref",
+          "type": "string"
+        },
+        "artifact_created_at": {
+          "format": "date-time",
+          "title": "Artifact Created At",
+          "type": "string"
+        },
+        "artifact_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "artifact_run_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Artifact Run Id",
+          "type": "string"
+        },
+        "artifact_schema_version": {
+          "enum": [
+            "sigma-capability-spike-bundle.v1",
+            "sigma-data-model-snapshot.v1",
+            "sigma-workbook-graph.v1",
+            "sigma-behavior-manifest.v1",
+            "sigma-api-capability-matrix.v1",
+            "sigma-migration-scope.v1",
+            "semantic-profile.v1",
+            "semantic-profile-coverage.v1",
+            "repository-inventory.v1"
+          ],
+          "title": "Artifact Schema Version",
+          "type": "string"
+        },
+        "artifact_scope_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Artifact Scope Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "artifact_schema_version",
+        "artifact_run_id",
+        "artifact_scope_id",
+        "content_hash",
+        "artifact_created_at",
+        "accepted_by_ref",
+        "acceptance_ref",
+        "acceptance_record_revision",
+        "acceptance_record_sha256",
+        "accepted_at"
+      ],
+      "title": "DeclaredSourceContextBinding",
+      "type": "object"
+    },
+    "SemanticRoutingPayload": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "consolidation_route": {
+                  "const": "evaluate_reuse_merge_parameterize_split"
+                },
+                "dbt_route": {
+                  "const": "required_when_approved_blueprint_places_logic_upstream"
+                },
+                "mode": {
+                  "const": "warehouse_first_refactor"
+                },
+                "omni_model_route": {
+                  "const": "model_on_accepted_source_and_data_layer_relations"
+                },
+                "required_specialist_ids": {
+                  "const": [
+                    "sigma_analytics_formula",
+                    "sigma_semantic_consolidation",
+                    "sigma_dbt_analytics_engineer",
+                    "sigma_omni_modeler",
+                    "sigma_independent_qa"
+                  ]
+                },
+                "semantic_acceptance_objective": {
+                  "const": "bounded_semantic_equivalence_after_approved_rearchitecture"
+                },
+                "skipped_specialist_ids": {
+                  "const": []
+                },
+                "target_environment_refs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "pattern": "^environment-ref://(?:dbt|snowflake|warehouse)/\\S+$",
+                        "type": "string"
+                      },
+                      "minContains": 1
+                    }
+                  ],
+                  "contains": {
+                    "pattern": "^environment-ref://omni/\\S+$",
+                    "type": "string"
+                  },
+                  "items": {
+                    "oneOf": [
+                      {
+                        "pattern": "^environment-ref://omni/\\S+$",
+                        "type": "string"
+                      },
+                      {
+                        "pattern": "^environment-ref://(?:dbt|snowflake|warehouse)/\\S+$",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "maxContains": 1,
+                  "minContains": 1,
+                  "minItems": 2,
+                  "type": "array",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "mode",
+                "target_environment_refs",
+                "dbt_route",
+                "consolidation_route",
+                "omni_model_route",
+                "semantic_acceptance_objective",
+                "required_specialist_ids",
+                "skipped_specialist_ids"
+              ],
+              "title": "Warehouse-first target environments"
+            },
+            {
+              "properties": {
+                "consolidation_route": {
+                  "const": "preserve_source_boundaries_for_direct_route"
+                },
+                "dbt_route": {
+                  "const": "not_applicable_direct_route"
+                },
+                "mode": {
+                  "const": "omni_semantic_reconstruction"
+                },
+                "omni_model_route": {
+                  "const": "reconstruct_semantics_in_omni_over_accepted_warehouse_relations"
+                },
+                "required_specialist_ids": {
+                  "const": [
+                    "sigma_analytics_formula",
+                    "sigma_semantic_consolidation",
+                    "sigma_omni_modeler",
+                    "sigma_independent_qa"
+                  ]
+                },
+                "semantic_acceptance_objective": {
+                  "const": "bounded_semantic_equivalence_after_direct_reconstruction"
+                },
+                "skipped_specialist_ids": {
+                  "const": [
+                    "sigma_dbt_analytics_engineer"
+                  ]
+                },
+                "target_environment_refs": {
+                  "items": {
+                    "pattern": "^environment-ref://omni/\\S+$",
+                    "type": "string"
+                  },
+                  "maxItems": 1,
+                  "minItems": 1,
+                  "type": "array",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "mode",
+                "target_environment_refs",
+                "dbt_route",
+                "consolidation_route",
+                "omni_model_route",
+                "semantic_acceptance_objective",
+                "required_specialist_ids",
+                "skipped_specialist_ids"
+              ],
+              "title": "Direct Omni target environment"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "automatic_one_to_one_claim_allowed": {
+          "const": false,
+          "default": false,
+          "title": "Automatic One To One Claim Allowed",
+          "type": "boolean"
+        },
+        "behavior_route": {
+          "const": "separate_behavior_manifest_and_redesign",
+          "default": "separate_behavior_manifest_and_redesign",
+          "title": "Behavior Route",
+          "type": "string"
+        },
+        "build_scope_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Build Scope Refs",
+          "type": "array"
+        },
+        "comparison_scope_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Comparison Scope Refs",
+          "type": "array"
+        },
+        "consolidation_route": {
+          "enum": [
+            "evaluate_reuse_merge_parameterize_split",
+            "preserve_source_boundaries_for_direct_route"
+          ],
+          "title": "Consolidation Route",
+          "type": "string"
+        },
+        "dbt_route": {
+          "enum": [
+            "required_when_approved_blueprint_places_logic_upstream",
+            "not_applicable_direct_route"
+          ],
+          "title": "Dbt Route",
+          "type": "string"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decided_by_ref": {
+          "pattern": "^human-ref://\\S+$",
+          "title": "Decided By Ref",
+          "type": "string"
+        },
+        "decision_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,159}$",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "decision_record_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Decision Record Revision",
+          "type": "string"
+        },
+        "decision_record_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Decision Record Sha256",
+          "type": "string"
+        },
+        "decision_ref": {
+          "pattern": "^human-decision-ref://\\S+$",
+          "title": "Decision Ref",
+          "type": "string"
+        },
+        "decision_verification_state": {
+          "const": "reference_only",
+          "default": "reference_only",
+          "title": "Decision Verification State",
+          "type": "string"
+        },
+        "independent_qa_required": {
+          "const": true,
+          "default": true,
+          "title": "Independent Qa Required",
+          "type": "boolean"
+        },
+        "migration_unit_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,159}$",
+          "title": "Migration Unit Id",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "warehouse_first_refactor",
+            "omni_semantic_reconstruction"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "omni_model_route": {
+          "enum": [
+            "model_on_accepted_source_and_data_layer_relations",
+            "reconstruct_semantics_in_omni_over_accepted_warehouse_relations"
+          ],
+          "title": "Omni Model Route",
+          "type": "string"
+        },
+        "question_version": {
+          "const": "sigma-semantic-migration-question.v1",
+          "title": "Question Version",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 4000,
+          "minLength": 10,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "required_specialist_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Specialist Ids",
+          "type": "array"
+        },
+        "run_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scope_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Scope Id",
+          "type": "string"
+        },
+        "semantic_acceptance_objective": {
+          "enum": [
+            "bounded_semantic_equivalence_after_approved_rearchitecture",
+            "bounded_semantic_equivalence_after_direct_reconstruction"
+          ],
+          "title": "Semantic Acceptance Objective",
+          "type": "string"
+        },
+        "skipped_specialist_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Skipped Specialist Ids",
+          "type": "array"
+        },
+        "source_context_bindings": {
+          "items": {
+            "$ref": "#/$defs/DeclaredSourceContextBinding"
+          },
+          "minItems": 1,
+          "title": "Source Context Bindings",
+          "type": "array"
+        },
+        "supersedes_decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SupersededSemanticDecisionBinding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "target_design_approval_required": {
+          "const": true,
+          "default": true,
+          "title": "Target Design Approval Required",
+          "type": "boolean"
+        },
+        "target_environment_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Target Environment Refs",
+          "type": "array"
+        },
+        "target_write_authority": {
+          "const": false,
+          "default": false,
+          "title": "Target Write Authority",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "decision_id",
+        "run_id",
+        "scope_id",
+        "migration_unit_id",
+        "comparison_scope_refs",
+        "build_scope_refs",
+        "target_environment_refs",
+        "mode",
+        "decided_by_ref",
+        "decision_ref",
+        "decision_record_revision",
+        "decision_record_sha256",
+        "decided_at",
+        "rationale",
+        "source_context_bindings",
+        "question_version",
+        "dbt_route",
+        "consolidation_route",
+        "omni_model_route",
+        "semantic_acceptance_objective",
+        "required_specialist_ids",
+        "skipped_specialist_ids"
+      ],
+      "title": "SemanticRoutingPayload",
+      "type": "object"
+    },
+    "SupersededSemanticDecisionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "migration_unit_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,159}$",
+          "title": "Migration Unit Id",
+          "type": "string"
+        },
+        "scope_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Scope Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "content_hash",
+        "created_at",
+        "scope_id",
+        "migration_unit_id"
+      ],
+      "title": "SupersededSemanticDecisionBinding",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "documented_fact",
+        "stated_evidence",
+        "observed_tenant_behavior",
+        "field_pattern",
+        "assumption",
+        "recommendation",
+        "unresolved_gap",
+        "synthetic_fixture"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "immutable": {
+      "const": true,
+      "default": true,
+      "title": "Immutable",
+      "type": "boolean"
+    },
+    "payload": {
+      "$ref": "#/$defs/SemanticRoutingPayload"
+    },
+    "producer": {
+      "title": "Producer",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "sigma-semantic-routing-decision.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "source_references": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source References",
+      "type": "array"
+    },
+    "superseded_by_artifact_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Superseded By Artifact Id"
+    },
+    "supersedes_artifact_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Artifact Id"
+    },
+    "supersession_state": {
+      "default": "current",
+      "enum": [
+        "current",
+        "superseded"
+      ],
+      "title": "Supersession State",
+      "type": "string"
+    },
+    "upstream_hashes": {
+      "items": {
+        "$ref": "#/$defs/ArtifactInput"
+      },
+      "title": "Upstream Hashes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "artifact_id",
+    "run_id",
+    "scope_id",
+    "created_at",
+    "producer",
+    "source_references",
+    "upstream_hashes",
+    "content_hash",
+    "classification",
+    "schema_version",
+    "payload"
+  ],
+  "title": "SigmaSemanticRoutingArtifact",
+  "type": "object"
+}

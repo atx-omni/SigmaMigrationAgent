@@ -1,0 +1,1135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/domo-portfolio-inventory.v1.schema.json",
+  "title": "Canonical Domo portfolio inventory and commonality admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "portfolio_id",
+    "run_id",
+    "scope_id",
+    "source_tenant_ref",
+    "visibility_principal_ref",
+    "as_of",
+    "source_object_graph_ref",
+    "evidence_bundle_ref",
+    "coverage_ledger_ref",
+    "inventory_snapshot_ref",
+    "observation_ids",
+    "objects",
+    "object_sets",
+    "summary",
+    "commonality_admission",
+    "portfolio_hash",
+    "immutable",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.portfolio-inventory.v1" },
+    "portfolio_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "source_tenant_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "visibility_principal_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "as_of": { "type": "string", "format": "date-time" },
+    "source_object_graph_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "evidence_bundle_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "coverage_ledger_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "inventory_snapshot_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "observation_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+      }
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/portfolioObject" }
+    },
+    "object_sets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/objectSet" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalog_state",
+        "total_objects",
+        "eligible_objects",
+        "blocked_objects",
+        "not_applicable_objects",
+        "missing_owner_objects"
+      ],
+      "properties": {
+        "catalog_state": { "enum": ["complete", "partial", "blocked"] },
+        "total_objects": { "type": "integer", "minimum": 1 },
+        "eligible_objects": { "type": "integer", "minimum": 0 },
+        "blocked_objects": { "type": "integer", "minimum": 0 },
+        "not_applicable_objects": { "type": "integer", "minimum": 0 },
+        "missing_owner_objects": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "commonality_admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "eligible_object_ids",
+        "excluded_object_ids",
+        "blocking_object_ids",
+        "reasons"
+      ],
+      "properties": {
+        "status": { "enum": ["ready", "partial", "blocked"] },
+        "eligible_object_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "excluded_object_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "blocking_object_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "ready" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "blocking_object_ids": { "maxItems": 0 },
+              "reasons": { "maxItems": 0 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "blocked" } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "blocking_object_ids": { "minItems": 1 },
+              "reasons": { "minItems": 1 }
+            }
+          }
+        }
+      ]
+    },
+    "portfolio_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "immutable": { "const": true },
+    "provenance": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/provenance"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "$defs": {
+    "portfolioObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "name",
+        "lifecycle_state",
+        "owner_state",
+        "owner_refs",
+        "evidence_state",
+        "observation_ids",
+        "definition",
+        "schema",
+        "lineage",
+        "usage",
+        "output_semantics",
+        "external_handoff_required",
+        "redesign_handoff_refs",
+        "commonality",
+        "semantic_profile_requirements",
+        "semantic_profile_expectations",
+        "object_hash",
+        "security"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectRef"
+        },
+        "name": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "lifecycle_state": { "enum": ["active", "inactive", "deleted", "unknown"] },
+        "owner_state": { "enum": ["known", "missing", "ambiguous", "not_applicable"] },
+        "owner_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "evidence_state": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/evidenceState"
+        },
+        "observation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "definition": { "$ref": "#/$defs/definitionEvidence" },
+        "schema": { "$ref": "#/$defs/schemaEvidence" },
+        "lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["producer_object_ids", "consumer_object_ids"],
+          "properties": {
+            "producer_object_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+              }
+            },
+            "consumer_object_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+              }
+            }
+          }
+        },
+        "usage": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/usageObservation" }
+        },
+        "output_semantics": {
+          "oneOf": [
+            { "$ref": "#/$defs/outputSemantics" },
+            { "type": "null" }
+          ]
+        },
+        "external_handoff_required": { "type": "boolean" },
+        "redesign_handoff_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "commonality": { "$ref": "#/$defs/commonality" },
+        "semantic_profile_requirements": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/semanticProfileRequirement" }
+        },
+        "semantic_profile_expectations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/semanticProfileExpectation" }
+        },
+        "object_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "security": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "external_handoff_required": { "const": true } },
+            "required": ["external_handoff_required"]
+          },
+          "then": {
+            "properties": { "redesign_handoff_refs": { "minItems": 1 } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "external_handoff_required": { "const": false } },
+            "required": ["external_handoff_required"]
+          },
+          "then": {
+            "properties": { "redesign_handoff_refs": { "maxItems": 0 } }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "owner_state": { "const": "known" }
+            },
+            "required": ["owner_state"]
+          },
+          "then": { "properties": { "owner_refs": { "minItems": 1 } } }
+        },
+        {
+          "if": {
+            "properties": {
+              "owner_state": { "enum": ["missing", "not_applicable"] }
+            },
+            "required": ["owner_state"]
+          },
+          "then": { "properties": { "owner_refs": { "maxItems": 0 } } }
+        },
+        {
+          "if": {
+            "properties": {
+              "commonality": {
+                "properties": { "status": { "const": "eligible" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["commonality"]
+          },
+          "then": {
+            "properties": {
+              "evidence_state": { "const": "extracted_complete" },
+              "definition": {
+                "properties": {
+                  "state": { "const": "extracted_complete" },
+                  "content_ref": {
+                    "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+                  },
+                  "content_hash": {
+                    "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+                  }
+                }
+              },
+              "commonality": {
+                "properties": {
+                  "reasons": { "maxItems": 0 },
+                  "profile": {
+                    "oneOf": [
+                      { "$ref": "#/$defs/beastModeProfile" },
+                      { "$ref": "#/$defs/sqlDataflowProfile" },
+                      { "$ref": "#/$defs/magicEtlProfile" },
+                      { "$ref": "#/$defs/workflowProfile" },
+                      { "$ref": "#/$defs/datasetOutputProfile" }
+                    ]
+                  }
+                }
+              },
+              "security": {
+                "properties": {
+                  "redaction_state": {
+                    "enum": ["not_required", "redacted", "tokenized"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "commonality": {
+                "properties": { "status": { "const": "blocked" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["commonality"]
+          },
+          "then": {
+            "properties": {
+              "commonality": {
+                "properties": {
+                  "reasons": { "minItems": 1 },
+                  "profile": { "$ref": "#/$defs/incompleteProfile" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "commonality": {
+                "properties": { "status": { "const": "not_applicable" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["commonality"]
+          },
+          "then": {
+            "properties": {
+              "commonality": {
+                "properties": {
+                  "profile": { "$ref": "#/$defs/notApplicableProfile" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": { "object_type": { "const": "beast_mode" } },
+                "required": ["object_type"]
+              },
+              "commonality": {
+                "properties": { "status": { "const": "eligible" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["identity", "commonality"]
+          },
+          "then": {
+            "properties": {
+              "commonality": {
+                "properties": { "profile": { "$ref": "#/$defs/beastModeProfile" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": { "object_type": { "const": "sql_dataflow" } },
+                "required": ["object_type"]
+              },
+              "commonality": {
+                "properties": { "status": { "const": "eligible" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["identity", "commonality"]
+          },
+          "then": {
+            "properties": {
+              "commonality": {
+                "properties": { "profile": { "$ref": "#/$defs/sqlDataflowProfile" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": { "object_type": { "const": "magic_etl" } },
+                "required": ["object_type"]
+              },
+              "commonality": {
+                "properties": { "status": { "const": "eligible" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["identity", "commonality"]
+          },
+          "then": {
+            "properties": {
+              "commonality": {
+                "properties": { "profile": { "$ref": "#/$defs/magicEtlProfile" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": { "object_type": { "const": "workflow" } },
+                "required": ["object_type"]
+              },
+              "commonality": {
+                "properties": { "status": { "const": "eligible" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["identity", "commonality"]
+          },
+          "then": {
+            "properties": {
+              "external_handoff_required": { "const": true },
+              "commonality": {
+                "properties": { "profile": { "$ref": "#/$defs/workflowProfile" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": { "object_type": { "const": "dataset" } },
+                "required": ["object_type"]
+              },
+              "commonality": {
+                "properties": { "status": { "const": "eligible" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["identity", "commonality"]
+          },
+          "then": {
+            "properties": {
+              "output_semantics": { "$ref": "#/$defs/outputSemantics" },
+              "commonality": {
+                "properties": { "profile": { "$ref": "#/$defs/datasetOutputProfile" } }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": {
+                  "object_type": {
+                    "enum": [
+                      "page",
+                      "subpage",
+                      "card",
+                      "dataset_schema",
+                      "variable",
+                      "pdp_policy",
+                      "schedule",
+                      "alert",
+                      "app_studio_app",
+                      "custom_app",
+                      "domo_everywhere_embed",
+                      "workbench_job",
+                      "connector_account",
+                      "file_asset",
+                      "code_engine_package",
+                      "publication",
+                      "user",
+                      "group",
+                      "role",
+                      "other"
+                    ]
+                  }
+                },
+                "required": ["object_type"]
+              }
+            },
+            "required": ["identity"]
+          },
+          "then": {
+            "properties": {
+              "commonality": {
+                "properties": {
+                  "status": { "not": { "const": "eligible" } }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity": {
+                "properties": {
+                  "object_type": {
+                    "enum": ["workflow", "app_studio_app", "custom_app", "domo_everywhere_embed"]
+                  }
+                },
+                "required": ["object_type"]
+              }
+            },
+            "required": ["identity"]
+          },
+          "then": {
+            "properties": { "external_handoff_required": { "const": true } }
+          }
+        }
+      ]
+    },
+    "definitionEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "state", "content_ref", "content_hash", "evidence_refs"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "none",
+            "metadata",
+            "page",
+            "card",
+            "dataset",
+            "beast_mode",
+            "sql_dataflow",
+            "magic_etl",
+            "workflow",
+            "application",
+            "other"
+          ]
+        },
+        "state": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/evidenceState"
+        },
+        "content_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        },
+        "content_hash": {
+          "oneOf": [
+            { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        }
+      }
+    },
+    "schemaEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "content_ref", "content_hash", "evidence_refs"],
+      "properties": {
+        "state": { "enum": ["complete", "partial", "missing", "not_applicable"] },
+        "content_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        },
+        "content_hash": {
+          "oneOf": [
+            { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        }
+      }
+    },
+    "usageObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric", "value", "window", "source_observation_id", "evidence_ref"],
+      "properties": {
+        "metric": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "value": { "type": "number" },
+        "window": { "$ref": "#/$defs/timeWindow" },
+        "source_observation_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "evidence_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "outputSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer_object_id",
+        "update_mode",
+        "grain",
+        "key_fields",
+        "freshness_profile_ref",
+        "history_profile_ref",
+        "security_profile_ref",
+        "result_profile_ref"
+      ],
+      "properties": {
+        "producer_object_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "update_mode": { "enum": ["replace", "append", "upsert", "snapshot"] },
+        "grain": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "key_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "freshness_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "history_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "security_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "result_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "commonality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasons", "profile"],
+      "properties": {
+        "status": { "enum": ["eligible", "blocked", "not_applicable"] },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "profile": {
+          "oneOf": [
+            { "$ref": "#/$defs/incompleteProfile" },
+            { "$ref": "#/$defs/notApplicableProfile" },
+            { "$ref": "#/$defs/beastModeProfile" },
+            { "$ref": "#/$defs/sqlDataflowProfile" },
+            { "$ref": "#/$defs/magicEtlProfile" },
+            { "$ref": "#/$defs/workflowProfile" },
+            { "$ref": "#/$defs/datasetOutputProfile" }
+          ]
+        }
+      }
+    },
+    "incompleteProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_type", "missing_requirements"],
+      "properties": {
+        "profile_type": { "const": "incomplete" },
+        "missing_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "notApplicableProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_type"],
+      "properties": { "profile_type": { "const": "not_applicable" } }
+    },
+    "beastModeProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_type",
+        "formula_ref",
+        "formula_hash",
+        "scope",
+        "referenced_fields",
+        "consumer_object_ids",
+        "calculation_kind"
+      ],
+      "properties": {
+        "profile_type": { "const": "beast_mode" },
+        "formula_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "formula_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "scope": { "enum": ["global", "dataset", "card"] },
+        "referenced_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "consumer_object_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "calculation_kind": { "enum": ["row", "aggregate", "window", "fixed_lod"] }
+      }
+    },
+    "sqlDataflowProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_type",
+        "sql_ref",
+        "sql_hash",
+        "dialect",
+        "ordered_input_object_ids",
+        "output_object_ids",
+        "update_mode"
+      ],
+      "properties": {
+        "profile_type": { "const": "sql_dataflow" },
+        "sql_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "sql_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "dialect": { "enum": ["mysql", "redshift", "other"] },
+        "ordered_input_object_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "output_object_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "update_mode": { "enum": ["replace", "append", "upsert", "snapshot"] }
+      }
+    },
+    "magicEtlProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_type",
+        "graph_ref",
+        "graph_hash",
+        "tile_count",
+        "graph_complete",
+        "input_object_ids",
+        "output_object_ids",
+        "update_mode"
+      ],
+      "properties": {
+        "profile_type": { "const": "magic_etl" },
+        "graph_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "graph_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "tile_count": { "type": "integer", "minimum": 1 },
+        "graph_complete": { "const": true },
+        "input_object_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "output_object_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "update_mode": { "enum": ["replace", "append", "upsert", "snapshot"] }
+      }
+    },
+    "workflowProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_type",
+        "definition_ref",
+        "definition_hash",
+        "portable_definition_complete",
+        "triggers",
+        "actions",
+        "side_effects",
+        "outputs_declared",
+        "output_object_ids",
+        "credential_boundary_ref"
+      ],
+      "properties": {
+        "profile_type": { "const": "workflow" },
+        "definition_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "definition_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "portable_definition_complete": { "const": true },
+        "triggers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "side_effects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "none",
+              "external_write",
+              "message_delivery",
+              "recipient_delivery",
+              "code_execution",
+              "credential_use",
+              "form_submission",
+              "embed_identity"
+            ]
+          }
+        },
+        "outputs_declared": { "const": true },
+        "output_object_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "credential_boundary_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "datasetOutputProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_type",
+        "producer_object_id",
+        "schema_ref",
+        "schema_hash",
+        "grain",
+        "key_fields",
+        "update_mode",
+        "freshness_profile_ref",
+        "history_profile_ref",
+        "security_profile_ref",
+        "result_profile_ref"
+      ],
+      "properties": {
+        "profile_type": { "const": "dataset_output" },
+        "producer_object_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "schema_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "schema_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "grain": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "key_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        },
+        "update_mode": { "enum": ["replace", "append", "upsert", "snapshot"] },
+        "freshness_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "history_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "security_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "result_profile_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "semanticProfileRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "profile_kind",
+        "base_object_id",
+        "context_id",
+        "context_ref",
+        "context_hash",
+        "definition_ref",
+        "definition_hash",
+        "source_revision_hash",
+        "consumer_object_id",
+        "evidence_refs",
+        "requirement_hash"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "profile_kind": {
+          "enum": [
+            "dataset_output",
+            "transformation",
+            "calculation",
+            "dashboard_query",
+            "security_policy",
+            "workflow_output"
+          ]
+        },
+        "base_object_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "context_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "context_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "context_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "definition_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "definition_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "source_revision_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "consumer_object_id": {
+          "oneOf": [
+            { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+            { "type": "null" }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+          }
+        },
+        "requirement_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "semanticProfileExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "requirement_hash",
+        "expected_profile_hash",
+        "builder_version"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "requirement_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "expected_profile_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        },
+        "builder_version": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "objectSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_type", "count", "object_ids", "exact_id_set_hash"],
+      "properties": {
+        "object_type": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectType"
+        },
+        "count": { "type": "integer", "minimum": 1 },
+        "object_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+          }
+        },
+        "exact_id_set_hash": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "timeWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "timezone"],
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" },
+        "timezone": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    }
+  }
+}

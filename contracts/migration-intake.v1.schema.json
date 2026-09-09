@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/migration-intake.v1.schema.json",
+  "title": "Source-only Domo migration intake",
+  "description": "Captures source scope, authority and non-secret target intent. Target credentials are deliberately outside this contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "intake_id",
+    "run_id",
+    "requested_at",
+    "requested_by_ref",
+    "source",
+    "requested_scope",
+    "business_outcomes",
+    "ownership",
+    "source_authority",
+    "privacy_boundary",
+    "available_acquisition_channels",
+    "target_intent",
+    "status"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.migration-intake.v1" },
+    "intake_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "requested_at": { "type": "string", "format": "date-time" },
+    "requested_by_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "tenant_ref", "environment", "base_url_ref"],
+      "properties": {
+        "system": { "const": "domo" },
+        "tenant_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "environment": { "enum": ["production", "sandbox", "development", "unknown"] },
+        "base_url_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "requested_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry_objects", "include_dependencies", "explicit_exclusions", "as_of"],
+      "properties": {
+        "entry_objects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectRef"
+          }
+        },
+        "include_dependencies": { "const": true },
+        "explicit_exclusions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectRef"
+          }
+        },
+        "as_of": { "type": "string", "format": "date-time" }
+      }
+    },
+    "business_outcomes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_owner_ref", "business_owner_ref", "acceptance_owner_ref"],
+      "properties": {
+        "source_owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "business_owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "acceptance_owner_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        }
+      }
+    },
+    "source_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "authorization_ref", "allowed_object_types", "forbidden_actions"],
+      "properties": {
+        "mode": { "const": "source_read_only" },
+        "authorization_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "allowed_object_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/sourceObjectType"
+          }
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "minItems": 1,
+          "contains": { "const": "source_write" },
+          "items": {
+            "enum": [
+              "source_write",
+              "target_write",
+              "credential_collection",
+              "publication",
+              "cutover",
+              "decommission"
+            ]
+          }
+        }
+      }
+    },
+    "privacy_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_ref", "permitted_data_classes", "raw_row_export_allowed", "redaction_required"],
+      "properties": {
+        "policy_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "permitted_data_classes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["metadata", "schema", "definitions", "aggregates", "sampled_rows", "screenshots"]
+          }
+        },
+        "raw_row_export_allowed": { "type": "boolean" },
+        "redaction_required": { "type": "boolean" }
+      }
+    },
+    "available_acquisition_channels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["channel", "declared_available", "requires_customer_action"],
+        "properties": {
+          "channel": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/acquisitionChannel"
+          },
+          "declared_available": { "type": "boolean" },
+          "requires_customer_action": { "type": "boolean" }
+        }
+      }
+    },
+    "target_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["warehouse_platform", "transformation_platform", "bi_platform"],
+      "properties": {
+        "warehouse_platform": { "enum": ["snowflake", "undecided"] },
+        "transformation_platform": { "enum": ["dbt", "undecided"] },
+        "bi_platform": { "const": "omni" },
+        "dbt_project_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        },
+        "omni_organization_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        },
+        "target_environment_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        }
+      }
+    },
+    "status": { "enum": ["draft", "ready_for_preflight", "blocked", "accepted"] }
+  }
+}

@@ -1,0 +1,418 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/qa-result.v1.schema.json",
+  "title": "Typed independent Domo-to-Omni QA result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "qa_result_id",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "gate_id",
+    "fixture_ref",
+    "fixture_hash",
+    "verifier_ref",
+    "producer_refs",
+    "source",
+    "target",
+    "tolerances",
+    "result",
+    "checks",
+    "evidence_refs",
+    "blockers",
+    "waiver_decision",
+    "promotion_bundle_fingerprint",
+    "executed_at",
+    "result_hash",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.qa-result.v1" },
+    "qa_result_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "tenant_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "run_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "scope_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "wave_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "migration_unit_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "validation_cycle_id": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+    },
+    "gate_id": {
+      "enum": [
+        "data",
+        "model",
+        "content",
+        "query_parity",
+        "visual_interaction",
+        "security",
+        "operations",
+        "omni_revalidation",
+        "production_validation"
+      ]
+    },
+    "fixture_ref": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+    },
+    "fixture_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "verifier_ref": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 2048,
+      "pattern": "^(agent-ref://migration[-_]qa|human-ref://.+|person-ref://.+|person://.+)$"
+    },
+    "producer_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+      }
+    },
+    "source": { "$ref": "#/$defs/artifactObservation" },
+    "target": { "$ref": "#/$defs/artifactObservation" },
+    "tolerances": {
+      "oneOf": [
+        { "$ref": "#/$defs/tolerance" },
+        { "type": "null" }
+      ]
+    },
+    "result": {
+      "enum": [
+        "passed",
+        "accepted",
+        "accepted_with_approved_exceptions",
+        "failed",
+        "blocked"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/checkResult" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "waiver_decision": {
+      "oneOf": [
+        { "$ref": "#/$defs/qaWaiverDecision" },
+        { "type": "null" }
+      ]
+    },
+    "promotion_bundle_fingerprint": {
+      "oneOf": [
+        { "$ref": "#/$defs/envelopeSha256" },
+        { "type": "null" }
+      ]
+    },
+    "executed_at": { "type": "string", "format": "date-time" },
+    "result_hash": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+    },
+    "security": {
+      "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "gate_id": { "const": "query_parity" } },
+        "required": ["gate_id"]
+      },
+      "then": {
+        "properties": { "tolerances": { "$ref": "#/$defs/tolerance" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "gate_id": { "const": "production_validation" } },
+        "required": ["gate_id"]
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": { "environment_tier": { "const": "production" } }
+          },
+          "target": {
+            "properties": { "environment_tier": { "const": "production" } }
+          },
+          "promotion_bundle_fingerprint": { "$ref": "#/$defs/envelopeSha256" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result": { "enum": ["passed", "accepted"] }
+        },
+        "required": ["result"]
+      },
+      "then": {
+        "properties": {
+          "checks": {
+            "minItems": 1,
+            "items": {
+              "properties": { "outcome": { "const": "passed" } }
+            }
+          },
+          "evidence_refs": { "minItems": 1 },
+          "blockers": { "maxItems": 0 },
+          "waiver_decision": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result": { "const": "accepted_with_approved_exceptions" }
+        },
+        "required": ["result"]
+      },
+      "then": {
+        "properties": {
+          "checks": { "minItems": 1 },
+          "evidence_refs": { "minItems": 1 },
+          "blockers": { "maxItems": 0 },
+          "waiver_decision": { "$ref": "#/$defs/qaWaiverDecision" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "result": { "const": "failed" } },
+        "required": ["result"]
+      },
+      "then": {
+        "properties": {
+          "checks": {
+            "minItems": 1,
+            "contains": {
+              "properties": { "outcome": { "const": "failed" } },
+              "required": ["outcome"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "result": { "const": "blocked" } },
+        "required": ["result"]
+      },
+      "then": {
+        "properties": { "blockers": { "minItems": 1 } }
+      }
+    }
+  ],
+  "$defs": {
+    "envelopeSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "watermark": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "timestamp" },
+            "value": { "type": "string", "format": "date-time" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "batch_id" },
+            "value": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "snapshot_ref" },
+            "value": {
+              "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+            }
+          }
+        }
+      ]
+    },
+    "artifactObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_ref",
+        "revision",
+        "content_sha256",
+        "environment_ref",
+        "environment_tier",
+        "watermark",
+        "logical_snapshot_id",
+        "observed_at"
+      ],
+      "properties": {
+        "artifact_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "revision": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "$ref": "#/$defs/envelopeSha256" },
+        "environment_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "environment_tier": {
+          "enum": ["source", "development", "staging", "production"]
+        },
+        "watermark": { "$ref": "#/$defs/watermark" },
+        "logical_snapshot_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "tolerance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "absolute",
+        "relative_percent",
+        "null_equivalence",
+        "ordering_required",
+        "policy_ref"
+      ],
+      "properties": {
+        "mode": { "enum": ["exact", "numeric", "policy_ref"] },
+        "absolute": { "type": "number", "minimum": 0 },
+        "relative_percent": { "type": "number", "minimum": 0 },
+        "null_equivalence": { "type": "boolean" },
+        "ordering_required": { "type": "boolean" },
+        "policy_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef"
+        }
+      }
+    },
+    "checkResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check_id",
+        "metric",
+        "expected_ref",
+        "actual_ref",
+        "tolerance_ref",
+        "outcome",
+        "difference_hash",
+        "note"
+      ],
+      "properties": {
+        "check_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "metric": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "expected_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "actual_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "tolerance_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "outcome": { "enum": ["passed", "failed", "blocked", "not_run"] },
+        "difference_hash": {
+          "oneOf": [
+            { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "note": {
+          "oneOf": [
+            { "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "qaWaiverDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_id",
+        "decision_ref",
+        "action",
+        "decided_by_ref",
+        "decided_at",
+        "expires_at",
+        "scope_ref",
+        "artifact_fingerprint",
+        "impact",
+        "compensating_controls"
+      ],
+      "properties": {
+        "decision_id": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/stableId"
+        },
+        "decision_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "action": { "const": "accept_qa_exception" },
+        "decided_by_ref": {
+          "type": "string",
+          "pattern": "^(human-ref|person-ref|person)://.+$"
+        },
+        "decided_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "scope_ref": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef"
+        },
+        "artifact_fingerprint": { "$ref": "#/$defs/envelopeSha256" },
+        "impact": {
+          "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "compensating_controls": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      }
+    }
+  }
+}

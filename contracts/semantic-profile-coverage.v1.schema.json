@@ -1,0 +1,490 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/semantic-profile-coverage.v1.schema.json",
+  "title": "Immutable exact semantic-profile subject coverage manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "coverage_id",
+    "coverage_revision",
+    "supersedes_coverage_hash",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "revision_bindings",
+    "status",
+    "subjects",
+    "subject_count",
+    "denominator_hash",
+    "resolutions",
+    "resolution_count",
+    "profile_producer_refs",
+    "evidence_refs",
+    "producer_ref",
+    "assembled_at",
+    "coverage_hash",
+    "authority",
+    "immutable",
+    "provenance",
+    "security_metadata"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.semantic-profile-coverage.v1" },
+    "coverage_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "coverage_revision": { "type": "integer", "minimum": 1 },
+    "supersedes_coverage_hash": {
+      "oneOf": [
+        { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        { "type": "null" }
+      ]
+    },
+    "tenant_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "run_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "scope_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "revision_bindings": { "$ref": "#/$defs/revisionBindings" },
+    "status": { "enum": ["complete", "blocked"] },
+    "subjects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/subject" }
+    },
+    "subject_count": { "type": "integer", "minimum": 1 },
+    "denominator_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "resolutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/resolution" }
+    },
+    "resolution_count": { "type": "integer", "minimum": 1 },
+    "profile_producer_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+    },
+    "producer_ref": { "const": "agent-ref://domo-to-omni-architect" },
+    "assembled_at": { "type": "string", "format": "date-time" },
+    "coverage_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "authority": { "$ref": "#/$defs/authority" },
+    "immutable": { "const": true },
+    "provenance": { "$ref": "common-definitions.v1.schema.json#/$defs/provenance" },
+    "security_metadata": { "$ref": "common-definitions.v1.schema.json#/$defs/securityMetadata" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "coverage_revision": { "const": 1 } },
+        "required": ["coverage_revision"]
+      },
+      "then": { "properties": { "supersedes_coverage_hash": { "type": "null" } } },
+      "else": {
+        "properties": {
+          "supersedes_coverage_hash": {
+            "$ref": "common-definitions.v1.schema.json#/$defs/sha256"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "complete" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "resolutions": {
+            "not": { "contains": { "properties": { "disposition": { "const": "blocker" } } } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "blocked" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "resolutions": {
+            "contains": { "properties": { "disposition": { "const": "blocker" } } }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "artifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tenant_ref",
+        "run_id",
+        "scope_id",
+        "migration_unit_id",
+        "validation_cycle_id",
+        "artifact_id",
+        "artifact_type",
+        "artifact_ref",
+        "revision",
+        "content_sha256",
+        "semantic_hash",
+        "producer_ref",
+        "binding_hash"
+      ],
+      "properties": {
+        "tenant_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "run_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "scope_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_type": {
+          "enum": [
+            "inventory_snapshot",
+            "domo_portfolio_inventory",
+            "migration_scope",
+            "repository_inventory",
+            "target_semantic_profile",
+            "semantic_profile"
+          ]
+        },
+        "artifact_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "semantic_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "producer_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "revisionBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_snapshot",
+        "portfolio",
+        "migration_scope",
+        "repository",
+        "target_proposals"
+      ],
+      "properties": {
+        "source_snapshot": {
+          "allOf": [
+            { "$ref": "#/$defs/artifactBinding" },
+            { "properties": { "artifact_type": { "const": "inventory_snapshot" } } }
+          ]
+        },
+        "portfolio": {
+          "allOf": [
+            { "$ref": "#/$defs/artifactBinding" },
+            { "properties": { "artifact_type": { "const": "domo_portfolio_inventory" } } }
+          ]
+        },
+        "migration_scope": {
+          "allOf": [
+            { "$ref": "#/$defs/artifactBinding" },
+            { "properties": { "artifact_type": { "const": "migration_scope" } } }
+          ]
+        },
+        "repository": {
+          "allOf": [
+            { "$ref": "#/$defs/artifactBinding" },
+            { "properties": { "artifact_type": { "const": "repository_inventory" } } }
+          ]
+        },
+        "target_proposals": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "allOf": [
+              { "$ref": "#/$defs/artifactBinding" },
+              { "properties": { "artifact_type": { "const": "target_semantic_profile" } } }
+            ]
+          }
+        }
+      }
+    },
+    "profileIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "kind", "object_id", "revision_hash"],
+      "properties": {
+        "system": { "enum": ["domo", "dbt", "snowflake", "omni"] },
+        "kind": {
+          "enum": [
+            "dataset_output",
+            "transformation",
+            "calculation",
+            "dashboard_query",
+            "security_policy",
+            "source_object",
+            "workflow_output",
+            "dbt_resource",
+            "omni_candidate"
+          ]
+        },
+        "object_id": { "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString" },
+        "revision_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_ref",
+        "subject_kind",
+        "profile_identity",
+        "inclusion_basis",
+        "derived_from_binding",
+        "source_artifact_ref",
+        "source_artifact_revision",
+        "source_revision_hash",
+        "subject_hash"
+      ],
+      "properties": {
+        "subject_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "subject_kind": {
+          "enum": [
+            "source_object",
+            "repository_resource",
+            "dashboard_query",
+            "pdp_security",
+            "target_semantic"
+          ]
+        },
+        "profile_identity": { "$ref": "#/$defs/profileIdentity" },
+        "inclusion_basis": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "migration_selected",
+              "dependency_reachable",
+              "commonality_eligible",
+              "repository_required",
+              "dashboard_query_required",
+              "pdp_security_required",
+              "target_proposal_required"
+            ]
+          }
+        },
+        "derived_from_binding": {
+          "enum": ["source_snapshot", "portfolio", "migration_scope", "repository", "target_proposals"]
+        },
+        "source_artifact_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "source_artifact_revision": { "type": "integer", "minimum": 1 },
+        "source_revision_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "subject_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "subject_kind": { "const": "source_object" } } },
+          "then": {
+            "properties": {
+              "derived_from_binding": { "const": "portfolio" },
+              "inclusion_basis": {
+                "items": {
+                  "enum": [
+                    "migration_selected",
+                    "dependency_reachable",
+                    "commonality_eligible"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "subject_kind": { "const": "repository_resource" } } },
+          "then": {
+            "properties": {
+              "derived_from_binding": { "const": "repository" },
+              "inclusion_basis": {
+                "minItems": 1,
+                "maxItems": 1,
+                "items": { "const": "repository_required" }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "subject_kind": { "const": "dashboard_query" } } },
+          "then": {
+            "properties": {
+              "derived_from_binding": { "const": "portfolio" },
+              "inclusion_basis": {
+                "minItems": 1,
+                "contains": { "const": "dashboard_query_required" },
+                "items": {
+                  "enum": [
+                    "dashboard_query_required",
+                    "migration_selected",
+                    "dependency_reachable",
+                    "commonality_eligible"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "subject_kind": { "const": "pdp_security" } } },
+          "then": {
+            "properties": {
+              "derived_from_binding": { "const": "portfolio" },
+              "inclusion_basis": {
+                "minItems": 1,
+                "contains": { "const": "pdp_security_required" },
+                "items": {
+                  "enum": [
+                    "pdp_security_required",
+                    "migration_selected",
+                    "dependency_reachable",
+                    "commonality_eligible"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "subject_kind": { "const": "target_semantic" } } },
+          "then": {
+            "properties": {
+              "derived_from_binding": { "const": "target_proposals" },
+              "inclusion_basis": {
+                "minItems": 1,
+                "maxItems": 1,
+                "items": { "const": "target_proposal_required" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "profileBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "profile_id", "profile_hash", "identity"],
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/artifactBinding"
+        },
+        "profile_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "profile_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "identity": { "$ref": "#/$defs/profileIdentity" }
+      }
+    },
+    "ownedBlocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blocker_id",
+        "owner_ref",
+        "reason_code",
+        "summary",
+        "evidence_refs",
+        "opened_at",
+        "blocker_hash"
+      ],
+      "properties": {
+        "blocker_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "owner_ref": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 2048,
+          "pattern": "^(human-ref|person-ref|person|team-ref|external-team-ref):.+$"
+        },
+        "reason_code": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "summary": { "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString" },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "opened_at": { "type": "string", "format": "date-time" },
+        "blocker_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_ref",
+        "subject_hash",
+        "disposition",
+        "profile",
+        "blocker",
+        "resolution_hash"
+      ],
+      "properties": {
+        "subject_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "subject_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "disposition": { "enum": ["profile", "blocker"] },
+        "profile": {
+          "oneOf": [
+            { "$ref": "#/$defs/profileBinding" },
+            { "type": "null" }
+          ]
+        },
+        "blocker": {
+          "oneOf": [
+            { "$ref": "#/$defs/ownedBlocker" },
+            { "type": "null" }
+          ]
+        },
+        "resolution_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "disposition": { "const": "profile" } } },
+          "then": {
+            "properties": {
+              "profile": { "$ref": "#/$defs/profileBinding" },
+              "blocker": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "disposition": { "const": "blocker" } } },
+          "then": {
+            "properties": {
+              "profile": { "type": "null" },
+              "blocker": { "$ref": "#/$defs/ownedBlocker" }
+            }
+          }
+        }
+      ]
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorizes_tenant_acceptance",
+        "authorizes_target_writes",
+        "authorizes_promotion",
+        "authorizes_cutover",
+        "authorizes_decommissioning"
+      ],
+      "properties": {
+        "authorizes_tenant_acceptance": { "const": false },
+        "authorizes_target_writes": { "const": false },
+        "authorizes_promotion": { "const": false },
+        "authorizes_cutover": { "const": false },
+        "authorizes_decommissioning": { "const": false }
+      }
+    }
+  }
+}

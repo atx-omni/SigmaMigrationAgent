@@ -1,0 +1,432 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/qa-acceptance-suite.v1.schema.json",
+  "title": "Immutable per-unit Domo-to-Omni QA acceptance suite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "evidence_class",
+    "suite_id",
+    "migration_unit_status",
+    "evidence_snapshot_ref",
+    "evidence_snapshot_hash",
+    "evidence_snapshot_revision",
+    "verifier_ref",
+    "producer_refs",
+    "comparison_contexts",
+    "bindings",
+    "denominator",
+    "results",
+    "assembled_at",
+    "suite_hash",
+    "authorizes_tenant_acceptance",
+    "authorizes_production_readiness",
+    "authorizes_promotion",
+    "authorizes_cutover",
+    "authorizes_decommissioning",
+    "immutable"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.qa-acceptance-suite.v1" },
+    "tenant_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "run_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "scope_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "wave_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "evidence_class": { "$ref": "qa-fixture.v2.schema.json#/$defs/evidenceClass" },
+    "suite_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "migration_unit_status": { "const": "validated" },
+    "evidence_snapshot_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "evidence_snapshot_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "evidence_snapshot_revision": { "type": "integer", "minimum": 1 },
+    "verifier_ref": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 2048,
+      "pattern": "^(agent-ref|human-ref|person-ref|person):.+$"
+    },
+    "producer_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+    },
+    "comparison_contexts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/comparisonContextPair" }
+    },
+    "bindings": { "$ref": "#/$defs/evidenceBindings" },
+    "denominator": { "$ref": "#/$defs/coverageDenominator" },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/resultCaseBinding" }
+    },
+    "assembled_at": { "type": "string", "format": "date-time" },
+    "suite_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "authorizes_tenant_acceptance": { "const": false },
+    "authorizes_production_readiness": { "const": false },
+    "authorizes_promotion": { "const": false },
+    "authorizes_cutover": { "const": false },
+    "authorizes_decommissioning": { "const": false },
+    "immutable": { "const": true }
+  },
+  "$defs": {
+    "comparisonContextPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["context_id", "source", "target", "pair_hash"],
+      "properties": {
+        "context_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "source": { "$ref": "qa-fixture.v2.schema.json#/$defs/comparisonContext" },
+        "target": { "$ref": "qa-fixture.v2.schema.json#/$defs/comparisonContext" },
+        "provenance_bindings": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/comparisonContextProvenanceBinding" }
+        },
+        "pair_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "comparisonContextProvenanceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance_kind",
+        "provenance_id",
+        "provenance_ref",
+        "provenance_hash",
+        "binding_hash"
+      ],
+      "properties": {
+        "provenance_kind": {
+          "enum": ["semantic_profile_context", "dashboard_filter_context"]
+        },
+        "provenance_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "provenance_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "provenance_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "artifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tenant_ref",
+        "run_id",
+        "scope_id",
+        "wave_id",
+        "migration_unit_id",
+        "validation_cycle_id",
+        "evidence_class",
+        "artifact_id",
+        "artifact_type",
+        "artifact_ref",
+        "revision",
+        "content_sha256",
+        "semantic_hash",
+        "producer_ref",
+        "created_at",
+        "binding_hash"
+      ],
+      "properties": {
+        "tenant_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "run_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "scope_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "wave_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "evidence_class": { "$ref": "qa-fixture.v2.schema.json#/$defs/evidenceClass" },
+        "artifact_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_type": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "artifact_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "semantic_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "producer_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "targetReceiptBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact",
+        "operation_id",
+        "request_fingerprint",
+        "target_ref",
+        "result",
+        "write_receipt_ref",
+        "readback_ref",
+        "binding_hash"
+      ],
+      "properties": {
+        "artifact": { "$ref": "#/$defs/artifactBinding" },
+        "operation_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "request_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "target_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "result": { "const": "succeeded" },
+        "write_receipt_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "readback_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "targetReadbackBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact",
+        "operation_id",
+        "request_fingerprint",
+        "target_ref",
+        "state",
+        "write_receipt_ref",
+        "readback_ref",
+        "observed_content_fingerprint",
+        "binding_hash"
+      ],
+      "properties": {
+        "artifact": { "$ref": "#/$defs/artifactBinding" },
+        "operation_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "request_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "target_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "state": { "const": "matched" },
+        "write_receipt_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "readback_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "observed_content_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "evidenceBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dashboard_plan",
+        "semantic_profile_coverage",
+        "topic_blueprints",
+        "semantic_profiles",
+        "consolidation_decisions",
+        "source_evidence",
+        "target_artifacts",
+        "target_receipts",
+        "target_readbacks",
+        "persona_policies",
+        "tolerance_policies",
+        "fixture_artifacts",
+        "result_artifacts",
+        "bindings_hash"
+      ],
+      "properties": {
+        "dashboard_plan": { "$ref": "#/$defs/artifactBinding" },
+        "semantic_profile_coverage": {
+          "allOf": [
+            { "$ref": "#/$defs/artifactBinding" },
+            {
+              "type": "object",
+              "properties": {
+                "artifact_type": { "const": "semantic_profile_coverage" }
+              }
+            }
+          ]
+        },
+        "topic_blueprints": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "semantic_profiles": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "consolidation_decisions": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "source_evidence": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "target_artifacts": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "target_receipts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/targetReceiptBinding" }
+        },
+        "target_readbacks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/targetReadbackBinding" }
+        },
+        "persona_policies": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "tolerance_policies": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "fixture_artifacts": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "result_artifacts": { "$ref": "#/$defs/nonEmptyArtifactBindings" },
+        "bindings_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "nonEmptyArtifactBindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifactBinding" }
+    },
+    "coverageCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "dimension",
+        "subject_ref",
+        "subject_hash",
+        "fixture_ref",
+        "fixture_hash",
+        "fixture_binding_hash",
+        "comparison_context_id",
+        "comparison_context_hash",
+        "source_consumer_ref",
+        "persona_ref",
+        "expected_access",
+        "negative_candidate_ref",
+        "expected_consolidation_outcome",
+        "case_hash"
+      ],
+      "properties": {
+        "case_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "dimension": { "$ref": "qa-fixture.v2.schema.json#/$defs/coverageDimension" },
+        "subject_ref": {
+          "type": "string",
+          "pattern": "^qa-subject-ref://[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$"
+        },
+        "subject_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "fixture_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "fixture_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "fixture_binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "comparison_context_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "comparison_context_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "source_consumer_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef" },
+        "persona_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef" },
+        "expected_access": {
+          "oneOf": [
+            { "enum": ["allow", "deny"] },
+            { "type": "null" }
+          ]
+        },
+        "negative_candidate_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef" },
+        "expected_consolidation_outcome": {
+          "oneOf": [
+            { "enum": ["different", "unknown"] },
+            { "type": "null" }
+          ]
+        },
+        "case_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "coverageDenominator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "derived_from_binding_hashes",
+        "source_consumer_refs",
+        "allowed_persona_refs",
+        "denied_persona_refs",
+        "cases",
+        "denominator_hash"
+      ],
+      "properties": {
+        "derived_from_binding_hashes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+        },
+        "source_consumer_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "allowed_persona_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "denied_persona_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/coverageCase" }
+        },
+        "denominator_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "resultCaseBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "dimension",
+        "result_ref",
+        "result_hash",
+        "result_binding_hash",
+        "fixture_ref",
+        "fixture_hash",
+        "verifier_ref",
+        "producer_refs",
+        "comparison_context_id",
+        "source_context_hash",
+        "target_context_hash",
+        "outcome",
+        "observed_persona_access",
+        "derived_field_leakage_detected",
+        "observed_consolidation_outcome",
+        "evidence_refs",
+        "blockers",
+        "binding_hash"
+      ],
+      "properties": {
+        "case_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "dimension": { "$ref": "qa-fixture.v2.schema.json#/$defs/coverageDimension" },
+        "result_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "result_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "result_binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "fixture_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "fixture_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "verifier_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "producer_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "comparison_context_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "source_context_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "target_context_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "outcome": { "enum": ["passed", "failed", "blocked", "not_run"] },
+        "observed_persona_access": {
+          "oneOf": [
+            { "enum": ["allow", "deny"] },
+            { "type": "null" }
+          ]
+        },
+        "derived_field_leakage_detected": { "type": "boolean" },
+        "observed_consolidation_outcome": {
+          "oneOf": [
+            { "enum": ["exact", "equivalent", "different", "unknown"] },
+            { "type": "null" }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "blockers": {
+          "type": "array",
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString" }
+        },
+        "binding_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    }
+  }
+}

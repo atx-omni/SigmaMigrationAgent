@@ -1,0 +1,360 @@
+{
+  "$defs": {
+    "DeclaredSourceContextBinding": {
+      "additionalProperties": false,
+      "description": "Exact source artifact plus acceptance metadata awaiting trusted-store resolution.",
+      "properties": {
+        "acceptance_record_revision": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Acceptance Record Revision",
+          "type": "string"
+        },
+        "acceptance_record_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Acceptance Record Sha256",
+          "type": "string"
+        },
+        "acceptance_ref": {
+          "pattern": "^human-approval-ref://\\S+$",
+          "title": "Acceptance Ref",
+          "type": "string"
+        },
+        "acceptance_verification_state": {
+          "const": "reference_only",
+          "default": "reference_only",
+          "title": "Acceptance Verification State",
+          "type": "string"
+        },
+        "accepted_at": {
+          "format": "date-time",
+          "title": "Accepted At",
+          "type": "string"
+        },
+        "accepted_by_ref": {
+          "pattern": "^human-ref://\\S+$",
+          "title": "Accepted By Ref",
+          "type": "string"
+        },
+        "artifact_created_at": {
+          "format": "date-time",
+          "title": "Artifact Created At",
+          "type": "string"
+        },
+        "artifact_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "artifact_run_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Artifact Run Id",
+          "type": "string"
+        },
+        "artifact_schema_version": {
+          "enum": [
+            "sigma-capability-spike-bundle.v1",
+            "sigma-data-model-snapshot.v1",
+            "sigma-workbook-graph.v1",
+            "sigma-behavior-manifest.v1",
+            "sigma-api-capability-matrix.v1",
+            "sigma-migration-scope.v1",
+            "semantic-profile.v1",
+            "semantic-profile-coverage.v1",
+            "repository-inventory.v1"
+          ],
+          "title": "Artifact Schema Version",
+          "type": "string"
+        },
+        "artifact_scope_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Artifact Scope Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "artifact_schema_version",
+        "artifact_run_id",
+        "artifact_scope_id",
+        "content_hash",
+        "artifact_created_at",
+        "accepted_by_ref",
+        "acceptance_ref",
+        "acceptance_record_revision",
+        "acceptance_record_sha256",
+        "accepted_at"
+      ],
+      "title": "DeclaredSourceContextBinding",
+      "type": "object"
+    },
+    "SupersededSemanticDecisionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "migration_unit_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,159}$",
+          "title": "Migration Unit Id",
+          "type": "string"
+        },
+        "scope_id": {
+          "maxLength": 160,
+          "minLength": 3,
+          "title": "Scope Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "content_hash",
+        "created_at",
+        "scope_id",
+        "migration_unit_id"
+      ],
+      "title": "SupersededSemanticDecisionBinding",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "properties": {
+            "mode": {
+              "const": "warehouse_first_refactor"
+            },
+            "target_environment_refs": {
+              "allOf": [
+                {
+                  "contains": {
+                    "pattern": "^environment-ref://(?:dbt|snowflake|warehouse)/\\S+$",
+                    "type": "string"
+                  },
+                  "minContains": 1
+                }
+              ],
+              "contains": {
+                "pattern": "^environment-ref://omni/\\S+$",
+                "type": "string"
+              },
+              "items": {
+                "oneOf": [
+                  {
+                    "pattern": "^environment-ref://omni/\\S+$",
+                    "type": "string"
+                  },
+                  {
+                    "pattern": "^environment-ref://(?:dbt|snowflake|warehouse)/\\S+$",
+                    "type": "string"
+                  }
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1,
+              "minItems": 2,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "mode",
+            "target_environment_refs"
+          ],
+          "title": "Warehouse-first target environments"
+        },
+        {
+          "properties": {
+            "mode": {
+              "const": "omni_semantic_reconstruction"
+            },
+            "target_environment_refs": {
+              "items": {
+                "pattern": "^environment-ref://omni/\\S+$",
+                "type": "string"
+              },
+              "maxItems": 1,
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "mode",
+            "target_environment_refs"
+          ],
+          "title": "Direct Omni target environment"
+        }
+      ]
+    }
+  ],
+  "description": "Required, scope-bound human direction for target semantic architecture.\n\nThis request is deliberately separate from ``SigmaCapabilitySpikeRequest`` so target\narchitecture can change without changing or reacquiring source evidence.",
+  "properties": {
+    "build_scope_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Build Scope Refs",
+      "type": "array"
+    },
+    "comparison_scope_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "title": "Comparison Scope Refs",
+      "type": "array"
+    },
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decided_by_ref": {
+      "pattern": "^human-ref://\\S+$",
+      "title": "Decided By Ref",
+      "type": "string"
+    },
+    "decision_id": {
+      "maxLength": 160,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,159}$",
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "decision_record_revision": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Decision Record Revision",
+      "type": "string"
+    },
+    "decision_record_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Decision Record Sha256",
+      "type": "string"
+    },
+    "decision_ref": {
+      "pattern": "^human-decision-ref://\\S+$",
+      "title": "Decision Ref",
+      "type": "string"
+    },
+    "migration_unit_id": {
+      "maxLength": 160,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,159}$",
+      "title": "Migration Unit Id",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "warehouse_first_refactor",
+        "omni_semantic_reconstruction"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "question_version": {
+      "const": "sigma-semantic-migration-question.v1",
+      "default": "sigma-semantic-migration-question.v1",
+      "title": "Question Version",
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 4000,
+      "minLength": 10,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 160,
+      "minLength": 3,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "sigma-semantic-routing-decision-request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_id": {
+      "maxLength": 160,
+      "minLength": 3,
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "source_context_bindings": {
+      "items": {
+        "$ref": "#/$defs/DeclaredSourceContextBinding"
+      },
+      "minItems": 1,
+      "title": "Source Context Bindings",
+      "type": "array"
+    },
+    "supersedes_decision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SupersededSemanticDecisionBinding"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "target_environment_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Target Environment Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "decision_id",
+    "run_id",
+    "scope_id",
+    "migration_unit_id",
+    "comparison_scope_refs",
+    "build_scope_refs",
+    "target_environment_refs",
+    "mode",
+    "decided_by_ref",
+    "decision_ref",
+    "decision_record_revision",
+    "decision_record_sha256",
+    "decided_at",
+    "rationale",
+    "source_context_bindings"
+  ],
+  "title": "SigmaSemanticRoutingDecisionRequest",
+  "type": "object"
+}

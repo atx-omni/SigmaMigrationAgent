@@ -1,0 +1,461 @@
+{
+  "$defs": {
+    "ApprovedExclusion": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_ref": {
+          "title": "Approval Ref",
+          "type": "string"
+        },
+        "approved_by_ref": {
+          "title": "Approved By Ref",
+          "type": "string"
+        },
+        "property_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Property Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_id",
+        "reason",
+        "approved_by_ref",
+        "approval_ref"
+      ],
+      "title": "ApprovedExclusion",
+      "type": "object"
+    },
+    "ArtifactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "content_hash"
+      ],
+      "title": "ArtifactInput",
+      "type": "object"
+    },
+    "RunManifestPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "api_base_url": {
+          "format": "uri",
+          "pattern": "^https://",
+          "title": "Api Base Url",
+          "type": "string"
+        },
+        "approved_api_hosts": {
+          "items": {
+            "maxLength": 253,
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Approved Api Hosts",
+          "type": "array"
+        },
+        "approved_exclusions": {
+          "items": {
+            "$ref": "#/$defs/ApprovedExclusion"
+          },
+          "title": "Approved Exclusions",
+          "type": "array"
+        },
+        "authorization_ref": {
+          "title": "Authorization Ref",
+          "type": "string"
+        },
+        "build_scope_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Build Scope Refs",
+          "type": "array"
+        },
+        "comparison_scope_refs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Comparison Scope Refs",
+          "type": "array"
+        },
+        "credential_ref": {
+          "pattern": "^secret-ref://\\S+$",
+          "title": "Credential Ref",
+          "type": "string"
+        },
+        "data_classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ],
+          "title": "Data Classification",
+          "type": "string"
+        },
+        "data_model_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,511}$",
+          "title": "Data Model Id",
+          "type": "string"
+        },
+        "decommission_authority": {
+          "const": false,
+          "default": false,
+          "title": "Decommission Authority",
+          "type": "boolean"
+        },
+        "effective_account_type": {
+          "enum": [
+            "admin",
+            "creator",
+            "explorer",
+            "viewer",
+            "unknown"
+          ],
+          "title": "Effective Account Type",
+          "type": "string"
+        },
+        "evidence_mode": {
+          "enum": [
+            "live_tenant",
+            "synthetic_fixture"
+          ],
+          "title": "Evidence Mode",
+          "type": "string"
+        },
+        "expected_organization_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Expected Organization Id",
+          "type": "string"
+        },
+        "expected_user_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Expected User Id",
+          "type": "string"
+        },
+        "manual_evidence_owner_ref": {
+          "title": "Manual Evidence Owner Ref",
+          "type": "string"
+        },
+        "mutation_endpoints_exposed": {
+          "const": false,
+          "default": false,
+          "title": "Mutation Endpoints Exposed",
+          "type": "boolean"
+        },
+        "organization_ref": {
+          "title": "Organization Ref",
+          "type": "string"
+        },
+        "per_endpoint_request_budget": {
+          "maximum": 250,
+          "minimum": 3,
+          "title": "Per Endpoint Request Budget",
+          "type": "integer"
+        },
+        "policy_version": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "principal_ref": {
+          "title": "Principal Ref",
+          "type": "string"
+        },
+        "privacy_approval_ref": {
+          "title": "Privacy Approval Ref",
+          "type": "string"
+        },
+        "release_authority": {
+          "const": false,
+          "default": false,
+          "title": "Release Authority",
+          "type": "boolean"
+        },
+        "request_budget": {
+          "maximum": 250,
+          "minimum": 10,
+          "title": "Request Budget",
+          "type": "integer"
+        },
+        "retention_policy_ref": {
+          "title": "Retention Policy Ref",
+          "type": "string"
+        },
+        "row_data_authorized": {
+          "const": false,
+          "title": "Row Data Authorized",
+          "type": "boolean"
+        },
+        "sanitization_policy_ref": {
+          "title": "Sanitization Policy Ref",
+          "type": "string"
+        },
+        "scope_approval_ref": {
+          "title": "Scope Approval Ref",
+          "type": "string"
+        },
+        "source_freeze": {
+          "$ref": "#/$defs/SourceFreeze"
+        },
+        "target_write_authority": {
+          "const": false,
+          "default": false,
+          "title": "Target Write Authority",
+          "type": "boolean"
+        },
+        "workbook_id": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._~-]{0,511}$",
+          "title": "Workbook Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "organization_ref",
+        "expected_organization_id",
+        "api_base_url",
+        "approved_api_hosts",
+        "principal_ref",
+        "expected_user_id",
+        "effective_account_type",
+        "credential_ref",
+        "authorization_ref",
+        "scope_approval_ref",
+        "comparison_scope_refs",
+        "build_scope_refs",
+        "policy_version",
+        "workbook_id",
+        "data_model_id",
+        "source_freeze",
+        "manual_evidence_owner_ref",
+        "privacy_approval_ref",
+        "sanitization_policy_ref",
+        "retention_policy_ref",
+        "data_classification",
+        "row_data_authorized",
+        "evidence_mode",
+        "request_budget",
+        "per_endpoint_request_budget",
+        "approved_exclusions"
+      ],
+      "title": "RunManifestPayload",
+      "type": "object"
+    },
+    "SourceFreeze": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_ref": {
+          "title": "Approval Ref",
+          "type": "string"
+        },
+        "approved_by_ref": {
+          "title": "Approved By Ref",
+          "type": "string"
+        },
+        "data_model_document_version": {
+          "minimum": 1,
+          "title": "Data Model Document Version",
+          "type": "integer"
+        },
+        "source_reference": {
+          "title": "Source Reference",
+          "type": "string"
+        },
+        "strategy": {
+          "enum": [
+            "published_version",
+            "version_tag",
+            "documented_alternative"
+          ],
+          "title": "Strategy",
+          "type": "string"
+        },
+        "workbook_published_version": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Workbook Published Version"
+        },
+        "workbook_tag_name": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "pattern": "^[^/\\\\?#%\\x00-\\x1f\\x7f]+$",
+          "title": "Workbook Tag Name"
+        }
+      },
+      "required": [
+        "strategy",
+        "source_reference",
+        "data_model_document_version",
+        "approved_by_ref",
+        "approval_ref"
+      ],
+      "title": "SourceFreeze",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "classification": {
+      "enum": [
+        "documented_fact",
+        "stated_evidence",
+        "observed_tenant_behavior",
+        "field_pattern",
+        "assumption",
+        "recommendation",
+        "unresolved_gap",
+        "synthetic_fixture"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "content_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Content Hash",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "immutable": {
+      "const": true,
+      "default": true,
+      "title": "Immutable",
+      "type": "boolean"
+    },
+    "payload": {
+      "$ref": "#/$defs/RunManifestPayload"
+    },
+    "producer": {
+      "title": "Producer",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "sigma-run-manifest.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_id": {
+      "title": "Scope Id",
+      "type": "string"
+    },
+    "source_references": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source References",
+      "type": "array"
+    },
+    "superseded_by_artifact_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Superseded By Artifact Id"
+    },
+    "supersedes_artifact_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Artifact Id"
+    },
+    "supersession_state": {
+      "default": "current",
+      "enum": [
+        "current",
+        "superseded"
+      ],
+      "title": "Supersession State",
+      "type": "string"
+    },
+    "upstream_hashes": {
+      "items": {
+        "$ref": "#/$defs/ArtifactInput"
+      },
+      "title": "Upstream Hashes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "artifact_id",
+    "run_id",
+    "scope_id",
+    "created_at",
+    "producer",
+    "source_references",
+    "upstream_hashes",
+    "content_hash",
+    "classification",
+    "schema_version",
+    "payload"
+  ],
+  "title": "SigmaRunManifestArtifact",
+  "type": "object"
+}

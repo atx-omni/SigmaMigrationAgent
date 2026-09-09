@@ -1,0 +1,390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/qa-fixture.v2.schema.json",
+  "title": "Closed-denominator Domo-to-Omni QA fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "tenant_ref",
+    "run_id",
+    "scope_id",
+    "wave_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "evidence_class",
+    "fixture_id",
+    "fixture_ref",
+    "case_id",
+    "dimension",
+    "subject_ref",
+    "subject_hash",
+    "fixture_kind",
+    "source_observation",
+    "target_observation",
+    "source_context",
+    "target_context",
+    "source_consumer_ref",
+    "persona_expectation",
+    "expected_consolidation_outcome",
+    "expected_ref",
+    "expected_hash",
+    "persona_policy_ref",
+    "persona_policy_hash",
+    "tolerance_policy_ref",
+    "tolerance_policy_hash",
+    "producer_ref",
+    "evidence_refs",
+    "created_at",
+    "fixture_hash",
+    "authorizes_tenant_acceptance",
+    "authorizes_production_readiness",
+    "authorizes_promotion",
+    "authorizes_cutover",
+    "authorizes_decommissioning",
+    "immutable"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.qa-fixture.v2" },
+    "tenant_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "run_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "scope_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "wave_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "migration_unit_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "validation_cycle_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "evidence_class": { "$ref": "#/$defs/evidenceClass" },
+    "fixture_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "fixture_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "case_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+    "dimension": { "$ref": "#/$defs/coverageDimension" },
+    "subject_ref": {
+      "type": "string",
+      "pattern": "^qa-subject-ref://[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$"
+    },
+    "subject_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "fixture_kind": {
+      "enum": [
+        "semantic",
+        "query_result",
+        "visual",
+        "interaction",
+        "operations",
+        "security_persona",
+        "negative_consolidation"
+      ]
+    },
+    "source_observation": { "$ref": "#/$defs/artifactObservation" },
+    "target_observation": { "$ref": "#/$defs/artifactObservation" },
+    "source_context": { "$ref": "#/$defs/comparisonContext" },
+    "target_context": { "$ref": "#/$defs/comparisonContext" },
+    "source_consumer_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nullableNonSecretRef" },
+    "persona_expectation": {
+      "oneOf": [
+        { "$ref": "#/$defs/personaExpectation" },
+        { "type": "null" }
+      ]
+    },
+    "expected_consolidation_outcome": {
+      "oneOf": [
+        { "enum": ["different", "unknown"] },
+        { "type": "null" }
+      ]
+    },
+    "expected_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "expected_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "persona_policy_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "persona_policy_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "tolerance_policy_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "tolerance_policy_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "producer_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "fixture_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+    "authorizes_tenant_acceptance": { "const": false },
+    "authorizes_production_readiness": { "const": false },
+    "authorizes_promotion": { "const": false },
+    "authorizes_cutover": { "const": false },
+    "authorizes_decommissioning": { "const": false },
+    "immutable": { "const": true }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "dimension": { "enum": ["consumer_contract", "query_result"] } },
+        "required": ["dimension"]
+      },
+      "then": {
+        "properties": {
+          "source_consumer_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "dimension": {
+            "enum": ["security_allow", "security_deny", "derived_field_leakage"]
+          }
+        },
+        "required": ["dimension"]
+      },
+      "then": {
+        "properties": { "persona_expectation": { "$ref": "#/$defs/personaExpectation" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "dimension": { "const": "security_allow" } },
+        "required": ["dimension"]
+      },
+      "then": {
+        "properties": {
+          "persona_expectation": {
+            "allOf": [
+              { "$ref": "#/$defs/personaExpectation" },
+              { "properties": { "expected_access": { "const": "allow" } } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "dimension": { "enum": ["security_deny", "derived_field_leakage"] }
+        },
+        "required": ["dimension"]
+      },
+      "then": {
+        "properties": {
+          "persona_expectation": {
+            "allOf": [
+              { "$ref": "#/$defs/personaExpectation" },
+              { "properties": { "expected_access": { "const": "deny" } } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "dimension": { "const": "negative_consolidation_control" } },
+        "required": ["dimension"]
+      },
+      "then": {
+        "properties": {
+          "fixture_kind": { "const": "negative_consolidation" },
+          "expected_consolidation_outcome": { "enum": ["different", "unknown"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "evidence_class": { "const": "production" } },
+        "required": ["evidence_class"]
+      },
+      "then": {
+        "properties": {
+          "target_observation": {
+            "allOf": [
+              { "$ref": "#/$defs/artifactObservation" },
+              {
+                "properties": { "environment_tier": { "const": "production" } },
+                "required": ["environment_tier"]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "evidenceClass": {
+      "enum": ["synthetic_local", "development", "staging", "production"]
+    },
+    "coverageDimension": {
+      "enum": [
+        "key",
+        "grain",
+        "fanout",
+        "row_calculation",
+        "aggregate_calculation",
+        "filter_context",
+        "time_semantics",
+        "schema",
+        "freshness",
+        "consumer_contract",
+        "query_result",
+        "control",
+        "filter_propagation",
+        "interaction",
+        "drill",
+        "layout_intent",
+        "visual_fixture",
+        "operations",
+        "security_allow",
+        "security_deny",
+        "derived_field_leakage",
+        "negative_consolidation_control"
+      ]
+    },
+    "watermark": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "timestamp" },
+            "value": { "type": "string", "format": "date-time" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "batch_id" },
+            "value": { "$ref": "common-definitions.v1.schema.json#/$defs/nonEmptyString" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "snapshot_ref" },
+            "value": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "sequence" },
+            "value": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "contextValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value_type", "canonical_values", "value_hash"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "value_type": {
+          "enum": ["null", "boolean", "integer", "decimal", "string", "date", "datetime"]
+        },
+        "canonical_values": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "value_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "sortBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field_ref", "direction", "nulls", "ordinal"],
+      "properties": {
+        "field_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "direction": { "enum": ["ascending", "descending"] },
+        "nulls": { "enum": ["first", "last", "source_default"] },
+        "ordinal": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "comparisonContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "watermark",
+        "logical_snapshot_id",
+        "parameters",
+        "filters",
+        "timezone",
+        "persona_ref",
+        "sort",
+        "row_limit",
+        "execution_context_hash",
+        "approved_tolerance_policy_hash",
+        "context_hash"
+      ],
+      "properties": {
+        "watermark": { "$ref": "#/$defs/watermark" },
+        "logical_snapshot_id": { "$ref": "common-definitions.v1.schema.json#/$defs/stableId" },
+        "parameters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contextValue" }
+        },
+        "filters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contextValue" }
+        },
+        "timezone": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "persona_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "sort": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sortBinding" }
+        },
+        "row_limit": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "execution_context_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "approved_tolerance_policy_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" },
+        "context_hash": { "$ref": "common-definitions.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "artifactObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_ref",
+        "revision",
+        "content_sha256",
+        "environment_ref",
+        "environment_tier",
+        "observed_at"
+      ],
+      "properties": {
+        "artifact_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "environment_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "environment_tier": { "enum": ["source", "development", "staging", "production"] },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "personaExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "persona_ref",
+        "expected_access",
+        "expected_visible_field_refs",
+        "expected_hidden_field_refs",
+        "derived_field_leakage_expected"
+      ],
+      "properties": {
+        "persona_ref": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" },
+        "expected_access": { "enum": ["allow", "deny"] },
+        "expected_visible_field_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "expected_hidden_field_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common-definitions.v1.schema.json#/$defs/nonSecretRef" }
+        },
+        "derived_field_leakage_expected": { "const": false }
+      }
+    }
+  }
+}

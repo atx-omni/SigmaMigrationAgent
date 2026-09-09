@@ -1,0 +1,672 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/agent-work-package.schema.json",
+  "title": "Governed migration agent work package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "tenant_ref",
+    "work_package_id",
+    "run_id",
+    "migration_unit_id",
+    "validation_cycle_id",
+    "phase",
+    "assignee",
+    "status",
+    "objective",
+    "tool_profile",
+    "scope_purpose",
+    "source_scope",
+    "input_refs",
+    "depends_on",
+    "gate_refs",
+    "expected_artifacts",
+    "authority",
+    "completion_criteria",
+    "validation_requirements",
+    "result",
+    "timestamps"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.work-package.v1" },
+    "tenant_ref": { "$ref": "#/$defs/nonSecretRef" },
+    "work_package_id": { "$ref": "#/$defs/id" },
+    "run_id": { "$ref": "#/$defs/id" },
+    "migration_unit_id": { "$ref": "#/$defs/id" },
+    "validation_cycle_id": { "$ref": "#/$defs/id" },
+    "phase": {
+      "enum": [
+        "intake",
+        "source_acquisition",
+        "inventory",
+        "repository_inventory",
+        "semantic_profiling",
+        "source_interpretation",
+        "semantic_consolidation",
+        "target_semantic_design",
+        "topic_design",
+        "dashboard_planning",
+        "architecture",
+        "data_acquisition",
+        "data_build",
+        "semantic_build",
+        "document_create",
+        "content_build",
+        "development_qa",
+        "production_qa",
+        "documentation",
+        "sigma_formula_planning",
+        "sigma_commonality_planning",
+        "sigma_dbt_planning",
+        "sigma_omni_planning",
+        "sigma_qa_planning",
+        "sigma_documentation_planning"
+      ]
+    },
+    "assignee": { "$ref": "#/$defs/assignee" },
+    "status": { "enum": ["pending", "ready", "in_progress", "completed", "blocked", "superseded"] },
+    "objective": { "$ref": "#/$defs/nonEmptyString" },
+    "tool_profile": { "$ref": "#/$defs/nonEmptyString" },
+    "scope_purpose": { "enum": ["comparison", "migration"] },
+    "source_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["system", "object_type", "object_id", "fingerprint"],
+        "properties": {
+          "system": { "enum": ["domo", "sigma", "dbt", "snowflake", "omni"] },
+          "object_type": { "$ref": "#/$defs/nonEmptyString" },
+          "object_id": { "$ref": "#/$defs/nonEmptyString" },
+          "fingerprint": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "sigma_routing": {
+      "anyOf": [{ "$ref": "#/$defs/sigmaRouting" }, { "type": "null" }],
+      "default": null
+    },
+    "input_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nonSecretRef" }
+    },
+    "depends_on": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "gate_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonSecretRef" }
+    },
+    "expected_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "dependency_graph",
+          "migration_intake",
+          "capability_preflight",
+          "source_object_graph",
+          "inventory_snapshot",
+          "domo_inventory_observation",
+          "domo_portfolio_inventory",
+          "repository_inventory",
+          "repository_definition_evidence",
+          "semantic_profile",
+          "semantic_profile_coverage",
+          "target_semantic_profile",
+          "equivalence_assessment",
+          "consolidation_candidate",
+          "consolidation_decision",
+          "topic_blueprint",
+          "dashboard_rebuild_plan",
+          "dashboard_evidence_snapshot",
+          "evidence_bundle",
+          "manual_capture_request",
+          "coverage_ledger",
+          "migration_scope",
+          "qa_fixture",
+          "qa_result",
+          "persona_policy",
+          "tolerance_policy",
+          "qa_acceptance_suite",
+          "qa_suite_validation",
+          "qa_target_operation_outcome",
+          "migration_lifecycle",
+          "ingestion_acceptance_evidence",
+          "production_validation_report",
+          "target_architecture",
+          "work_package_dag",
+          "validation_matrix",
+          "promotion_decision_package",
+          "experience_spec",
+          "query_and_interaction_fixtures",
+          "transformation_spec",
+          "dialect_risk_ledger",
+          "dbt_handoff",
+          "external_redesign_assignment",
+          "ingestion_handoff",
+          "application_redesign_handoff",
+          "operations_governance_handoff",
+          "dbt_changes",
+          "dbt_test_evidence",
+          "data_reconciliation",
+          "omni_model_changes",
+          "model_validation",
+          "semantic_query_evidence",
+          "omni_content_artifact",
+          "omni_document_shell",
+          "target_write_receipt",
+          "document_readback",
+          "target_visual_fixtures",
+          "validation_report",
+          "defect_ledger",
+          "independent_verdict",
+          "change_map",
+          "source_target_lineage",
+          "user_guide",
+          "admin_runbook",
+          "documentation_package",
+          "training_package",
+          "risk_or_decision_request",
+          "sigma_formula_plan",
+          "sigma_commonality_plan",
+          "sigma_dbt_plan",
+          "sigma_omni_model_plan",
+          "sigma_independent_qa_plan",
+          "sigma_documentation_plan"
+        ]
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "authorization_ref",
+        "intended_change_set_fingerprint",
+        "target_scope_refs",
+        "allowed_tools",
+        "forbidden_actions"
+      ],
+      "properties": {
+        "mode": { "enum": ["read_only", "proposal_only", "branch_write", "document_create_write", "document_draft_write", "human_handoff"] },
+        "authorization_ref": {
+          "anyOf": [
+            { "$ref": "#/$defs/nonSecretRef" },
+            { "type": "null" }
+          ]
+        },
+        "intended_change_set_fingerprint": {
+          "anyOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "target_scope_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonSecretRef" }
+        },
+        "allowed_tools": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "completion_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "validation_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["validation_id", "method", "required_evidence"],
+        "properties": {
+          "validation_id": { "$ref": "#/$defs/id" },
+          "method": { "$ref": "#/$defs/nonEmptyString" },
+          "required_evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/nonEmptyString" }
+          }
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "artifact_refs", "evidence_refs", "decision_requests", "issues"],
+      "properties": {
+        "state": { "enum": ["not_started", "completed", "blocked"] },
+        "artifact_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonSecretRef" }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonSecretRef" }
+        },
+        "decision_requests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["severity", "summary", "subject_refs"],
+            "properties": {
+              "severity": { "enum": ["info", "warning", "blocking"] },
+              "summary": { "$ref": "#/$defs/nonEmptyString" },
+              "subject_refs": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/nonSecretRef" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "timestamps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["created_at", "updated_at"],
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source_scope": { "contains": { "properties": { "system": { "const": "sigma" } }, "required": ["system"] } }
+        },
+        "required": ["source_scope"]
+      },
+      "then": { "required": ["sigma_routing"], "properties": { "sigma_routing": { "$ref": "#/$defs/sigmaRouting" } } }
+    },
+    {
+      "if": { "properties": { "phase": { "pattern": "^sigma_" } }, "required": ["phase"] },
+      "then": {
+        "required": ["sigma_routing"],
+        "properties": {
+          "sigma_routing": { "$ref": "#/$defs/sigmaRouting" },
+          "source_scope": { "contains": { "properties": { "system": { "const": "sigma" } }, "required": ["system"] } },
+          "authority": {
+            "properties": {
+              "mode": { "enum": ["read_only", "proposal_only"] },
+              "authorization_ref": { "type": "null" },
+              "intended_change_set_fingerprint": { "type": "null" },
+              "target_scope_refs": { "maxItems": 0 },
+              "allowed_tools": { "items": { "enum": ["artifact_registry_read", "local_draft_write"] } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "sigma_routing": { "type": "object", "properties": { "mode": { "const": "omni_semantic_reconstruction" } }, "required": ["mode"] } },
+        "required": ["sigma_routing"]
+      },
+      "then": {
+        "properties": {
+          "phase": { "not": { "enum": ["data_build", "sigma_dbt_planning"] } },
+          "assignee": { "properties": { "agent_id": { "not": { "enum": ["dbt_analytics_engineer", "sigma_dbt_analytics_engineer"] } } } },
+          "authority": { "properties": { "allowed_tools": { "items": { "not": { "pattern": "^dbt_" } } } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "enum": [
+              "data_acquisition",
+              "data_build",
+              "semantic_build",
+              "document_create",
+              "content_build"
+            ]
+          }
+        },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 11,
+            "allOf": [
+              { "contains": { "const": "gate-ref://source_completeness" } },
+              { "contains": { "const": "gate-ref://semantic_profile_complete" } },
+              { "contains": { "const": "gate-ref://target_semantic_profile_ready" } },
+              { "contains": { "const": "gate-ref://equivalence_assessed" } },
+              { "contains": { "const": "gate-ref://consolidation_approved" } },
+              { "contains": { "const": "gate-ref://grain_fanout_validated" } },
+              { "contains": { "const": "gate-ref://security_disposition_approved" } },
+              { "contains": { "const": "gate-ref://freshness_ownership_accepted" } },
+              { "contains": { "const": "gate-ref://dashboard_plan_ready" } },
+              { "contains": { "const": "gate-ref://architecture" } },
+              { "contains": { "const": "gate-ref://build_authorization" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "dashboard_planning" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 8,
+            "allOf": [
+              { "contains": { "const": "gate-ref://source_completeness" } },
+              { "contains": { "const": "gate-ref://semantic_profile_complete" } },
+              { "contains": { "const": "gate-ref://target_semantic_profile_ready" } },
+              { "contains": { "const": "gate-ref://equivalence_assessed" } },
+              { "contains": { "const": "gate-ref://consolidation_approved" } },
+              { "contains": { "const": "gate-ref://grain_fanout_validated" } },
+              { "contains": { "const": "gate-ref://security_disposition_approved" } },
+              { "contains": { "const": "gate-ref://freshness_ownership_accepted" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "target_semantic_design" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 1,
+            "allOf": [
+              { "contains": { "const": "gate-ref://source_completeness" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "semantic_profiling" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 1,
+            "allOf": [
+              { "contains": { "const": "gate-ref://source_completeness" } }
+            ]
+          },
+          "expected_artifacts": {
+            "contains": { "const": "semantic_profile_coverage" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "semantic_consolidation" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 3,
+            "allOf": [
+              { "contains": { "const": "gate-ref://source_completeness" } },
+              { "contains": { "const": "gate-ref://semantic_profile_complete" } },
+              { "contains": { "const": "gate-ref://target_semantic_profile_ready" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "topic_design" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 2,
+            "allOf": [
+              { "contains": { "const": "gate-ref://equivalence_assessed" } },
+              { "contains": { "const": "gate-ref://consolidation_approved" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "architecture" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 9,
+            "allOf": [
+              { "contains": { "const": "gate-ref://source_completeness" } },
+              { "contains": { "const": "gate-ref://semantic_profile_complete" } },
+              { "contains": { "const": "gate-ref://target_semantic_profile_ready" } },
+              { "contains": { "const": "gate-ref://equivalence_assessed" } },
+              { "contains": { "const": "gate-ref://consolidation_approved" } },
+              { "contains": { "const": "gate-ref://grain_fanout_validated" } },
+              { "contains": { "const": "gate-ref://security_disposition_approved" } },
+              { "contains": { "const": "gate-ref://freshness_ownership_accepted" } },
+              { "contains": { "const": "gate-ref://dashboard_plan_ready" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "production_qa" } },
+        "required": ["phase"]
+      },
+      "then": {
+        "properties": {
+          "gate_refs": {
+            "minItems": 1,
+            "allOf": [
+              { "contains": { "const": "gate-ref://omni_readback" } }
+            ]
+          },
+          "expected_artifacts": {
+            "minItems": 6,
+            "allOf": [
+              { "contains": { "const": "qa_result" } },
+              { "contains": { "const": "qa_acceptance_suite" } },
+              { "contains": { "const": "qa_suite_validation" } },
+              { "contains": { "const": "qa_target_operation_outcome" } },
+              { "contains": { "const": "production_validation_report" } },
+              { "contains": { "const": "independent_verdict" } }
+            ]
+          },
+          "authority": {
+            "properties": {
+              "mode": { "const": "read_only" },
+              "authorization_ref": { "type": "null" },
+              "intended_change_set_fingerprint": { "type": "null" },
+              "target_scope_refs": { "maxItems": 0 }
+            }
+          }
+        },
+        "if": {
+          "properties": { "sigma_routing": { "type": "object", "properties": { "mode": { "const": "omni_semantic_reconstruction" } }, "required": ["mode"] } },
+          "required": ["sigma_routing"]
+        },
+        "else": { "properties": { "gate_refs": { "minItems": 2, "contains": { "const": "gate-ref://dbt_readback" } } } }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "mode": { "enum": ["branch_write", "document_create_write", "document_draft_write"] }
+            },
+            "required": ["mode"]
+          }
+        },
+        "required": ["authority"]
+      },
+      "then": {
+        "properties": {
+          "authority": {
+            "properties": {
+              "authorization_ref": { "$ref": "#/$defs/nonSecretRef" },
+              "intended_change_set_fingerprint": { "$ref": "#/$defs/sha256" },
+              "target_scope_refs": { "minItems": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "completed" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "properties": { "state": { "const": "completed" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "const": "blocked" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "properties": { "state": { "const": "blocked" } }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "assignee": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "agent_id"],
+          "properties": {
+            "kind": { "const": "agent" },
+            "agent_id": {
+              "enum": [
+                "domo_to_omni_architect",
+                "inventory_intake",
+                "data_acquisition_ingestion",
+                "domo_bi_developer",
+                "domo_analytics_engineer",
+                "semantic_consolidation",
+                "dbt_analytics_engineer",
+                "omni_modeler",
+                "omni_bi_developer",
+                "migration_qa",
+                "documentation_training",
+                "sigma_analytics_formula",
+                "sigma_semantic_consolidation",
+                "sigma_dbt_analytics_engineer",
+                "sigma_omni_modeler",
+                "sigma_independent_qa",
+                "sigma_documentation_training"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "capability", "owner_ref"],
+          "properties": {
+            "kind": { "const": "external_team" },
+            "capability": {
+              "enum": [
+                "platform_ingestion",
+                "application_redesign",
+                "operations_governance"
+              ]
+            },
+            "owner_ref": { "$ref": "#/$defs/nonSecretRef" }
+          }
+        }
+      ]
+    },
+    "sigmaRouting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "decision_ref", "decision_hash", "scope_id", "comparison_scope_refs", "build_scope_refs", "target_environment_refs", "source_artifact_hashes", "include_dependency_results"],
+      "properties": {
+        "mode": { "enum": ["warehouse_first_refactor", "omni_semantic_reconstruction"] },
+        "decision_ref": { "type": "string", "pattern": "^artifact-ref://[^\\s?#]+$" },
+        "decision_hash": { "$ref": "#/$defs/sha256" },
+        "scope_id": { "type": "string", "minLength": 3 },
+        "comparison_scope_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonSecretRef" } },
+        "build_scope_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonSecretRef" } },
+        "target_environment_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonSecretRef" } },
+        "source_artifact_hashes": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/$defs/sha256" } },
+        "include_dependency_results": { "const": true }
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "nonSecretRef": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^[A-Za-z][A-Za-z0-9+.-]*://[^?#\\s]+$",
+      "not": {
+        "pattern": "([Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]|[Pp][Aa][Ss][Ss][Ww][Dd]|[Ss][Ee][Cc][Rr][Ee][Tt]|[Tt][Oo][Kk][Ee][Nn]|[Aa][Pp][Ii][_-]?[Kk][Ee][Yy]|[Pp][Rr][Ii][Vv][Aa][Tt][Ee][_-]?[Kk][Ee][Yy])\\s*[:=]"
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

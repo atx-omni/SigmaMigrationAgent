@@ -1,0 +1,517 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/semantic-profile.v1.schema.json",
+  "title": "Immutable cross-platform semantic asset profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "profile_id",
+    "run_id",
+    "scope_id",
+    "identity",
+    "status",
+    "definition",
+    "grain",
+    "lineage",
+    "aggregation",
+    "filters",
+    "joins",
+    "time",
+    "security",
+    "operations",
+    "consumers",
+    "side_effects",
+    "unknowns",
+    "blockers",
+    "evidence_refs",
+    "dimension_hashes",
+    "profile_hash",
+    "immutable",
+    "provenance",
+    "security_metadata"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.semantic-profile.v1" },
+    "profile_id": { "$ref": "#/$defs/stableId" },
+    "run_id": { "$ref": "#/$defs/stableId" },
+    "scope_id": { "$ref": "#/$defs/stableId" },
+    "identity": { "$ref": "#/$defs/identity" },
+    "status": { "enum": ["ready", "blocked"] },
+    "definition": { "$ref": "#/$defs/definition" },
+    "grain": { "$ref": "#/$defs/grain" },
+    "lineage": { "$ref": "#/$defs/lineage" },
+    "aggregation": { "$ref": "#/$defs/aggregation" },
+    "filters": { "$ref": "#/$defs/filters" },
+    "joins": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/join" }
+    },
+    "time": { "$ref": "#/$defs/time" },
+    "security": { "$ref": "#/$defs/security" },
+    "operations": { "$ref": "#/$defs/operations" },
+    "consumers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "side_effects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sideEffect" }
+    },
+    "unknowns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "blockers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonSecretRef" }
+    },
+    "dimension_hashes": { "$ref": "#/$defs/dimensionHashes" },
+    "profile_hash": { "$ref": "#/$defs/sha256" },
+    "immutable": { "const": true },
+    "provenance": { "type": "object" },
+    "security_metadata": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "ready" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "unknowns": { "maxItems": 0 },
+          "blockers": { "maxItems": 0 },
+          "definition": {
+            "properties": {
+              "state": { "const": "complete" },
+              "canonical_state": { "const": "supported" }
+            }
+          },
+          "grain": { "$ref": "#/$defs/requiredKnownDimension" },
+          "lineage": { "$ref": "#/$defs/requiredKnownDimension" },
+          "aggregation": { "$ref": "#/$defs/requiredKnownDimension" },
+          "filters": { "$ref": "#/$defs/requiredKnownDimension" },
+          "time": { "$ref": "#/$defs/requiredKnownDimension" },
+          "security": { "$ref": "#/$defs/requiredKnownDimension" },
+          "operations": {
+            "allOf": [
+              { "$ref": "#/$defs/requiredKnownDimension" },
+              { "properties": { "owner_refs": { "minItems": 1 } } }
+            ]
+          },
+          "side_effects": {
+            "items": {
+              "properties": {
+                "handoff_ref": { "$ref": "#/$defs/nonSecretRef" }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "nonSecretRef": {
+      "type": "string",
+      "minLength": 4,
+      "pattern": "^(?!secret:|vault:|credential:)[A-Za-z][A-Za-z0-9+.-]*:.+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "knowledgeState": {
+      "enum": ["known", "unknown", "conflict", "not_applicable"]
+    },
+    "requiredKnownDimension": {
+      "properties": {
+        "state": { "enum": ["known", "not_applicable"] }
+      },
+      "required": ["state"]
+    },
+    "stringList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "refList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonSecretRef" }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "kind", "object_id", "revision_hash"],
+      "properties": {
+        "system": { "enum": ["domo", "dbt", "snowflake", "omni"] },
+        "kind": {
+          "enum": [
+            "dataset_output",
+            "transformation",
+            "calculation",
+            "dashboard_query",
+            "security_policy",
+            "source_object",
+            "workflow_output",
+            "dbt_resource",
+            "omni_candidate"
+          ]
+        },
+        "object_id": { "$ref": "#/$defs/nonEmptyString" },
+        "revision_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "language",
+        "dialect",
+        "runtime",
+        "original_definition",
+        "original_ref",
+        "original_hash",
+        "canonicalizer_version",
+        "canonical_state",
+        "canonical_form",
+        "canonical_hash",
+        "translation_refs",
+        "unsupported_reason"
+      ],
+      "properties": {
+        "state": { "enum": ["complete", "partial", "unknown"] },
+        "language": {
+          "enum": [
+            "sql",
+            "beast_mode",
+            "query",
+            "magic_etl",
+            "workflow",
+            "omni_yaml",
+            "unknown"
+          ]
+        },
+        "dialect": { "type": ["string", "null"] },
+        "runtime": { "type": ["string", "null"] },
+        "original_definition": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" },
+            { "type": "array" },
+            { "type": "null" }
+          ]
+        },
+        "original_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "original_hash": { "$ref": "#/$defs/sha256" },
+        "canonicalizer_version": { "$ref": "#/$defs/nonEmptyString" },
+        "canonical_state": { "enum": ["supported", "unknown"] },
+        "canonical_form": { "type": ["string", "null"] },
+        "canonical_hash": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "translation_refs": { "$ref": "#/$defs/refList" },
+        "unsupported_reason": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "canonical_state": { "const": "supported" } },
+            "required": ["canonical_state"]
+          },
+          "then": {
+            "properties": {
+              "canonical_form": { "type": "string", "minLength": 1 },
+              "canonical_hash": { "$ref": "#/$defs/sha256" },
+              "unsupported_reason": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "canonical_state": { "const": "unknown" } },
+            "required": ["canonical_state"]
+          },
+          "then": {
+            "properties": {
+              "canonical_form": { "type": "null" },
+              "canonical_hash": { "type": "null" },
+              "unsupported_reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      ]
+    },
+    "grain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "description",
+        "key_fields",
+        "row_universe",
+        "uniqueness_evidence_refs"
+      ],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "description": { "type": ["string", "null"] },
+        "key_fields": { "$ref": "#/$defs/stringList" },
+        "row_universe": { "type": ["string", "null"] },
+        "uniqueness_evidence_refs": { "$ref": "#/$defs/refList" }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "authoritative_source_ids",
+        "upstream_asset_ids",
+        "relational_operations",
+        "evidence_refs"
+      ],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "authoritative_source_ids": { "$ref": "#/$defs/stringList" },
+        "upstream_asset_ids": { "$ref": "#/$defs/stringList" },
+        "relational_operations": { "$ref": "#/$defs/stringList" },
+        "evidence_refs": { "$ref": "#/$defs/refList" }
+      }
+    },
+    "aggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "stage",
+        "grouping_fields",
+        "distinct_mode",
+        "partition_fields",
+        "order_fields",
+        "window_frame",
+        "null_semantics"
+      ],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "stage": {
+          "enum": [
+            "row",
+            "pre_aggregate",
+            "aggregate",
+            "post_aggregate",
+            "window",
+            "fixed_lod",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "grouping_fields": { "$ref": "#/$defs/stringList" },
+        "distinct_mode": {
+          "enum": ["none", "distinct_rows", "distinct_values", "unknown"]
+        },
+        "partition_fields": { "$ref": "#/$defs/stringList" },
+        "order_fields": { "$ref": "#/$defs/stringList" },
+        "window_frame": { "type": ["string", "null"] },
+        "null_semantics": { "type": ["string", "null"] }
+      }
+    },
+    "filters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "stage", "scope", "precedence", "predicates", "evidence_refs"],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "stage": {
+          "enum": [
+            "source",
+            "row",
+            "pre_aggregate",
+            "post_aggregate",
+            "dashboard",
+            "mixed",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "global",
+            "dataset",
+            "card",
+            "query",
+            "tile",
+            "topic",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "precedence": { "$ref": "#/$defs/stringList" },
+        "predicates": { "$ref": "#/$defs/stringList" },
+        "evidence_refs": { "$ref": "#/$defs/refList" }
+      }
+    },
+    "join": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left_asset_id",
+        "right_asset_id",
+        "predicates",
+        "declared_cardinality",
+        "observed_cardinality",
+        "fanout_state",
+        "evidence_refs"
+      ],
+      "properties": {
+        "left_asset_id": { "$ref": "#/$defs/nonEmptyString" },
+        "right_asset_id": { "$ref": "#/$defs/nonEmptyString" },
+        "predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "declared_cardinality": { "$ref": "#/$defs/cardinality" },
+        "observed_cardinality": { "$ref": "#/$defs/cardinality" },
+        "fanout_state": { "enum": ["passed", "failed", "unknown", "not_applicable"] },
+        "evidence_refs": { "$ref": "#/$defs/refList" }
+      }
+    },
+    "cardinality": {
+      "enum": ["one_to_one", "one_to_many", "many_to_one", "many_to_many", "unknown"]
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "timezone",
+        "fiscal_calendar_ref",
+        "date_boundary_semantics",
+        "late_arriving_behavior"
+      ],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "timezone": { "type": ["string", "null"] },
+        "fiscal_calendar_ref": { "type": ["string", "null"] },
+        "date_boundary_semantics": { "type": ["string", "null"] },
+        "late_arriving_behavior": { "type": ["string", "null"] }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "security_domain",
+        "pdp_policy_refs",
+        "masking_policy_refs",
+        "principal_precedence",
+        "derived_field_exposure",
+        "evidence_refs"
+      ],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "security_domain": { "type": ["string", "null"] },
+        "pdp_policy_refs": { "$ref": "#/$defs/refList" },
+        "masking_policy_refs": { "$ref": "#/$defs/refList" },
+        "principal_precedence": { "$ref": "#/$defs/stringList" },
+        "derived_field_exposure": {
+          "enum": ["safe", "leakage_risk", "unknown", "not_applicable"]
+        },
+        "evidence_refs": { "$ref": "#/$defs/refList" }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "update_mode",
+        "watermark_field",
+        "freshness_sla",
+        "history_behavior",
+        "backfill_behavior",
+        "owner_refs",
+        "sla_ref"
+      ],
+      "properties": {
+        "state": { "$ref": "#/$defs/knowledgeState" },
+        "update_mode": {
+          "enum": ["replace", "append", "upsert", "snapshot", "view", "unknown"]
+        },
+        "watermark_field": { "type": ["string", "null"] },
+        "freshness_sla": { "type": ["string", "null"] },
+        "history_behavior": { "type": ["string", "null"] },
+        "backfill_behavior": { "type": ["string", "null"] },
+        "owner_refs": { "$ref": "#/$defs/refList" },
+        "sla_ref": { "type": ["string", "null"] }
+      }
+    },
+    "sideEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "description", "handoff_ref"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "$ref": "#/$defs/nonEmptyString" },
+        "handoff_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/nonSecretRef" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "dimensionHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definition",
+        "grain",
+        "lineage",
+        "aggregation",
+        "filters",
+        "joins",
+        "time",
+        "security",
+        "operations",
+        "consumers",
+        "side_effects"
+      ],
+      "properties": {
+        "definition": { "$ref": "#/$defs/sha256" },
+        "grain": { "$ref": "#/$defs/sha256" },
+        "lineage": { "$ref": "#/$defs/sha256" },
+        "aggregation": { "$ref": "#/$defs/sha256" },
+        "filters": { "$ref": "#/$defs/sha256" },
+        "joins": { "$ref": "#/$defs/sha256" },
+        "time": { "$ref": "#/$defs/sha256" },
+        "security": { "$ref": "#/$defs/sha256" },
+        "operations": { "$ref": "#/$defs/sha256" },
+        "consumers": { "$ref": "#/$defs/sha256" },
+        "side_effects": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

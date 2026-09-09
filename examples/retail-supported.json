@@ -1,0 +1,94 @@
+{
+  "snapshotContract": "sigma-api-v2",
+  "synthetic": true,
+  "fixtureNotice": "Purely fictional reduced supported example. Not a customer capture, approval, or live evidence.",
+  "connections": [
+    {"connectionId": "fictional-source", "type": "snowflake"}
+  ],
+  "dataModels": [
+    {
+      "dataModelId": "fictional-retail",
+      "name": "Fictional retail",
+      "spec": {
+        "dataModelId": "fictional-retail",
+        "documentVersion": 1,
+        "pages": [
+          {
+            "pageId": "source-page",
+            "name": "Sources",
+            "elements": [
+              {
+                "elementId": "orders",
+                "kind": "table",
+                "name": "orders",
+                "source": {"type": "table", "tableId": "fictional-orders", "connectionId": "fictional-source", "path": ["fictional", "analytics", "orders"]},
+                "columns": [
+                  {"columnId": "region", "name": "region", "hidden": false},
+                  {"columnId": "amount", "name": "amount"},
+                  {"columnId": "status", "name": "status", "hidden": true},
+                  {"columnId": "region-alias", "name": "display_region", "formula": "[region]"}
+                ],
+                "metrics": [
+                  {"metricId": "revenue", "name": "total_revenue", "formula": "Sum([amount])"},
+                  {"metricId": "completed-revenue", "name": "completed_revenue", "formula": "SumIf([amount], [status] = \"complete\")"}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "workbooks": [
+    {
+      "workbookId": "fictional-overview",
+      "name": "Fictional retail overview",
+      "pages": [
+        {
+          "pageId": "overview",
+          "name": "Overview",
+          "elements": [
+            {"elementId": "revenue-chart", "type": "chart", "name": "Revenue by region", "visualizationType": "column"},
+            {"elementId": "revenue-table", "type": "table", "name": "Completed revenue"}
+          ]
+        }
+      ],
+      "controls": [
+        {"controlId": "region-filter", "type": "list", "name": "Region", "values": ["East"]}
+      ],
+      "grants": [],
+      "schedules": []
+    }
+  ],
+  "prepush_context": {
+    "schema_version": "sigma-prepush-context.v1",
+    "source_sha256": "d48ba1773a857b99761f186f006ba13ba90389e8daf3be3e29e7785595649ad2",
+    "evidence_ref": "fictional-fixture://retail-source-observation-v1",
+    "workbook_id": "fictional-overview",
+    "elements": {
+      "revenue-chart": {
+        "field_locators": ["data-model:fictional-retail/element:orders/column:region-alias", "data-model:fictional-retail/element:orders/metric:revenue"],
+        "chart_type": "column",
+        "layout": {"x": 0, "y": 0, "w": 12, "h": 40},
+        "limit": 1000,
+        "sorts": [{"field_locator": "data-model:fictional-retail/element:orders/column:region-alias", "descending": false}]
+      },
+      "revenue-table": {
+        "field_locators": ["data-model:fictional-retail/element:orders/column:region-alias", "data-model:fictional-retail/element:orders/metric:completed-revenue"],
+        "chart_type": "table",
+        "layout": {"x": 12, "y": 0, "w": 12, "h": 40},
+        "limit": 1000,
+        "sorts": [{"field_locator": "data-model:fictional-retail/element:orders/column:region-alias", "descending": false}]
+      }
+    },
+    "controls": {
+      "region-filter": {
+        "field_locator": "data-model:fictional-retail/element:orders/column:region",
+        "target_element_ids": ["revenue-chart", "revenue-table"],
+        "filter_type": "string",
+        "kind": "EQUALS",
+        "values": ["East"]
+      }
+    }
+  }
+}

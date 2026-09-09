@@ -1,0 +1,520 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omni-migration-agent/contracts/consolidation-decision.v1.schema.json",
+  "title": "Governed semantic consolidation decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "decision_id",
+    "run_id",
+    "scope_id",
+    "validation_cycle_id",
+    "group_id",
+    "status",
+    "disposition",
+    "classification",
+    "member_profiles",
+    "candidate_refs",
+    "assessment_refs",
+    "canonical_target_profile",
+    "affected_consumer_ids",
+    "accepted_differences",
+    "impact",
+    "approvals",
+    "validation_context",
+    "proposed_by_ref",
+    "input_fingerprint",
+    "decision_hash",
+    "retirement_state",
+    "authorizes_build",
+    "authorizes_source_decommission",
+    "invalidated_by",
+    "rollback_plan",
+    "residual_risks",
+    "immutable",
+    "provenance",
+    "security"
+  ],
+  "properties": {
+    "contract_version": { "const": "domo-to-omni.consolidation-decision.v1" },
+    "decision_id": { "$ref": "#/$defs/stableId" },
+    "run_id": { "$ref": "#/$defs/stableId" },
+    "scope_id": { "$ref": "#/$defs/stableId" },
+    "validation_cycle_id": { "$ref": "#/$defs/stableId" },
+    "group_id": { "$ref": "#/$defs/stableId" },
+    "status": { "enum": ["proposed", "approved", "rejected", "superseded", "invalidated"] },
+    "disposition": {
+      "enum": ["reuse", "merge", "parameterize", "split", "retire", "manual_review"]
+    },
+    "classification": {
+      "enum": [
+        "exact_definition",
+        "structurally_equivalent",
+        "bounded_behavioral_equivalence",
+        "approved_semantic_substitution",
+        "different",
+        "unknown"
+      ]
+    },
+    "member_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/profileRef" }
+    },
+    "candidate_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/candidateRef" }
+    },
+    "assessment_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/assessmentRef" }
+    },
+    "canonical_target_profile": {
+      "oneOf": [
+        { "$ref": "#/$defs/profileRef" },
+        { "type": "null" }
+      ]
+    },
+    "affected_consumer_ids": { "$ref": "#/$defs/stringList" },
+    "accepted_differences": { "$ref": "#/$defs/stringList" },
+    "impact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "business_semantics_changed",
+        "security_changed",
+        "freshness_history_or_sla_changed",
+        "side_effects_changed",
+        "consumer_behavior_changed"
+      ],
+      "properties": {
+        "business_semantics_changed": { "type": "boolean" },
+        "security_changed": { "type": "boolean" },
+        "freshness_history_or_sla_changed": { "type": "boolean" },
+        "side_effects_changed": { "type": "boolean" },
+        "consumer_behavior_changed": { "type": "boolean" }
+      }
+    },
+    "approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["business", "security", "operations"],
+      "properties": {
+        "business": { "$ref": "#/$defs/nullableBusinessApproval" },
+        "security": { "$ref": "#/$defs/nullableSecurityApproval" },
+        "operations": { "$ref": "#/$defs/nullableOperationsApproval" }
+      }
+    },
+    "validation_context": { "$ref": "#/$defs/validationContext" },
+    "proposed_by_ref": { "$ref": "#/$defs/actorRef" },
+    "input_fingerprint": { "$ref": "#/$defs/sha256" },
+    "decision_hash": { "$ref": "#/$defs/sha256" },
+    "retirement_state": {
+      "enum": ["not_applicable", "candidate_only", "replacement_accepted", "cutover_complete", "hypercare_complete"]
+    },
+    "authorizes_build": { "type": "boolean" },
+    "authorizes_source_decommission": { "const": false },
+    "invalidated_by": { "$ref": "#/$defs/stringList" },
+    "rollback_plan": { "$ref": "#/$defs/nonEmptyString" },
+    "residual_risks": { "$ref": "#/$defs/stringList" },
+    "immutable": { "const": true },
+    "provenance": { "type": "object" },
+    "security": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "approved" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "approvals": {
+            "properties": { "business": { "$ref": "#/$defs/businessApproval" } }
+          },
+          "invalidated_by": { "maxItems": 0 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": { "enum": ["proposed", "rejected", "superseded", "invalidated"] }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": { "authorizes_build": { "const": false } }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "impact": {
+            "properties": { "security_changed": { "const": true } },
+            "required": ["security_changed"]
+          },
+          "status": { "const": "approved" }
+        },
+        "required": ["impact", "status"]
+      },
+      "then": {
+        "properties": {
+          "approvals": {
+            "properties": { "security": { "$ref": "#/$defs/securityApproval" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "impact": {
+            "properties": { "side_effects_changed": { "const": true } },
+            "required": ["side_effects_changed"]
+          },
+          "status": { "const": "approved" }
+        },
+        "required": ["impact", "status"]
+      },
+      "then": {
+        "properties": {
+          "approvals": {
+            "properties": { "operations": { "$ref": "#/$defs/operationsApproval" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "impact": {
+            "properties": { "freshness_history_or_sla_changed": { "const": true } },
+            "required": ["freshness_history_or_sla_changed"]
+          },
+          "status": { "const": "approved" }
+        },
+        "required": ["impact", "status"]
+      },
+      "then": {
+        "properties": {
+          "approvals": {
+            "properties": { "operations": { "$ref": "#/$defs/operationsApproval" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "status": { "enum": ["invalidated", "superseded"] } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "invalidated_by": { "minItems": 1 },
+          "authorizes_build": { "const": false }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "disposition": { "const": "manual_review" } },
+        "required": ["disposition"]
+      },
+      "then": {
+        "properties": {
+          "status": { "enum": ["proposed", "rejected", "superseded", "invalidated"] },
+          "authorizes_build": { "const": false }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": { "const": "approved" },
+          "disposition": { "enum": ["reuse", "merge", "parameterize"] }
+        },
+        "required": ["status", "disposition"]
+      },
+      "then": {
+        "properties": {
+          "classification": {
+            "enum": [
+              "exact_definition",
+              "structurally_equivalent",
+              "bounded_behavioral_equivalence",
+              "approved_semantic_substitution"
+            ]
+          },
+          "member_profiles": { "minItems": 2 },
+          "candidate_refs": { "minItems": 1 },
+          "canonical_target_profile": { "$ref": "#/$defs/profileRef" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "classification": { "const": "approved_semantic_substitution" } },
+        "required": ["classification"]
+      },
+      "then": {
+        "properties": { "accepted_differences": { "minItems": 1 } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "classification": { "const": "exact_definition" } },
+        "required": ["classification"]
+      },
+      "then": {
+        "properties": { "accepted_differences": { "maxItems": 0 } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "disposition": { "const": "retire" } },
+        "required": ["disposition"]
+      },
+      "then": {
+        "properties": {
+          "retirement_state": { "const": "candidate_only" },
+          "authorizes_build": { "const": false },
+          "authorizes_source_decommission": { "const": false }
+        }
+      },
+      "else": {
+        "properties": { "retirement_state": { "const": "not_applicable" } }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "validation_context": {
+            "properties": {
+              "inventory_closure": {
+                "properties": { "status": { "const": "incomplete" } },
+                "required": ["status"]
+              }
+            },
+            "required": ["inventory_closure"]
+          }
+        },
+        "required": ["validation_context"]
+      },
+      "then": {
+        "properties": {
+          "status": { "not": { "const": "approved" } },
+          "authorizes_build": { "const": false }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "sha256": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "nonSecretRef": {
+      "type": "string",
+      "minLength": 4,
+      "pattern": "^(?!secret:|vault:|credential:)[A-Za-z][A-Za-z0-9+.-]*:.+$"
+    },
+    "actorRef": {
+      "type": "string",
+      "pattern": "^(?:agent-ref|human-ref|person-ref|person):.+$"
+    },
+    "stringList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "profileRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_id", "asset_id", "profile_hash"],
+      "properties": {
+        "profile_id": { "$ref": "#/$defs/stableId" },
+        "asset_id": { "$ref": "#/$defs/nonEmptyString" },
+        "profile_hash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "assessmentRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assessment_id", "assessment_hash", "overall_category"],
+      "properties": {
+        "assessment_id": { "$ref": "#/$defs/stableId" },
+        "assessment_hash": { "$ref": "#/$defs/sha256" },
+        "overall_category": {
+          "enum": [
+            "exact_definition",
+            "structurally_equivalent",
+            "bounded_behavioral_equivalence",
+            "approved_semantic_substitution",
+            "different",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "candidateRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "candidate_hash",
+        "assessment_id",
+        "assessment_hash",
+        "source_profile_hash",
+        "target_profile_hash",
+        "consumer_map_hash",
+        "scope_ref"
+      ],
+      "properties": {
+        "candidate_id": { "$ref": "#/$defs/stableId" },
+        "candidate_hash": { "$ref": "#/$defs/sha256" },
+        "assessment_id": { "$ref": "#/$defs/stableId" },
+        "assessment_hash": { "$ref": "#/$defs/sha256" },
+        "source_profile_hash": { "$ref": "#/$defs/sha256" },
+        "target_profile_hash": { "$ref": "#/$defs/sha256" },
+        "consumer_map_hash": { "$ref": "#/$defs/sha256" },
+        "scope_ref": { "$ref": "#/$defs/nonSecretRef" }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "decision_ref",
+        "approver_ref",
+        "canonical_actor_ref",
+        "issuer_ref",
+        "approval_receipt_ref",
+        "approval_receipt_hash",
+        "authority_policy_ref",
+        "authority_policy_hash",
+        "approved_at",
+        "scope_hash",
+        "validation_cycle_id"
+      ],
+      "properties": {
+        "role": { "enum": ["business", "security", "operations"] },
+        "decision_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "approver_ref": {
+          "type": "string",
+          "pattern": "^(?:human-ref|person-ref|person):.+$"
+        },
+        "canonical_actor_ref": {
+          "type": "string",
+          "pattern": "^(?:human-ref|person-ref|person):.+$"
+        },
+        "issuer_ref": {
+          "type": "string",
+          "pattern": "^(?:agent-ref|human-ref|person-ref|person):.+$"
+        },
+        "approval_receipt_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "approval_receipt_hash": { "$ref": "#/$defs/sha256" },
+        "authority_policy_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "authority_policy_hash": { "$ref": "#/$defs/sha256" },
+        "approved_at": { "type": "string", "format": "date-time" },
+        "scope_hash": { "$ref": "#/$defs/sha256" },
+        "validation_cycle_id": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "businessApproval": {
+      "allOf": [
+        { "$ref": "#/$defs/approval" },
+        { "properties": { "role": { "const": "business" } }, "required": ["role"] }
+      ]
+    },
+    "securityApproval": {
+      "allOf": [
+        { "$ref": "#/$defs/approval" },
+        { "properties": { "role": { "const": "security" } }, "required": ["role"] }
+      ]
+    },
+    "operationsApproval": {
+      "allOf": [
+        { "$ref": "#/$defs/approval" },
+        { "properties": { "role": { "const": "operations" } }, "required": ["role"] }
+      ]
+    },
+    "nullableBusinessApproval": {
+      "oneOf": [
+        { "$ref": "#/$defs/businessApproval" },
+        { "type": "null" }
+      ]
+    },
+    "nullableSecurityApproval": {
+      "oneOf": [
+        { "$ref": "#/$defs/securityApproval" },
+        { "type": "null" }
+      ]
+    },
+    "nullableOperationsApproval": {
+      "oneOf": [
+        { "$ref": "#/$defs/operationsApproval" },
+        { "type": "null" }
+      ]
+    },
+    "artifactRevisionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_ref", "artifact_hash", "revision"],
+      "properties": {
+        "artifact_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "artifact_hash": { "$ref": "#/$defs/sha256" },
+        "revision": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "inventoryClosureRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_ref", "artifact_hash", "revision", "status"],
+      "properties": {
+        "artifact_ref": { "$ref": "#/$defs/nonSecretRef" },
+        "artifact_hash": { "$ref": "#/$defs/sha256" },
+        "revision": { "$ref": "#/$defs/nonEmptyString" },
+        "status": { "enum": ["complete", "incomplete"] }
+      }
+    },
+    "validationContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inventory_closure",
+        "source_graph",
+        "portfolio_inventory",
+        "repository_inventory",
+        "target_context",
+        "policy_bundle",
+        "approval_owner_policy",
+        "fixture_bundle",
+        "consumer_contract_set",
+        "context_hash"
+      ],
+      "properties": {
+        "inventory_closure": { "$ref": "#/$defs/inventoryClosureRef" },
+        "source_graph": { "$ref": "#/$defs/artifactRevisionRef" },
+        "portfolio_inventory": { "$ref": "#/$defs/artifactRevisionRef" },
+        "repository_inventory": { "$ref": "#/$defs/artifactRevisionRef" },
+        "target_context": { "$ref": "#/$defs/artifactRevisionRef" },
+        "policy_bundle": { "$ref": "#/$defs/artifactRevisionRef" },
+        "approval_owner_policy": { "$ref": "#/$defs/artifactRevisionRef" },
+        "fixture_bundle": { "$ref": "#/$defs/artifactRevisionRef" },
+        "consumer_contract_set": { "$ref": "#/$defs/artifactRevisionRef" },
+        "context_hash": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

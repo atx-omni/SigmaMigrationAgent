@@ -1,0 +1,43 @@
+{
+  "schema_version": "sigma-semantic-routing-decision-request.v1",
+  "decision_id": "semantic-route-warehouse-first-replace-me",
+  "run_id": "run.sigma.migration.replace-me",
+  "scope_id": "scope.sigma.migration.replace-me",
+  "migration_unit_id": "migration-unit-replace-me",
+  "comparison_scope_refs": [
+    "sigma://workbooks/replace-workbook-id",
+    "sigma://dataModels/replace-data-model-id"
+  ],
+  "build_scope_refs": [
+    "sigma://workbooks/replace-workbook-id"
+  ],
+  "target_environment_refs": [
+    "environment-ref://dbt/development",
+    "environment-ref://omni/quarantine"
+  ],
+  "mode": "warehouse_first_refactor",
+  "decided_by_ref": "human-ref://migration-owner",
+  "decision_ref": "human-decision-ref://sigma/semantic-route/replace-me",
+  "decision_record_revision": "revision-1",
+  "decision_record_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "decided_at": "2020-01-02T09:00:00-06:00",
+  "rationale": "Place approved reusable and persistent logic in the governed data layer before Omni.",
+  "source_context_bindings": [
+    {
+      "artifact_id": "sigma-data-model-snapshot.replace-me",
+      "artifact_schema_version": "sigma-data-model-snapshot.v1",
+      "artifact_run_id": "run.sigma.phase0.replace-me",
+      "artifact_scope_id": "scope.sigma.migration.replace-me",
+      "content_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "artifact_created_at": "2020-01-02T08:00:00-06:00",
+      "accepted_by_ref": "human-ref://migration-owner",
+      "acceptance_ref": "human-approval-ref://sigma/source-context/replace-me",
+      "acceptance_record_revision": "revision-1",
+      "acceptance_record_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "accepted_at": "2020-01-02T08:30:00-06:00",
+      "acceptance_verification_state": "reference_only"
+    }
+  ],
+  "supersedes_decision": null,
+  "question_version": "sigma-semantic-migration-question.v1"
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "synthetic-sigma-formula-preflight.v1",
+  "fictional_only": true,
+  "fixture_name": "Fictional Paper Moon Orders",
+  "expected_result_basis": "Independently authored arithmetic and SQL-style aggregate/null contracts over the rows below. Not captured Sigma results, not an Omni query, and not proof of vendor semantic equivalence. Unsupported row/window results describe intended synthetic behavior only.",
+  "null_and_order_policy": "Aggregate functions ignore null values; Count() counts all rows; Count([Amount]) excludes nulls; conditions use SQL three-valued logic. Row outputs follow row_id order. Guarded division returns null for zero or missing denominators. Running-total intention is row_id order with null amounts contributing no increment.",
+  "columns": ["row_id", "amount", "quantity", "status", "region", "denominator"],
+  "rows": [
+    [1, 10, 2, "open", "north", 2],
+    [2, 20, 0, "closed", "south", 0],
+    [3, null, 3, "open", "north", 3],
+    [4, -5, 1, "open", "south", null],
+    [5, 10, 2, null, "north", 2]
+  ],
+  "formula_cases": [
+    {"id": "aggregate_sum", "category": "aggregate", "formula": "Sum([Amount])", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "sum", "expected_filters": null, "expected_result": 35},
+    {"id": "aggregate_average", "category": "aggregate_null", "formula": "Average([Amount])", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "average", "expected_filters": null, "expected_result": 8.75},
+    {"id": "aggregate_count_rows", "category": "aggregate_null", "formula": "Count()", "expected_disposition": "translated", "expected_sql": null, "expected_aggregate": "count", "expected_filters": null, "expected_result": 5},
+    {"id": "aggregate_count_values", "category": "aggregate_null", "formula": "Count([Amount])", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "count", "expected_filters": null, "expected_result": 4},
+    {"id": "aggregate_distinct", "category": "aggregate_null", "formula": "CountDistinct([Amount])", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "count_distinct", "expected_filters": null, "expected_result": 3},
+    {"id": "aggregate_min", "category": "aggregate", "formula": "Min([Amount])", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "min", "expected_filters": null, "expected_result": -5},
+    {"id": "aggregate_max", "category": "aggregate", "formula": "Max([Amount])", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "max", "expected_filters": null, "expected_result": 20},
+    {"id": "conditional_sum", "category": "conditional_null", "formula": "SumIf([Amount], [Status] = \"open\")", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "sum", "expected_filters": {"status": {"is": "open"}}, "expected_result": 5},
+    {"id": "conditional_average", "category": "conditional_null", "formula": "AvgIf([Amount], [Status] = \"open\")", "expected_disposition": "translated", "expected_sql": "amount", "expected_aggregate": "average", "expected_filters": {"status": {"is": "open"}}, "expected_result": 2.5},
+    {"id": "conditional_count", "category": "conditional_null", "formula": "CountIf([Status] = \"open\")", "expected_disposition": "translated", "expected_sql": null, "expected_aggregate": "count", "expected_filters": {"status": {"is": "open"}}, "expected_result": 3},
+    {"id": "conditional_multi", "category": "conditional", "formula": "CountIf([Status] = \"open\", [Region] = \"north\")", "expected_disposition": "translated", "expected_sql": null, "expected_aggregate": "count", "expected_filters": {"status": {"is": "open"}, "region": {"is": "north"}}, "expected_result": 2},
+    {"id": "conditional_not_equal", "category": "conditional_null", "formula": "CountIf([Status] != \"closed\")", "expected_disposition": "translated", "expected_sql": null, "expected_aggregate": "count", "expected_filters": {"status": {"is_not": "closed"}}, "expected_result": 3},
+    {"id": "aggregate_median", "category": "aggregate", "formula": "Median([Amount])", "expected_disposition": "translated_without_local_evaluation", "expected_sql": "amount", "expected_aggregate": "median", "expected_filters": null, "expected_result": 10, "local_evaluation_limit": "Stdlib SQLite does not supply median; no replacement aggregate is implemented."},
+    {"id": "row_product", "category": "row", "formula": "[Amount] * [Quantity]", "expected_disposition": "explicit_unsupported", "expected_result": [20, 0, null, -5, 20]},
+    {"id": "row_alias", "category": "row", "formula": "[Amount]", "expected_disposition": "explicit_unsupported", "expected_result": [10, 20, null, -5, 10], "note": "A measure translator must not silently treat a row reference as an aggregate. Exact self-name passthrough is separately checked in extraction."},
+    {"id": "row_conditional", "category": "conditional_row", "formula": "If([Status] = \"open\", [Amount], 0)", "expected_disposition": "explicit_unsupported", "expected_result": [10, 0, null, -5, 0]},
+    {"id": "window_running_total", "category": "window", "formula": "CumulativeSum([Amount])", "expected_disposition": "explicit_unsupported", "expected_result": [10, 30, 30, 25, 35], "note": "Requires order and window-context preservation; this is an intended fixture result, not a live Sigma function evaluation."},
+    {"id": "window_function", "category": "window", "formula": "WindowSum([Amount])", "expected_disposition": "explicit_unsupported", "expected_result": null, "note": "No expected result is asserted without a captured frame/order definition."},
+    {"id": "null_coalesce", "category": "null_row", "formula": "Coalesce([Amount], 0)", "expected_disposition": "explicit_unsupported", "expected_result": [10, 20, 0, -5, 10]},
+    {"id": "null_condition", "category": "null_conditional", "formula": "CountIf([Amount] = Null)", "expected_disposition": "explicit_unsupported", "expected_result": null, "note": "Null-comparison semantics require explicit source evidence; rejection is required rather than guessing IS NULL."},
+    {"id": "division_zero_guarded", "category": "divide_by_zero", "formula": "If([Denominator] = 0, Null, [Amount] / [Denominator])", "expected_disposition": "explicit_unsupported", "expected_result": [5, null, null, null, 5]},
+    {"id": "aggregate_ratio", "category": "divide_by_zero_aggregate", "formula": "Sum([Amount]) / Sum([Denominator])", "expected_disposition": "explicit_unsupported", "expected_result": 5},
+    {"id": "unknown_function", "category": "unknown_function", "formula": "WarpDrive([Amount])", "expected_disposition": "explicit_unsupported", "expected_result": null},
+    {"id": "cross_table", "category": "cross_table", "formula": "Sum([Other Orders/Amount])", "expected_disposition": "explicit_unsupported", "expected_result": null},
+    {"id": "missing_source_field", "category": "source_binding", "formula": "Sum([Never Captured])", "expected_disposition": "explicit_unsupported", "expected_result": null, "note": "A source-bound preflight must flag a reference absent from the captured schema; successful tuple generation alone is not safe translation."}
+  ],
+  "extractor_columns": [
+    {"id": "fictional-amount", "name": "Amount", "formula": "[Amount]"},
+    {"id": "fictional-quantity", "name": "Quantity"},
+    {"id": "fictional-status", "name": "Status"},
+    {"id": "fictional-region", "name": "Region"},
+    {"id": "fictional-denominator", "name": "Denominator"},
+    {"id": "fictional-row-product", "name": "Row Product", "formula": "[Amount] * [Quantity]"},
+    {"id": "fictional-hidden-total", "name": "Hidden Total", "formula": "Sum([Amount])", "hidden": true}
+  ],
+  "extractor_metrics": [
+    {"id": "fictional-total", "name": "Total Amount", "formula": "Sum([Amount])"},
+    {"id": "fictional-unknown", "name": "Unknown Function", "formula": "WarpDrive([Amount])"},
+    {"id": "fictional-missing", "name": "Missing Reference", "formula": "Sum([Never Captured])"}
+  ],
+  "extractor_expectations": {
+    "self_passthrough_preserved": true,
+    "row_formula_explicit_review": true,
+    "unknown_metric_explicit_review": true,
+    "hidden_aggregate_preserved": true,
+    "missing_metric_explicit_review": true
+  }
+}

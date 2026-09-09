@@ -1,0 +1,498 @@
+{
+  "registry_version": "sigma-to-omni.agents.v1",
+  "runtime_pattern": "manager_with_typed_specialists",
+  "implemented_milestone": "phase_0_capability_spike",
+  "manager": "sigma_to_omni_architect",
+  "phase_0_authority": {
+    "source": "bounded_read_only",
+    "artifact_registry": "required_external_control_plane_not_wired",
+    "target": "none",
+    "release": "none",
+    "cutover": "none",
+    "decommission": "none"
+  },
+  "semantic_migration_discovery": {
+    "required_before_target_design": true,
+    "blocks_phase_0_source_acquisition": false,
+    "default_mode": null,
+    "question": "Which implementation path should this Sigma semantic layer use: warehouse-first refactoring before Omni, or direct reconstruction in Omni?",
+    "shared_guardrail": "Both paths target bounded semantic equivalence with explicit exceptions and the same closed-denominator QA; neither guarantees one-to-one semantic, behavioral, visual, or workflow parity.",
+    "prompt_contract": "sigma-semantic-routing-prompt.v1",
+    "decision_request_contract": "sigma-semantic-routing-decision-request.v1",
+    "decision_contract": "sigma-semantic-routing-decision.v1",
+    "route_resolver": "omni_migrator.extractors.sigma.semantic_routing.route_sigma_semantic_specialists",
+    "decision_scope": "one migration_unit_id within exact comparison and build scopes",
+    "decision_evidence": "human record reference plus revision and content hash; reference_only until a trusted resolver verifies it",
+    "source_context_binding": "artifact schema, run, scope, created-at, exact content hash, and reference-only acceptance provenance",
+    "reselection_policy": "create an append-only successor for the same migration unit and invalidate dependent target plans",
+    "route_change_policy": "if direct Omni reconstruction later requires data-layer work, stop and create an append-only superseding warehouse_first_refactor decision before any dbt or warehouse work",
+    "dependency_direction": "accepted source context -> semantic routing decision -> target design; never semantic routing decision -> source evidence",
+    "modes": {
+      "warehouse_first_refactor": {
+        "display_name": "Warehouse-first refactor",
+        "target_environment_rule": "exactly one Omni target plus at least one dbt, Snowflake, or warehouse target",
+        "consolidation_route": "evaluate_reuse_merge_parameterize_split",
+        "dbt_route": "required_when_approved_blueprint_places_logic_upstream",
+        "omni_model_route": "model_on_accepted_source_and_data_layer_relations",
+        "semantic_acceptance_objective": "bounded_semantic_equivalence_after_approved_rearchitecture",
+        "required_specialists": [
+          "sigma_analytics_formula",
+          "sigma_semantic_consolidation",
+          "sigma_dbt_analytics_engineer",
+          "sigma_omni_modeler",
+          "sigma_independent_qa"
+        ]
+      },
+      "omni_semantic_reconstruction": {
+        "display_name": "Omni semantic reconstruction",
+        "target_environment_rule": "exactly one Omni target and no data-layer target; any later data-layer need requires a superseding warehouse_first_refactor decision",
+        "consolidation_route": "preserve_source_boundaries_for_direct_route",
+        "dbt_route": "not_applicable_direct_route",
+        "omni_model_route": "reconstruct_semantics_in_omni_over_accepted_warehouse_relations",
+        "semantic_acceptance_objective": "bounded_semantic_equivalence_after_direct_reconstruction",
+        "required_specialists": [
+          "sigma_analytics_formula",
+          "sigma_semantic_consolidation",
+          "sigma_omni_modeler",
+          "sigma_independent_qa"
+        ],
+        "skipped_specialists": [
+          "sigma_dbt_analytics_engineer"
+        ]
+      }
+    }
+  },
+  "tool_profiles": {
+    "sigma_orchestrator_read_delegate_validate": {
+      "allowed_tools": [
+        "in_process_bundle_read",
+        "local_immutable_bundle_write",
+        "contract_validate",
+        "local_draft_write",
+        "specialist_delegate"
+      ],
+      "forbidden_tools": [
+        "sigma_mutation",
+        "dbt_write",
+        "snowflake_write",
+        "omni_write",
+        "release",
+        "cutover",
+        "decommission"
+      ]
+    },
+    "sigma_bounded_read_and_artifact_write": {
+      "allowed_tools": [
+        "sigma_token_create",
+        "sigma_whoami_read",
+        "sigma_approved_content_read",
+        "in_process_bundle_read",
+        "local_immutable_bundle_write",
+        "contract_validate"
+      ],
+      "forbidden_tools": [
+        "sigma_mutation",
+        "unbounded_row_export",
+        "target_write"
+      ]
+    },
+    "sigma_version_bound_content_read_and_proposal": {
+      "allowed_tools": [
+        "sigma_approved_content_read",
+        "in_process_bundle_read",
+        "local_immutable_bundle_write",
+        "local_draft_write"
+      ],
+      "forbidden_tools": [
+        "sigma_mutation",
+        "source_action_execute",
+        "target_write"
+      ]
+    },
+    "sigma_model_formula_sql_read_and_proposal": {
+      "allowed_tools": [
+        "sigma_approved_content_read",
+        "in_process_bundle_read",
+        "local_immutable_bundle_write",
+        "deterministic_formula_parse",
+        "local_draft_write"
+      ],
+      "forbidden_tools": [
+        "source_sql_execute",
+        "sigma_mutation",
+        "target_write"
+      ]
+    },
+    "semantic_evidence_read_and_proposal_only": {
+      "allowed_tools": [
+        "artifact_registry_read",
+        "artifact_registry_write",
+        "control_plane_validate",
+        "local_draft_write"
+      ],
+      "forbidden_tools": [
+        "human_approval_create",
+        "target_write"
+      ]
+    },
+    "authorized_dbt_development_write": {
+      "allowed_tools": [
+        "artifact_registry_read",
+        "artifact_registry_write",
+        "dbt_branch_read",
+        "dbt_branch_write",
+        "dbt_compile",
+        "dbt_build",
+        "dbt_test",
+        "snowflake_bounded_query"
+      ],
+      "forbidden_tools": [
+        "protected_branch_write",
+        "production_merge",
+        "release"
+      ]
+    },
+    "authorized_omni_model_branch_write_and_validate": {
+      "allowed_tools": [
+        "artifact_registry_read",
+        "artifact_registry_write",
+        "omni_model_read",
+        "omni_model_write",
+        "omni_model_validate",
+        "omni_query_read"
+      ],
+      "forbidden_tools": [
+        "omni_production_merge",
+        "omni_publish",
+        "release"
+      ]
+    },
+    "authorized_omni_quarantine_document_write": {
+      "allowed_tools": [
+        "artifact_registry_read",
+        "artifact_registry_write",
+        "omni_document_create_quarantine",
+        "omni_document_draft_write",
+        "omni_document_read",
+        "omni_query_read"
+      ],
+      "forbidden_tools": [
+        "omni_unrestricted_folder_write",
+        "omni_publish",
+        "release"
+      ]
+    },
+    "bounded_source_target_reads_and_comparators": {
+      "allowed_tools": [
+        "artifact_registry_read",
+        "sigma_bounded_result_read",
+        "omni_query_read",
+        "omni_visual_read",
+        "persona_test_read",
+        "deterministic_comparator"
+      ],
+      "forbidden_tools": [
+        "artifact_repair",
+        "target_write",
+        "acceptance_approve"
+      ]
+    },
+    "accepted_artifact_read_and_document_draft_write": {
+      "allowed_tools": [
+        "artifact_registry_read",
+        "local_draft_write"
+      ],
+      "forbidden_tools": [
+        "source_write",
+        "target_write",
+        "release",
+        "external_send"
+      ]
+    }
+  },
+  "agents": [
+    {
+      "id": "sigma_to_omni_architect",
+      "spec": "sigma-to-omni-architect.md",
+      "invocation": "manager",
+      "active_from_phase": 0,
+      "default_authority": "read_delegate_validate_and_propose",
+      "tool_profile": "sigma_orchestrator_read_delegate_validate",
+      "input_contracts": [
+        "sigma-capability-spike-request.v1"
+      ],
+      "conditional_input_contracts": {
+        "target_design": [
+          "sigma-semantic-routing-decision-request.v1"
+        ]
+      },
+      "output_contracts": [
+        "sigma-capability-spike-bundle.v1",
+        "sigma-semantic-routing-prompt.v1",
+        "sigma-semantic-routing-decision.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_migration_mode_missing_before_target_design",
+        "semantic_routing_decision_stale_superseded_or_conflicting",
+        "identity_or_scope_mismatch",
+        "stale_or_incomplete_evidence",
+        "authority_expansion"
+      ],
+      "retry_policy": "delegate retries to the bounded deterministic client; reconcile before rerouting",
+      "escalation_behavior": "route approvals, security, operational redesign, release, cutover, and decommission to named humans"
+    },
+    {
+      "id": "sigma_inventory_admin",
+      "spec": "sigma-inventory-admin.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 0,
+      "default_authority": "bounded_sigma_read_and_artifact_write",
+      "tool_profile": "sigma_bounded_read_and_artifact_write",
+      "input_contracts": [
+        "sigma-run-manifest.v1",
+        "sigma-capability-spike-request.v1"
+      ],
+      "output_contracts": [
+        "sigma-observation.v1",
+        "sigma-api-capability-matrix.v1"
+      ],
+      "stopping_conditions": [
+        "whoami_mismatch",
+        "request_budget_exhausted",
+        "pagination_inconsistent",
+        "privacy_boundary_missing"
+      ],
+      "retry_policy": "one token refresh and bounded idempotent GET retries only",
+      "escalation_behavior": "return unresolved visibility and manual evidence to the content or admin owner"
+    },
+    {
+      "id": "sigma_bi_workbook",
+      "spec": "sigma-bi-workbook.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 0,
+      "default_authority": "version_bound_read_and_propose",
+      "tool_profile": "sigma_version_bound_content_read_and_proposal",
+      "input_contracts": [
+        "sigma-observation.v1",
+        "sigma-api-capability-matrix.v1"
+      ],
+      "output_contracts": [
+        "sigma-workbook-graph.v1",
+        "sigma-behavior-manifest.v1"
+      ],
+      "stopping_conditions": [
+        "unfrozen_source",
+        "missing_element_denominator",
+        "silent_behavior_loss"
+      ],
+      "retry_policy": "no direct retries; consume only newly produced in-process source observations",
+      "escalation_behavior": "route actions, input tables, embeds, and delivery to explicit redesign owners"
+    },
+    {
+      "id": "sigma_analytics_formula",
+      "spec": "sigma-analytics-formula.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 0,
+      "default_authority": "model_formula_sql_read_and_propose",
+      "tool_profile": "sigma_model_formula_sql_read_and_proposal",
+      "input_contracts": [
+        "sigma-observation.v1",
+        "sigma-data-model-snapshot.v1"
+      ],
+      "conditional_input_contracts": {
+        "target_logic_placement": [
+          "sigma-semantic-routing-decision.v1"
+        ]
+      },
+      "output_contracts": [
+        "sigma-data-model-snapshot.v1"
+      ],
+      "stopping_conditions": [
+        "unsupported_formula",
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting_before_target_placement",
+        "missing_evaluation_context",
+        "unknown_grain_key_or_security"
+      ],
+      "retry_policy": "deterministic recomputation only after current in-process evidence changes",
+      "escalation_behavior": "return unknown translation or legacy dataset preservation to a named human owner"
+    },
+    {
+      "id": "sigma_semantic_consolidation",
+      "spec": "semantic-consolidation.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 3,
+      "default_authority": "proposal_only",
+      "tool_profile": "semantic_evidence_read_and_proposal_only",
+      "input_contracts": [
+        "semantic-profile.v1",
+        "semantic-profile-coverage.v1",
+        "sigma-semantic-routing-decision.v1"
+      ],
+      "activation_condition": "both modes; warehouse-first evaluates reuse/merge/parameterize/split, while Omni reconstruction records a closed-denominator preserve-boundary disposition unless separately approved",
+      "output_contracts": [
+        "equivalence-assessment.v1",
+        "consolidation-candidate.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting",
+        "protected_dimension_unknown",
+        "incomplete_denominator",
+        "stale_profile"
+      ],
+      "retry_policy": "recompute only from new registered profiles",
+      "escalation_behavior": "require human approval for every merge, retirement, security, or operational disposition"
+    },
+    {
+      "id": "sigma_dbt_analytics_engineer",
+      "spec": "dbt-analytics-engineer.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 4,
+      "default_authority": "approved_development_branch_only",
+      "tool_profile": "authorized_dbt_development_write",
+      "input_contracts": [
+        "consolidation-decision.v1",
+        "topic-blueprint.v1",
+        "sigma-semantic-routing-decision.v1",
+        "target-authorization.v1"
+      ],
+      "activation_condition": "warehouse_first_refactor only, when an approved blueprint places logic upstream",
+      "output_contracts": [
+        "target-operation.v1",
+        "repository-readback.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting",
+        "protected_branch",
+        "stale_sha",
+        "authorization_mismatch",
+        "ambiguous_write"
+      ],
+      "retry_policy": "same idempotency key after explicit readback reconciliation only",
+      "escalation_behavior": "route merge, production, destructive, and cost decisions to humans"
+    },
+    {
+      "id": "sigma_omni_modeler",
+      "spec": "omni-modeler.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 4,
+      "default_authority": "approved_model_branch_only",
+      "tool_profile": "authorized_omni_model_branch_write_and_validate",
+      "input_contracts": [
+        "topic-blueprint.v1",
+        "target-authorization.v1",
+        "sigma-semantic-routing-decision.v1"
+      ],
+      "conditional_input_contracts": {
+        "warehouse_first_refactor": [
+          "repository-readback.v1"
+        ],
+        "omni_semantic_reconstruction": [
+          "semantic-profile.v1",
+          "formula-translation.v1",
+          "consolidation-decision.v1"
+        ]
+      },
+      "output_contracts": [
+        "target-operation.v1",
+        "omni-model-readback.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting",
+        "grain_fanout_or_security_unresolved",
+        "stale_checksum",
+        "ambiguous_write"
+      ],
+      "retry_policy": "same idempotency key after checksum and readback reconciliation only",
+      "escalation_behavior": "route security acceptance and promotion to named humans"
+    },
+    {
+      "id": "sigma_omni_bi_developer",
+      "spec": "omni-bi-developer.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 4,
+      "default_authority": "approved_quarantine_document_only",
+      "tool_profile": "authorized_omni_quarantine_document_write",
+      "input_contracts": [
+        "dashboard-rebuild-plan.v1",
+        "sigma-behavior-manifest.v1",
+        "sigma-semantic-routing-decision.v1",
+        "target-authorization.v1"
+      ],
+      "output_contracts": [
+        "target-operation.v1",
+        "omni-document-readback.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting",
+        "query_mapping_incomplete",
+        "behavior_unresolved",
+        "target_identity_mismatch"
+      ],
+      "retry_policy": "same idempotency key after create or update reconciliation only",
+      "escalation_behavior": "route unsupported workflows and publication to named humans"
+    },
+    {
+      "id": "sigma_independent_qa",
+      "spec": "independent-qa.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 5,
+      "default_authority": "read_compare_and_recommend_only",
+      "tool_profile": "bounded_source_target_reads_and_comparators",
+      "input_contracts": [
+        "qa-comparison-context.v1",
+        "sigma-observation.v1",
+        "sigma-semantic-routing-decision.v1",
+        "qa-target-operation-outcome.v1"
+      ],
+      "output_contracts": [
+        "qa-result.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting",
+        "comparison_context_mismatch",
+        "incomplete_denominator",
+        "expired_evidence",
+        "self_certification"
+      ],
+      "retry_policy": "new validation cycle after new aligned observations only",
+      "escalation_behavior": "route variances and business, security, operational, and technical acceptance separately"
+    },
+    {
+      "id": "sigma_documentation_training",
+      "spec": "documentation-training.md",
+      "invocation": "specialist_tool",
+      "active_from_phase": 5,
+      "default_authority": "accepted_artifact_read_and_local_draft_only",
+      "tool_profile": "accepted_artifact_read_and_document_draft_write",
+      "input_contracts": [
+        "accepted-artifacts.v1",
+        "sigma-semantic-routing-decision.v1",
+        "qa-result.v1"
+      ],
+      "output_contracts": [
+        "documentation-package.v1"
+      ],
+      "stopping_conditions": [
+        "semantic_routing_decision_missing_stale_superseded_or_conflicting",
+        "stale_lineage",
+        "qa_unresolved",
+        "acceptance_missing",
+        "release_overclaim"
+      ],
+      "retry_policy": "regenerate only after accepted evidence changes",
+      "escalation_behavior": "route unresolved customer, security, and release language to human reviewers"
+    }
+  ],
+  "human_only_actions": [
+    "choose_semantic_migration_mode",
+    "approve_scope",
+    "approve_consolidation",
+    "approve_security_disposition",
+    "approve_operational_redesign",
+    "authorize_target_write",
+    "accept_business_security_operational_and_technical_results",
+    "authorize_release",
+    "authorize_cutover",
+    "authorize_decommission"
+  ]
+}
