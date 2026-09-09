@@ -34,7 +34,8 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 <a href="#9-build-and-validate">9. Build and validate</a>
 <a href="#10-export-and-share-the-result">10. Export and share the result</a>
 <a href="#11-resume-update-or-withdraw-review">11. Resume, update or withdraw review</a>
-<a href="#12-troubleshooting-and-the-final-live-gate">12. Troubleshooting and the final live gate</a></nav><main>
+<a href="#12-troubleshooting-and-the-final-live-gate">12. Troubleshooting and the final live gate</a>
+<a href="#13-optional-use-the-agent-skill">13. Optional: use the agent skill</a></nav><main>
 <h1 id="sigma-to-omni-setup-and-operating-guide">Sigma-to-Omni: setup and operating guide</h1>
 <p><strong>DRAFT — requires explicit SE/AE review before sending to customer.</strong></p>
 <section aria-labelledby="1-what-this-tool-does">
@@ -130,6 +131,14 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 <p>If an input is missing, changed, oversized, credential-bearing or uses symbolic links, correct that input and retry. The tool refuses unsafe paths and duplicate JSON keys. Existing run names and ZIP filenames are not overwritten; choose a new name. A build interrupted before completion is not a successful package; rebuild after checking status.</p>
 <p>Unresolved formulas/field references, unsupported controls/actions/writeback, security policy differences and missing layout evidence need explicit remediation. Do not remove source objects just to obtain a green result. Any reduced pilot scope must be deliberately recorded as a different migration, not claimed as the original workbook&#x27;s complete migration.</p>
 <p>Before claiming success, separately authorize a bounded live development pilot: apply reviewed artifacts, confirm returned IDs and readback, compare source/target numbers, controls, visibility, allowed/denied personas and visual behavior, then obtain platform-owner acceptance. No live deployment or independent human operator walkthrough is claimed by the synthetic checks delivered with this tool.</p>
+</section>
+<section aria-labelledby="13-optional-use-the-agent-skill">
+<h2 id="13-optional-use-the-agent-skill">13. Optional: use the agent skill</h2>
+<p>The current <code>sigma-to-omni-migration</code> skill is included in <code>.agents/skills/sigma-to-omni-migration</code>. It guides the same steps above and is aligned with runtime version 0.2.0. It does not add an Omni push capability. Using the terminal directly remains an option; an AI assistant is not required.</p>
+<p>After installing Python and the runtime in step 3, open the extracted package folder or GitHub checkout as your Codex project. Ask: “Use the sigma-to-omni-migration skill to prepare one workbook. Ask whether I want it modeled upstream or lifted and shifted to Omni directly. Stop for my review.”</p>
+<p>Codex discovers repository/project skills in <code>.agents/skills</code>; if the skill does not appear, restart Codex. See <a href="https://developers.openai.com/codex/skills">official skill setup</a>. Some file browsers hide folders beginning with a dot; the <code>.agents</code> folder is included in the package even when it is not initially visible.</p>
+<p>For a different project, copy the entire <code>sigma-to-omni-migration</code> folder into that project&#x27;s <code>.agents/skills/</code>, preserve any existing customized version, and tell the agent where this installed runtime lives. Copying the skill does not copy the engine or examples. Keep the skill and runtime from the same package/repository revision, instead of mixing these instructions with the old bespoke POC skill.</p>
+<p>The agent can explain mappings and run authorized preparation steps, but it must not accept its own proposal. You personally run the <code>review</code> command from step 8 and enter your decision in the terminal. The agent then checks status before continuing. Never paste credentials into the conversation.</p>
 </section>
 </main><footer>Self-contained instruction page. No scripts, tracking, uploads, or remote assets. Links open official reference documentation only when you choose them. Use your browser's Print option for a PDF copy.</footer>
 </body></html>

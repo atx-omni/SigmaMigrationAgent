@@ -1,5 +1,12 @@
 # Sigma-to-Omni agent catalog
 
+For the **current operator skill and local pre-push workflow**, use
+[`sigma-to-omni-migration`](../../.agents/skills/sigma-to-omni-migration/SKILL.md)
+and the [operator guide](../../customer/sigma/SETUP-AND-USAGE.md).
+The catalog below describes the retained **advanced Phase 0 specialist workflow**,
+not the limits of the newer deterministic `sigma-migrate` preparation workflow.
+The two runtimes are not an integrated autonomous end-to-end migration agent.
+
 This catalog defines one manager and nine bounded specialists for the governed Sigma-to-Omni
 migration lifecycle. The implemented first milestone is **Phase 0 capability spike**, not the
 requirements document's full functional first pass.

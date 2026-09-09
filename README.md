@@ -27,6 +27,30 @@ The public workflow is `capture → configure → init → route → review → 
 You can also import a previously captured snapshot. Review is interactive; hashes
 and immutable bindings are generated automatically. No target apply command exists.
 
+## Use the current agent skill
+
+The maintained skill is
+[sigma-to-omni-migration](.agents/skills/sigma-to-omni-migration/SKILL.md), aligned
+with runtime **0.2.0**. It replaces the older bespoke POC instructions; it does not
+require Sigma/Omni MCP, Omni CLI, or an AI-provider key for local preparation.
+
+Open this checkout as your Codex project. Its repository-scoped skill lives in
+`.agents/skills`, following [official Codex skill discovery](https://developers.openai.com/codex/skills).
+Ask: “Use the sigma-to-omni-migration skill to prepare one workbook. Ask me whether
+to model upstream or lift and shift directly, and stop for my local review.”
+If the skill does not appear, restart Codex. Skill discovery does not install
+Python; complete the runtime installation above first.
+
+For another project, copy the complete `sigma-to-omni-migration` folder into that
+project's `.agents/skills/` without overwriting an existing customized skill, and
+tell the agent where this runtime checkout lives. Keep skill and runtime from the
+same repository revision. The customer-package builder includes the same skill
+files and checksums; no nested skill ZIP is needed. The standalone terminal
+workflow remains available without an AI assistant.
+
+The agent must not answer the terminal approval prompt for you. It will pause
+and give you the `review` command when it cannot hand over an interactive terminal.
+
 ## Readiness boundaries
 
 This release is for **supervised local preparation**, not a promise of arbitrary

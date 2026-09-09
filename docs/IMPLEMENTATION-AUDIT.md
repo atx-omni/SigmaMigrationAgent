@@ -11,6 +11,22 @@ The implementation materially advances preparation; **the full original workbook
 and the entire remediation plan are not complete**. The supported fictional slice
 must not be represented as migration of the original complex synthetic workbook.
 
+## Agent skill alignment follow-up
+
+The canonical operator skill now lives at
+[`.agents/skills/sigma-to-omni-migration/SKILL.md`](../.agents/skills/sigma-to-omni-migration/SKILL.md)
+and declares compatibility with runtime 0.2.0. It guides the current deterministic
+pre-push commands, both explicit routes, real human terminal review, and input
+revision invalidation. It replaces the older bespoke MCP/Omni CLI pilot playbook
+for this runtime; the legacy specialist catalog remains separately identified.
+
+The customer package includes those same three skill files byte-for-byte under
+the same discovery path, with scanner and manifest/checksum coverage. The guide
+includes optional skill setup; the terminal-only workflow still needs no AI host.
+Skill validation, **20 focused skill/public-session checks**, and **8 packaging
+checks** passed for this follow-up. These are documentation/runtime compatibility
+and packaging evidence, not a human operator walkthrough or live acceptance.
+
 ## Review against every plan row
 
 | Requirement | Status | Evidence and remaining boundary |

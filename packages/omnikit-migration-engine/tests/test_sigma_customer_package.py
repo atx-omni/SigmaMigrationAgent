@@ -32,9 +32,50 @@ def test_distribution_inventory_and_reproducibility(tmp_path):
                 "contracts/common-definitions.v1.schema.json"} <= names
         assert any(name.startswith("engine/src/omni_migrator/rulebook/") for name in names)
         assert not any("/tests/" in name or "/.git/" in name or "/docs/" in name for name in names)
+        skill_paths = {
+            ".agents/skills/sigma-to-omni-migration/SKILL.md",
+            ".agents/skills/sigma-to-omni-migration/agents/openai.yaml",
+            ".agents/skills/sigma-to-omni-migration/references/runtime-workflow.md",
+        }
+        assert {name for name in names if name.startswith(".agents/skills/")} == skill_paths
+        records = {item["path"]: item for item in manifest["files"]}
+        for name in skill_paths:
+            source = (ROOT / name).read_bytes()
+            assert archive.read(prefix + name) == source
+            assert records[name]["source_path"] == name
+            assert records[name]["source_sha256"] == PACKAGER.digest(source)
+            assert records[name]["sha256"] == PACKAGER.digest(source)
+            assert records[name]["distribution_notice_added"] is False
         assert manifest["human_distribution_review_required"] is True
     with pytest.raises(ValueError, match="already exists"):
         PACKAGER.build(ROOT, first, "test-pilot")
+
+
+@pytest.mark.parametrize("missing_name", PACKAGER.SKILL_FILES)
+def test_missing_required_canonical_skill_file_blocks_distribution(tmp_path, monkeypatch, missing_name):
+    missing = ROOT / missing_name
+    assert missing.is_file(), "Run packaging checks after the canonical skill files exist"
+    original_is_file = Path.is_file
+
+    def is_file(path):
+        return False if path == missing else original_is_file(path)
+
+    # Simulate absence without moving or deleting an authored repository file.
+    monkeypatch.setattr(Path, "is_file", is_file)
+    destination = tmp_path / "missing-skill.zip"
+    with pytest.raises(ValueError, match="missing or oversized package input") as error:
+        PACKAGER.build(ROOT, destination, "test-missing-skill")
+    assert missing_name in str(error.value)
+    assert not destination.exists()
+
+
+def test_skill_selection_does_not_glob_extra_files(tmp_path):
+    unexpected = tmp_path / ".agents/skills/sigma-to-omni-migration/unreviewed.md"
+    unexpected.parent.mkdir(parents=True)
+    unexpected.write_text("Must not enter the allowlisted distribution.\n")
+    selected = PACKAGER.selection(tmp_path)
+    assert {name for name in selected if name.startswith(".agents/skills/")} == set(PACKAGER.SKILL_FILES)
+    assert unexpected not in selected.values()
 
 
 def test_scanner_rejects_private_values_and_symbolic_links_without_echoing(tmp_path):

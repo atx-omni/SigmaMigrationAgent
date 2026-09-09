@@ -200,3 +200,31 @@ apply reviewed artifacts, confirm returned IDs and readback, compare source/targ
 numbers, controls, visibility, allowed/denied personas and visual behavior, then
 obtain platform-owner acceptance. No live deployment or independent human operator
 walkthrough is claimed by the synthetic checks delivered with this tool.
+
+## 13. Optional: use the agent skill
+
+The current `sigma-to-omni-migration` skill is included in
+`.agents/skills/sigma-to-omni-migration`. It guides the same steps above and is
+aligned with runtime version 0.2.0. It does not add an Omni push capability.
+Using the terminal directly remains an option; an AI assistant is not required.
+
+After installing Python and the runtime in step 3, open the extracted package
+folder or GitHub checkout as your Codex project. Ask: “Use the
+sigma-to-omni-migration skill to prepare one workbook. Ask whether I want it
+modeled upstream or lifted and shifted to Omni directly. Stop for my review.”
+
+Codex discovers repository/project skills in `.agents/skills`; if the skill does
+not appear, restart Codex. See [official skill setup](https://developers.openai.com/codex/skills).
+Some file browsers hide folders beginning with a dot; the `.agents` folder is
+included in the package even when it is not initially visible.
+
+For a different project, copy the entire `sigma-to-omni-migration` folder into
+that project's `.agents/skills/`, preserve any existing customized version, and
+tell the agent where this installed runtime lives. Copying the skill does not copy
+the engine or examples. Keep the skill and runtime from the same package/repository
+revision, instead of mixing these instructions with the old bespoke POC skill.
+
+The agent can explain mappings and run authorized preparation steps, but it must
+not accept its own proposal. You personally run the `review` command from step 8
+and enter your decision in the terminal. The agent then checks status before
+continuing. Never paste credentials into the conversation.

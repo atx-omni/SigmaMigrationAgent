@@ -13,8 +13,13 @@ This guide is for migration teams who own their source and destination platforms
 - **engine/:** the supplied Python software, software license, and historical upstream attribution.
 - **contracts/:** technical input definitions and fictional reference examples.
 - **PACKAGE-MANIFEST.json:** exact file fingerprints and source snapshot status.
+- **.agents/skills/sigma-to-omni-migration/:** optional current agent skill, with the
+  same instructions as the repository and a matching runtime-version requirement.
 
-Extract this ZIP once. There is no nested skill ZIP, plugin installation, or Claude/Codex subscription requirement for the offline example. Do not merge it with an older migration package.
+Extract this ZIP once. There is no nested skill ZIP, mandatory plugin installation,
+or Claude/Codex subscription requirement for the offline example. The optional
+skill is already included as a folder; see step 13 of the guide to use it. Do not
+merge this package with an older migration package.
 
 Use the Sigma steps in this guide. Some shared data types retain historical names, but no Domo source adapter or Domo operator command is available in this distribution.
 

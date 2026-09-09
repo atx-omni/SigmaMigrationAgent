@@ -24,6 +24,11 @@ CUSTOMER_FILES = (
     "SOFTWARE-NOTICES.md", "start.py", "examples/fictional-sigma-snapshot.json",
 )
 ENGINE_FILES = ("pyproject.toml", "LICENSE", "PROVENANCE.json", "requirements-tested.txt")
+SKILL_FILES = (
+    ".agents/skills/sigma-to-omni-migration/SKILL.md",
+    ".agents/skills/sigma-to-omni-migration/agents/openai.yaml",
+    ".agents/skills/sigma-to-omni-migration/references/runtime-workflow.md",
+)
 BLOCKED_PARTS = {".git", ".codex", ".venv", "__pycache__", "tests", "evals", "evidence",
                  ".runs", ".artifacts", ".secrets", "customer-evidence", "node_modules"}
 SCAN_RULES = {
@@ -46,10 +51,13 @@ def digest(data: bytes) -> str:
 
 
 def selection(root: Path) -> dict[str, Path]:
-    """Explicit customer files plus only source code/rulebook and reference schemas."""
+    """Explicit customer/skill files plus source code/rulebook and reference schemas."""
     selected = {name: root / CUSTOMER / name for name in CUSTOMER_FILES}
     selected["SOFTWARE-NOTICES.md"] = root / "SOFTWARE-NOTICES.md"
     selected.update({f"engine/{name}": root / ENGINE / name for name in ENGINE_FILES})
+    # Required canonical skill files retain their discovery path. Do not glob
+    # arbitrary skills or bypass the same scanning/checksum path as other files.
+    selected.update({name: root / name for name in SKILL_FILES})
     for path in sorted((root / "examples").glob("*.json")):
         selected[f"examples/{path.name}"] = path
     selected["engine/README.md"] = root / CUSTOMER / "ENGINE-README.md"
