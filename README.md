@@ -21,9 +21,13 @@ Python 3.11+ on macOS or Linux is required. Windows users need a Linux environme
 python3 -m venv .venv
 .venv/bin/python -m pip install -e 'packages/omnikit-migration-engine[dev]'
 .venv/bin/sigma-migrate --help
+.venv/bin/sigma-migrate setup --directory migration-setup
 ```
 
-The public workflow is `capture → configure → init → route → review → build → validate → export`.
+Start with guided `setup`, then `doctor`, optional read-only `discover`,
+`capture` or snapshot import, optional `scope`, `configure`, `init`, `review`,
+`build`, `validate`, `report`, and `export`. Setup records the explicit route;
+pass its profile to configure/init so you are not asked twice.
 You can also import a previously captured snapshot. Review is interactive; hashes
 and immutable bindings are generated automatically. No target apply command exists.
 
@@ -31,8 +35,17 @@ and immutable bindings are generated automatically. No target apply command exis
 
 The maintained skill is
 [sigma-to-omni-migration](.agents/skills/sigma-to-omni-migration/SKILL.md), aligned
-with runtime **0.2.0**. It replaces the older bespoke POC instructions; it does not
+with runtime **0.3.0**. It replaces the older bespoke POC instructions; it does not
 require Sigma/Omni MCP, Omni CLI, or an AI-provider key for local preparation.
+Optional OAuth and live topic discovery use the official Omni CLI. Token-based
+model/connection discovery does not require it. Discovery is read-only.
+
+Setup writes a private, conditional `.env` template and a step-by-step local
+checklist. It never asks for secrets in chat or overwrites existing credentials.
+Choose dashboard-only reuse to preserve an existing Topic; this emits query and
+document proposals without model or dbt changes. Reviewed target field evidence
+is still required. See [the configuration-first audit](docs/GUIDED-SETUP-AUDIT.md)
+for delivered features and remaining limits.
 
 Open this checkout as your Codex project. Its repository-scoped skill lives in
 `.agents/skills`, following [official Codex skill discovery](https://developers.openai.com/codex/skills).

@@ -1,4 +1,4 @@
 interface:
   display_name: "Sigma-to-Omni Migration"
   short_description: "Prepare reviewed Sigma-to-Omni migration packages"
-  default_prompt: "Use $sigma-to-omni-migration to prepare one Sigma workbook for Omni, ask me to choose direct or modeled, and stop for my local review before building."
+  default_prompt: "Use $sigma-to-omni-migration to guide my setup first, choose direct or modeled and allowed changes, then prepare one workbook and stop for my review."

@@ -57,4 +57,5 @@ def test_skill_walkthrough_commands_parse_against_public_cli():
     assert operations == {
         "capture", "inspect", "configure", "import-context", "init", "route", "review",
         "status", "build", "validate", "export", "import-source", "import-target", "revoke",
+        "setup", "doctor", "discover", "scope", "report",
     }

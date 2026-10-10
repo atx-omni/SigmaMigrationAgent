@@ -26,7 +26,7 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 <a href="#1-what-this-tool-does">1. What this tool does</a>
 <a href="#2-what-you-need">2. What you need</a>
 <a href="#3-install-once">3. Install once</a>
-<a href="#4-first-try-the-fictional-example">4. First try the fictional example</a>
+<a href="#4-start-with-guided-setup">4. Start with guided setup</a>
 <a href="#5-capture-your-sigma-source">5. Capture your Sigma source</a>
 <a href="#6-configure-your-destination">6. Configure your destination</a>
 <a href="#7-choose-your-migration-approach">7. Choose your migration approach</a>
@@ -45,7 +45,7 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 </section>
 <section aria-labelledby="2-what-you-need">
 <h2 id="2-what-you-need">2. What you need</h2>
-<p>Use macOS or Linux with Python 3.11 or newer, a terminal and an extracted copy of this package. Native Windows is not supported; use a Linux environment such as WSL. For your own source capture, have a Sigma API client ID/secret, the correct regional API host, one workbook ID and its data-model ID. Have the intended Omni model and connection UUIDs and the warehouse schema, table and column names.</p>
+<p>Use macOS or Linux with Python 3.11 or newer, a terminal and an extracted copy of this package. Native Windows is not supported; use a Linux environment such as WSL. You do not need to gather every credential in advance. Guided setup asks which path you need and creates the right checklist. Live source capture needs a Sigma API client ID/secret, the organization&#x27;s API host, one workbook and its data-model ID. Omni discovery is optional: choose browser login, a personal token, or stay offline with reviewed target details. Model/connection IDs can be discovered.</p>
 <p>No AI-provider credential is needed for this deterministic workflow. The advanced proposal runner is separate from this guide.</p>
 </section>
 <section aria-labelledby="3-install-once">
@@ -56,32 +56,62 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 .venv/bin/sigma-migrate --help</code></pre>
 <p>From a GitHub checkout instead, replace <code>./engine</code> with <code>./packages/omnikit-migration-engine</code>. Always run the remaining commands from the same folder. Keep the terminal and source files available while reviewing a run.</p>
 </section>
-<section aria-labelledby="4-first-try-the-fictional-example">
-<h2 id="4-first-try-the-fictional-example">4. First try the fictional example</h2>
+<section aria-labelledby="4-start-with-guided-setup">
+<h2 id="4-start-with-guided-setup">4. Start with guided setup</h2>
+<pre><code>.venv/bin/sigma-migrate setup --directory migration-setup</code></pre>
+<p>Answer four short questions: source capture or existing snapshot; direct or modeled migration; allowed changes; and optional Omni connection method. There is no silent migration-route default. These choices are separate:</p>
+<ul>
+<li><strong>Assessment only:</strong> inspect source coverage; no target artifacts are built.</li>
+<li><strong>Dashboard-only:</strong> use an existing Omni Topic; no view, model, Topic or dbt changes.</li>
+<li><strong>Model changes:</strong> prepare model/Topic and dashboard proposals; modeled migration adds supported dbt artifacts.</li>
+</ul>
+<p>Setup creates <code>migration-profile.json</code>, <code>SETUP-NEXT-STEPS.txt</code>, and, only when needed, a private <code>.env</code> containing exactly the required variables. It also creates a local <code>.gitignore</code> if none exists. Open the checklist, then edit <code>.env</code> locally to replace <code>REPLACE_LOCALLY</code>. Do not paste secrets into chat or run <code>source .env</code>. If a <code>.gitignore</code> already exists, confirm it excludes <code>.env</code> and <code>.env.*</code> before using Git. Do not commit or share credential files—even in a private repository.</p>
+<p>Where to get each value:</p>
+<div class="table-scroll"><table><thead><tr><th>Selected path</th><th>What to provide</th><th>Where to find it</th></tr></thead><tbody>
+<tr><td>Sigma API capture</td><td><code>SIGMA_API_URL</code></td><td>Sigma Administration → Developer access → API base URL. Use the displayed regional host, not your workbook browser URL.</td></tr>
+<tr><td>Sigma API capture</td><td><code>SIGMA_CLIENT_ID</code>, <code>SIGMA_CLIENT_SECRET</code></td><td>Create REST API credentials in Developer access, choose the intended owner, and save the displayed ID/secret locally. The secret is shown once.</td></tr>
+<tr><td>Omni personal token</td><td><code>OMNI_BASE_URL</code></td><td>Your organization&#x27;s HTTPS origin, with no workbook path.</td></tr>
+<tr><td>Omni personal token</td><td><code>OMNI_API_TOKEN</code></td><td>User profile → Manage account → Generate token. Use the permissions needed for the selected reads; a broad organization key is not the default.</td></tr>
+<tr><td>Omni browser login</td><td>No Omni secret in <code>.env</code></td><td>Install the current official Omni CLI. Create/select the named profile and complete browser consent yourself; follow the generated checklist.</td></tr>
+<tr><td>Offline snapshot and target</td><td>No credentials</td><td>Use reviewed local files. Neither MCP nor an AI-provider key is required.</td></tr>
+</tbody></table></div>
+<p>Official instructions: <a href="https://help.sigmacomputing.com/reference/generate-client-credentials">Sigma credentials</a>, <a href="https://docs.omni.co/api/authentication">Omni authentication</a>, and <a href="https://docs.omni.co/developers/cli/authentication">Omni CLI browser login</a>. The CLI owns its OAuth tokens. This tool does not read Apple Keychain; if credentials are already there, retrieve them yourself and fill the private file, or use the existing supported CLI OAuth profile. MCP authentication alone does not configure the CLI. Never make the GitHub repository public to bypass installation access: use an authenticated private download or the provided customer ZIP.</p>
+<p>Check local configuration without connecting:</p>
+<pre><code>.venv/bin/sigma-migrate doctor --profile migration-setup/migration-profile.json --env-file migration-setup/.env</code></pre>
+<p>Omit <code>--env-file</code> if your selected path did not create one. When ready, add <code>--allow-source-read</code> and/or <code>--allow-target-read</code> to authorize the applicable connection checks. Source checks verify selected workbook/model access, not their lineage or full capture. Target checks verify identity, not write permission or semantic compatibility. Process environment overrides the selected <code>.env</code>; a host conflict blocks before credentials are sent. No implicit <code>.env</code> search occurs.</p>
+<p>Re-run setup with the same directory to resume without replacing the profile or credentials. For different choices, use a new setup directory, then import revised inputs into your existing migration and review again. Setup does not install software, grant access, create keys, or change platform settings on your behalf.</p>
+<h3 id="optional-fictional-first-run">Optional fictional first run</h3>
 <p>The supplied small example is a supported, explicitly fictional slice. It is not a substitute for your workbook and does not contain customer data. Start with:</p>
 <pre><code>.venv/bin/sigma-migrate init --run-dir demo-run --source examples/retail-supported.json --target examples/target.json --synthetic</code></pre>
-<p>Then continue at step 7. Do not reuse the example&#x27;s target UUIDs for real work. The old <code>start.py</code> is retained only as a source-extraction demonstration; use <code>sigma-migrate</code> for the complete local review/build flow.</p>
+<p>Then continue at step 7 (this legacy demo chooses its route there). Do not reuse the example&#x27;s target UUIDs for real work. The old <code>start.py</code> is retained only as a source-extraction demonstration; use <code>sigma-migrate</code> for the complete local review/build flow.</p>
 </section>
 <section aria-labelledby="5-capture-your-sigma-source">
 <h2 id="5-capture-your-sigma-source">5. Capture your Sigma source</h2>
-<p>In your terminal, set SIGMA_CLIENT_ID and SIGMA_CLIENT_SECRET using your normal secure credential workflow. Do not put credentials in a JSON file, Git, screenshots or the package you share.</p>
-<p>Replace the host and IDs in this command with your own:</p>
-<pre><code>.venv/bin/sigma-migrate capture --api-url https://YOUR-SIGMA-API-HOST --trusted-api-host YOUR-SIGMA-API-HOST --workbook-id YOUR-WORKBOOK-ID --data-model-id YOUR-MODEL-ID --output source.json --allow-source-read</code></pre>
-<p>This authorizes only a bounded Sigma metadata read. Some layout, control targets, security, actions and input-table details are not complete in API metadata. The tool must block those gaps until sufficient source-bound context is supplied. Capture does not certify a version freeze or live source completeness. Existing capture files are not overwritten; use a new filename for a new capture.</p>
+<p>After completing the generated setup checklist:</p>
+<pre><code>.venv/bin/sigma-migrate capture --profile migration-setup/migration-profile.json --env-file migration-setup/.env --output source.json --allow-source-read</code></pre>
+<p>This authorizes only a bounded Sigma metadata read. Some layout, control targets, security, actions and input-table details are not complete in API metadata. The tool must block those gaps until sufficient source-bound context is supplied. Capture does not certify a version freeze or live source completeness. Existing capture files are not overwritten; use a new filename for a new capture. The default request budget is 100; <code>--request-budget</code> permits an explicit 5–1000 bound. Increasing it does not resolve missing access or unsupported behavior. For a workbook in another user&#x27;s My Documents, check access using the credential&#x27;s owner. A deliberate copy may help, but it creates a new identity: recapture and review it as a new source, preserving the original and its dependencies.</p>
 </section>
 <section aria-labelledby="6-configure-your-destination">
 <h2 id="6-configure-your-destination">6. Configure your destination</h2>
-<p>Run the guided configuration command:</p>
-<pre><code>.venv/bin/sigma-migrate configure --source source.json --output target.json</code></pre>
-<p>Enter the intended Omni model/connection IDs and exact warehouse schema, table and physical column names when prompted. Preserve capitalization. For warehouse-first, also enter the proposed modeled destination table name. This writes a local mapping file and makes no connection to Omni.</p>
+<p>Optionally discover real model/connection IDs instead of copying UUIDs manually:</p>
+<pre><code>.venv/bin/sigma-migrate discover --profile migration-setup/migration-profile.json --env-file migration-setup/.env --output omni-discovery.json --allow-target-read</code></pre>
+<p>Omit <code>--env-file</code> for OAuth-only setup. This lists shared models and connections; extensions/workbook models are not in this first-pass list. To capture topic definitions too, repeat into a new output file with <code>--model-id YOUR-MODEL-ID</code> and optionally <code>--topic YOUR_TOPIC</code>. Topic discovery requires the current official Omni CLI for either authentication method; token-based ID discovery uses REST and does not require it. Older CLI builds without <code>whoami</code> must be updated for OAuth.</p>
+<p>Run guided configuration with the choices already saved in setup:</p>
+<pre><code>.venv/bin/sigma-migrate configure --profile migration-setup/migration-profile.json --source source.json --discovery omni-discovery.json --output target.json</code></pre>
+<p>Enter the intended Omni model/connection IDs and exact warehouse schema, table and physical column names when prompted. Preserve capitalization. For warehouse-first, also enter the proposed modeled destination table name. This writes a local mapping file and makes no connection to Omni. Omit <code>--discovery</code> when supplying IDs manually. Direct migrations do not prompt for modeled destination tables. Assessment-only prints coverage and stops here.</p>
+<p>For dashboard-only reuse, also pass <code>--topic-inventory reviewed-topic.json</code>. The inventory must use <code>omni-topic-inventory.v1</code> and contain the observed Topic&#x27;s exact model/connection IDs, base view, timestamp, evidence reference, grain, filters, and field definitions/visibility. The agent can help normalize the saved topic response into this contract; the tool does not guess an unknown API response shape. Review those definitions, then map exact field IDs and explain compatible grain, filters, metrics and joins. Hashes are calculated automatically. Unmapped, hidden or incompatible fields block; matching display names is not sufficient. This first pass supports one base view, not arbitrary joined Topic migrations. <code>examples/retail-topic-inventory.json</code> shows the exact structure using fictional data. Use it only with the fictional retail snapshot; for real work, replace every identity and definition with observed evidence. Do not relabel this example as a live inventory. No manual hashes are needed.</p>
 <p>For captured/reviewed layout and controls, use <code>sigma-migrate inspect --source source.json</code> to list captured identities. Prepare a context JSON with the workbook ID, evidence reference, observed element fields/chart/layout/sorts/limit and observed control targets, following the <code>prepush_context</code> structure in the example. Do not calculate its hash. Bind it automatically with:</p>
 <pre><code>.venv/bin/sigma-migrate import-context --source source.json --context observed-context.json --output enriched-source.json</code></pre>
 <p>Use <code>enriched-source.json</code> as the source when initializing (or import it as a new source revision in an existing run). Use your own source IDs and observed mappings. Missing context remains blocked. Do not copy the example context onto unrelated source objects. If the compiler reports an unsupported pattern, keep that blocker for a reviewed redesign; accepting the proposal does not override it.</p>
+<p>For a small pilot, select chart or page IDs without deleting source objects:</p>
+<pre><code>.venv/bin/sigma-migrate scope --source enriched-source.json --workbook-id YOUR-WORKBOOK-ID --chart-id YOUR-CHART-ID --output pilot-source.json</code></pre>
+<p>Repeat <code>--chart-id</code>, or use <code>--page-id</code>, for additional selections. Use the resulting file in configure and init. Scope retains the full source, records exclusions, checks dependency closure and shared controls, and records single-document assembly intent. Missing/ambiguous lineage blocks. All captured model objects remain in the denominator, so unrelated unsupported model logic can still block a pilot. Scope currently reduces local build selection, not live capture API calls or AI usage.</p>
 <p>Then initialize:</p>
-<pre><code>.venv/bin/sigma-migrate init --run-dir my-migration --source source.json --target target.json</code></pre>
+<pre><code>.venv/bin/sigma-migrate init --profile migration-setup/migration-profile.json --run-dir my-migration --source source.json --target target.json</code></pre>
 </section>
 <section aria-labelledby="7-choose-your-migration-approach">
 <h2 id="7-choose-your-migration-approach">7. Choose your migration approach</h2>
+<p>If you passed the profile to <code>init</code>, your setup choice is already recorded: skip this step. Use <code>route</code> only for the fictional demo or an explicit change of choice.</p>
 <p>Use your chosen run directory in every command below; the fictional walkthrough uses <code>demo-run</code>, while your own migration above uses <code>my-migration</code>.</p>
 <pre><code>.venv/bin/sigma-migrate route --run-dir demo-run</code></pre>
 <p>Answer the question: do you want the semantic layer fully modeled, or lifted and shifted directly into Omni?</p>
@@ -100,7 +130,8 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 <section aria-labelledby="9-build-and-validate">
 <h2 id="9-build-and-validate">9. Build and validate</h2>
 <pre><code>.venv/bin/sigma-migrate build --run-dir demo-run
-.venv/bin/sigma-migrate validate --run-dir demo-run</code></pre>
+.venv/bin/sigma-migrate validate --run-dir demo-run
+.venv/bin/sigma-migrate report --run-dir demo-run</code></pre>
 <p>The tool reopens the generated files and checks their content, mappings and review bindings. Read the actual status and issues.</p>
 <ul>
 <li><code>offline_preflight_passed</code>: the supported local contract passed; live checks remain.</li>
@@ -111,7 +142,7 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 <li>Modeled route: generated data-layer artifacts still need deployment and validation</li>
 </ul>
 <p>  before the dependent Omni work can be accepted.</p>
-<p>Synthetic runs remain synthetic in every state. Neither status means migration accepted.</p>
+<p>Synthetic runs remain synthetic in every state. Neither status means migration accepted. The report lists selected charts, exclusions, prepared outputs, discrepancies, actual persisted local-check results and the next resume action. It never reports live validation from local files or estimates elapsed migration cost per chart. Dashboard-only output contains semantic query JSON and document proposals, not warehouse SQL or model-layer files. Final visual polish remains separate.</p>
 </section>
 <section aria-labelledby="10-export-and-share-the-result">
 <h2 id="10-export-and-share-the-result">10. Export and share the result</h2>
@@ -130,12 +161,14 @@ th { background:#edf2f6; } footer { color:#526171; font-size:.9rem; padding:20px
 <h2 id="12-troubleshooting-and-the-final-live-gate">12. Troubleshooting and the final live gate</h2>
 <p>If an input is missing, changed, oversized, credential-bearing or uses symbolic links, correct that input and retry. The tool refuses unsafe paths and duplicate JSON keys. Existing run names and ZIP filenames are not overwritten; choose a new name. A build interrupted before completion is not a successful package; rebuild after checking status.</p>
 <p>Unresolved formulas/field references, unsupported controls/actions/writeback, security policy differences and missing layout evidence need explicit remediation. Do not remove source objects just to obtain a green result. Any reduced pilot scope must be deliberately recorded as a different migration, not claimed as the original workbook&#x27;s complete migration.</p>
+<p>For connection problems: rejected credentials require refresh/login; denied access requires checking the selected identity&#x27;s role and resource access; missing resources require checking organization and IDs; rate limits require waiting before retry. Do not disable TLS checks or add broader keys merely to make a check green. After a one-time lookup, revoke temporary keys through the platform when no longer needed; the tool never revokes or creates keys automatically.</p>
+<p>When comparing numbers, distinguish migration errors, source quirks, deliberate corrections, and data-timing differences. A discrepancy is unresolved until evidence supports its classification; matching Sigma does not prove the original logic correct.</p>
 <p>Before claiming success, separately authorize a bounded live development pilot: apply reviewed artifacts, confirm returned IDs and readback, compare source/target numbers, controls, visibility, allowed/denied personas and visual behavior, then obtain platform-owner acceptance. No live deployment or independent human operator walkthrough is claimed by the synthetic checks delivered with this tool.</p>
 </section>
 <section aria-labelledby="13-optional-use-the-agent-skill">
 <h2 id="13-optional-use-the-agent-skill">13. Optional: use the agent skill</h2>
-<p>The current <code>sigma-to-omni-migration</code> skill is included in <code>.agents/skills/sigma-to-omni-migration</code>. It guides the same steps above and is aligned with runtime version 0.2.0. It does not add an Omni push capability. Using the terminal directly remains an option; an AI assistant is not required.</p>
-<p>After installing Python and the runtime in step 3, open the extracted package folder or GitHub checkout as your Codex project. Ask: “Use the sigma-to-omni-migration skill to prepare one workbook. Ask whether I want it modeled upstream or lifted and shifted to Omni directly. Stop for my review.”</p>
+<p>The current <code>sigma-to-omni-migration</code> skill is included in <code>.agents/skills/sigma-to-omni-migration</code>. It guides the same steps above and is aligned with runtime version 0.3.0. It does not add an Omni push capability. Using the terminal directly remains an option; an AI assistant is not required.</p>
+<p>After installing Python and the runtime in step 3, open the extracted package folder or GitHub checkout as your Codex project. Ask: “Use the sigma-to-omni-migration skill to guide setup first, then prepare one workbook. Ask whether I want it modeled upstream or lifted and shifted, and whether to reuse an existing Topic without model changes. Stop for my review.”</p>
 <p>Codex discovers repository/project skills in <code>.agents/skills</code>; if the skill does not appear, restart Codex. See <a href="https://developers.openai.com/codex/skills">official skill setup</a>. Some file browsers hide folders beginning with a dot; the <code>.agents</code> folder is included in the package even when it is not initially visible.</p>
 <p>For a different project, copy the entire <code>sigma-to-omni-migration</code> folder into that project&#x27;s <code>.agents/skills/</code>, preserve any existing customized version, and tell the agent where this installed runtime lives. Copying the skill does not copy the engine or examples. Keep the skill and runtime from the same package/repository revision, instead of mixing these instructions with the old bespoke POC skill.</p>
 <p>The agent can explain mappings and run authorized preparation steps, but it must not accept its own proposal. You personally run the <code>review</code> command from step 8 and enter your decision in the terminal. The agent then checks status before continuing. Never paste credentials into the conversation.</p>

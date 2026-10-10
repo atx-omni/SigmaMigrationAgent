@@ -1,5 +1,9 @@
 # Remediation implementation audit
 
+For the October 9 configuration-first/runtime 0.3.0 update, see
+[the guided setup audit](GUIDED-SETUP-AUDIT.md). The historical results below remain
+evidence for the earlier implementation, not the latest verification count.
+
 September 9, 2026. Confidence: **High for the observed local results**; live migration
 success has not been measured. This is not a success-rate estimate.
 

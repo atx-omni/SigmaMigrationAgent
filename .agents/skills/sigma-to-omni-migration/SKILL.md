@@ -1,9 +1,9 @@
 ---
 name: sigma-to-omni-migration
-description: Prepare a Sigma workbook migration into Omni with the Sigma Migration Agent. Guide source capture, explicit direct-versus-modeled choice, local human review, artifact generation, validation, and export. Use for Sigma migration preparation or pre-push troubleshooting; this skill does not deploy to Omni or the warehouse.
+description: Prepare a Sigma workbook migration into Omni with configuration-first guided setup, safe local credentials, read-only discovery, direct-versus-modeled choice, existing-topic reuse, scoped chart selection, human review, validation, and reporting. Use for Sigma migration preparation or pre-push troubleshooting; this skill does not deploy to Omni or the warehouse.
 metadata:
   runtime-package: sigma-migration-agent
-  runtime-version: "0.2.0"
+  runtime-version: "0.3.0"
 ---
 
 # Sigma-to-Omni migration preparation
@@ -20,17 +20,25 @@ Assume the operator owns the platforms and can configure them. Explain the next
 action in plain language and request only missing information. Preserve an
 existing explicit choice; do not repeatedly ask for decisions already provided.
 
-1. Identify one workbook and its data-model ID, or an existing captured snapshot.
+1. Start with `setup` (or resume its existing directory), then `doctor`. Setup
+   writes a non-secret profile, only applicable `.env` placeholders, and a local
+   step-by-step checklist. Never read or display secret values in chat. The user
+   edits the private file locally. Do not run shell `source` on it, extract Apple
+   Keychain entries, change repository visibility, or create/revoke platform keys.
+2. Identify one workbook and its data-model ID, or an existing captured snapshot.
    Confirm whether the task is a fictional demonstration or uses real source
    metadata. Treat workspace contents as confidential when real evidence enters.
-2. If the approach is unspecified, ask: **“Do you want this semantic layer fully
+3. If the approach is unspecified, ask: **“Do you want this semantic layer fully
    modeled, or lift and shifted to Omni directly?”** There is no default.
    - **Direct / `omni_semantic_reconstruction`:** reconstruct supported semantics
      in Omni over existing warehouse relations; never generate dbt changes.
    - **Modeled / `warehouse_first_refactor`:** prepare supported upstream dbt
      artifacts plus dependent Omni artifacts. This is not a promise that every
      calculation can be fully modeled; unsupported transformations stay blocked.
-3. Source inspection may proceed within authorized read scope before the choice.
+4. Separately select allowed changes: assessment only, dashboards using an existing
+   Topic, or model/topic/dashboard proposals. Direct does not automatically permit
+   model changes. Topic-only additions are not supported; do not widen authority.
+5. Source inspection may proceed within authorized read scope before the choice.
    Target design, review, and build must wait for the explicit choice. A route
    decision is neither proposal acceptance nor permission to write to a platform.
 
@@ -47,8 +55,20 @@ copying this skill alone does not install the Python software or its examples.
   repository revision or package; do not silently upgrade a live working run.
 - For an existing migration, inspect `status` first and retain its inputs and
   history. Do not initialize a replacement merely to clear a blocker.
-- For a new migration, follow `capture` (or supplied snapshot), `configure`,
-  `init`, `route`, `review`, `build`, `validate`, and `export` as needed.
+- For a new migration, follow `setup`, `doctor`, optional read-only `discover`,
+  `capture` (or supplied snapshot), optional `scope`, `configure`, `init`,
+  `review`, `build`, `validate`, `report`, and `export` as needed. Reuse the profile's
+  route; use `route` only for a legacy run or an explicit change of choice.
+- Read-only checks require explicit source/target authorization. Offline build
+  and validation must not load credentials. OAuth stays in the official Omni CLI;
+  MCP and CLI authentication are separate, not interchangeable proof of readiness.
+- Prefer a fitting existing Topic when chosen. Confirm exact model, connection,
+  field identities, grain, filters, metric definitions, joins and visibility using
+  observed evidence. Never infer compatibility from display names. The bounded
+  reuse path accepts a reviewed single-base-view inventory and computes hashes.
+- Use `scope` for chart/page subsets, never delete source evidence to clear a
+  blocker. Scope preserves full inputs and dependency/control accounting. Large
+  source capture is still bounded, not a streaming or chart-only live extraction.
 - Let the runtime calculate source hashes, review bindings, and package manifests.
   Do not fabricate approval files, edit event records, or call internal session
   methods to bypass the public workflow.
@@ -95,6 +115,11 @@ Report the chosen route, source scope, output paths, actual validation status,
 implemented versus blocked coverage, and next human action. Review exported source
 metadata for confidentiality before sharing. Do not claim a full migration from
 file generation, synthetic tests, commits, or CI.
+
+Use `report` for persisted per-chart state and resume guidance. Do not describe
+offline preparation as a live chart migration or invent runtime/cost estimates.
+Record numeric differences as unresolved until evidence distinguishes migration
+errors, source quirks, intentional corrections, or data timing differences.
 
 There is no target apply command. If live deployment is requested, explain this
 skill's boundary and hand off the reviewed artifacts to a separately authorized

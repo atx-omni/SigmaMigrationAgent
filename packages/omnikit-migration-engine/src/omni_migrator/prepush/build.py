@@ -21,6 +21,7 @@ import hashlib
 import json
 import re
 from copy import deepcopy
+from types import SimpleNamespace
 from typing import Any, Literal
 from uuid import UUID
 
@@ -31,6 +32,8 @@ from omni_migrator.deterministic.model_emitter import emit_model, view_path
 from omni_migrator.deterministic.sigma_translate import parse_ref
 from omni_migrator.extractors.sigma.extractor import _build_bundle
 from omni_migrator.ir.schema import FieldIR, TopicIR, ViewIR
+from omni_migrator.prepush.reuse import source_fields, validate_target as validate_reuse_target
+from omni_migrator.prepush.scope import validate_scope
 
 ROUTES = {"omni_semantic_reconstruction", "warehouse_first_refactor"}
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
@@ -95,7 +98,7 @@ class ReviewedSourceContext(_Strict):
 
 
 def source_context_hash(snapshot: dict) -> str:
-    source = {key: value for key, value in snapshot.items() if key != "prepush_context"}
+    source = {key: value for key, value in snapshot.items() if key not in {"prepush_context", "_migration_scope"}}
     return hashlib.sha256(json.dumps(
         source, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
     ).encode("utf-8")).hexdigest()
@@ -185,6 +188,11 @@ def _physical_source_relation(source: Any) -> bool:
 
 
 def _target(value: dict, route: str) -> dict:
+    if isinstance(value, dict) and "allowed_changes" in value:
+        policy = value["allowed_changes"]
+        if policy != "model_changes":
+            raise ValueError("This artifact path requires model_changes; dashboard_only needs reviewed existing-topic evidence, and validation_only/topic_additions cannot emit model changes.")
+        value = {key: child for key, child in value.items() if key != "allowed_changes"}
     if not isinstance(value, dict) or set(value) != {
         "model_id", "connection_id", "document_name", "relations"
     }:
@@ -319,6 +327,11 @@ def build(snapshot: dict, route: str, target: dict) -> dict:
         raise ValueError("Choose one of the two explicit Sigma semantic routes before building.")
     if not isinstance(snapshot, dict):
         raise ValueError("A captured Sigma snapshot object is required.")
+    scope = validate_scope(snapshot)
+    if scope and scope["issues"]:
+        raise ValueError("Selected scope has unresolved dependency evidence; review scope issues before compiling.")
+    if isinstance(target, dict) and target.get("allowed_changes") == "dashboard_only":
+        return _reuse_build(snapshot, route, target)
     target = _target(target, route)
     context = None
     if snapshot.get("prepush_context") is not None:
@@ -496,6 +509,7 @@ def build(snapshot: dict, route: str, target: dict) -> dict:
                 if paths:
                     implemented(row["source_path"], paths, "source-container")
     # Container coverage never conceals a blocked descendant.
+    _apply_scope_dispositions(scope, dispositions)
     for path in sorted(dispositions, key=len, reverse=True):
         if any(row["status"] == "blocked" for child, row in dispositions.items() if child.startswith(path + "/")):
             dispositions[path].update(status="blocked", reason="One or more contained source objects remain blocked.")
@@ -504,9 +518,98 @@ def build(snapshot: dict, route: str, target: dict) -> dict:
             "dependencies": dependencies, "target_write_authority": False, "production_ready": False}
 
 
-def _documents(snapshot, context, target, field_sources, files, dispositions, implemented):
+def _reuse_build(snapshot, route, target):
+    """Reuse reviewed target semantics; never emit model, physical SQL or dbt files."""
+    target = validate_reuse_target(target, snapshot)
+    if route != "omni_semantic_reconstruction":
+        raise ValueError("Dashboard-only reuse cannot implement a warehouse-first refactor; choose direct reuse or explicitly allow model changes.")
+    context = None
+    if snapshot.get("prepush_context") is not None:
+        context = ReviewedSourceContext.model_validate(snapshot["prepush_context"])
+        if context.source_sha256 != source_context_hash(snapshot):
+            raise ValueError("Reviewed source context is stale; recapture it for this exact source revision.")
+    inventory = source_inventory(snapshot)
+    dispositions = {row["source_path"]: {**row, "status": "blocked", "target_paths": [],
+                    "reason": "No verified existing Topic mapping for this source object."} for row in inventory}
+    mappings, files = [], {}
+
+    def implemented(path, paths, reference):
+        if path not in dispositions:
+            return
+        row = dispositions[path]
+        row.update(status="implemented", target_paths=sorted(set(paths)),
+                   reason="Bound to imported existing Topic evidence; live parity remains unverified.")
+        mappings.extend({"source_path": path, "source_id": row["source_id"], "target_path": name,
+                         "target_object_ref": reference} for name in sorted(set(paths)))
+
+    topic = target["existing_topic"]["inventory"]
+    raw_fields = source_fields(snapshot)
+    field_sources = {}
+    bundle = _build_bundle(deepcopy(snapshot), acquisition_mode="manual")
+    existing_view = SimpleNamespace(name=topic["base_view"], fields=[])
+    for view in bundle.model.views:
+        source_prefix = view.source_locator.replace("/source:", "/element:") + "/"
+        source_path = next((path.rsplit("/", 2)[0] for locator, (path, _, _) in raw_fields.items()
+                            if locator.startswith(source_prefix)), None)
+        # Reusing a Topic does not itself prove unrepresented source transforms.
+        raw_view = None
+        if source_path:
+            raw_view = snapshot
+            for part in source_path.strip("/").split("/"):
+                raw_view = raw_view[int(part)] if isinstance(raw_view, list) else raw_view[part]
+        if (not isinstance(raw_view, dict) or not _physical_source_relation(raw_view.get("source"))
+                or any(raw_view.get(key) for key in (
+                "filters", "parameters", "security", "rls", "cls", "customSql", "sql", "groupings",
+                "groupBy", "pivot", "window", "cumulative"))):
+            continue
+        for field in view.fields:
+            binding = target["existing_topic"]["field_mappings"].get(field.source_locator)
+            if not binding or field.source_locator not in raw_fields:
+                continue
+            definition = topic["fields"][binding["target_field"]]
+            path = raw_fields[field.source_locator][0]
+            if field.kind != definition["kind"]:
+                dispositions[path]["reason"] = "Source and existing Topic field kinds differ."
+                continue
+            copied = field.model_copy(deep=True)
+            copied.name = binding["target_field"].split(".")[1]
+            existing_view.fields.append(copied)
+            field_sources[field.source_locator] = (existing_view, copied)
+            implemented(path, ["target.json"], "existing-topic-field:" + binding["target_field"])
+        if source_path and any(path.startswith(source_path + "/") and row["status"] == "implemented"
+                               for path, row in dispositions.items()):
+            implemented(source_path, ["target.json"], "existing-topic:" + topic["topic_name"])
+    _documents(snapshot, context, target, field_sources, files, dispositions, implemented, semantic=topic)
+    for path, row in dispositions.items():
+        if row["source_kind"] == "connections":
+            implemented(path, ["target.json"], "connection:" + target["connection_id"])
+        elif row["source_kind"] in {"dataModels", "pages"} and path.startswith("/dataModels/"):
+            if any(child.startswith(path + "/") and value["status"] == "implemented"
+                   for child, value in dispositions.items()):
+                implemented(path, ["target.json"], "source-container")
+    _apply_scope_dispositions(validate_scope(snapshot), dispositions)
+    for path in sorted(dispositions, key=len, reverse=True):
+        if any(row["status"] == "blocked" for child, row in dispositions.items() if child.startswith(path + "/")):
+            dispositions[path].update(status="blocked", reason="One or more contained source objects remain blocked.")
+    return {"schema_version": "sigma-prepush-build.v1", "route": route, "files": files,
+            "dispositions": list(dispositions.values()), "source_mappings": mappings,
+            "dependencies": [{"kind": "existing_topic_live_parity", "status": "unverified", "paths": ["target.json"],
+                              "reason": "Imported Topic evidence and compatibility notes require a separate live freshness, security and result-parity gate."}],
+            "target_write_authority": False, "production_ready": False}
+
+
+def _apply_scope_dispositions(scope, dispositions):
+    if scope:
+        for path in scope["excluded_source_paths"]:
+            if path in dispositions:
+                dispositions[path].update(status="excluded", target_paths=[],
+                                          reason="Explicitly excluded from this reviewed pilot; original source evidence is retained.")
+
+
+def _documents(snapshot, context, target, field_sources, files, dispositions, implemented, semantic=None):
     if context is None:
         return
+    scope = validate_scope(snapshot)
     workbooks = snapshot.get("workbooks", [])
     matches = [(index, row) for index, row in enumerate(workbooks)
                if str(row.get("workbookId", row.get("id", ""))) == context.workbook_id]
@@ -535,6 +638,8 @@ def _documents(snapshot, context, target, field_sources, files, dispositions, im
     tile_meta = {}
     page_children: dict[int, list] = {index: [] for index in range(len(pages))}
     for identity, (pi, element, path) in elements.items():
+        if scope and identity not in scope["selected_chart_ids"]:
+            continue
         setting = context.elements.get(identity)
         if setting is None:
             continue
@@ -581,10 +686,11 @@ def _documents(snapshot, context, target, field_sources, files, dispositions, im
                     raise ValueError("Sort fields must be selected source fields.")
                 _, field = field_sources[sort.field_locator]
                 sorts.append({"column_name": f"{view.name}.{field.name}", "descending": sort.descending})
-            tile = {"name": name, "type": "query", "topicName": view.name,
+            topic_name = semantic["topic_name"] if semantic else view.name
+            tile = {"name": name, "type": "query", "topicName": topic_name,
                     "prefersChart": setting.chart_type != "table", "automaticVis": False,
                     "query": {"table": view.name, "fields": dimensions + measures,
-                              "join_paths_from_topic_name": view.name, "limit": setting.limit,
+                              "join_paths_from_topic_name": topic_name, "limit": setting.limit,
                               "sorts": sorts, "filters": {}, "pivots": [], "calculations": [],
                               "column_totals": {}, "row_totals": {}, "fill_fields": [], "userEditedSQL": False},
                     "visConfig": _vis(setting.chart_type, dimensions, measures), "resultConfig": {}}
@@ -603,9 +709,17 @@ def _documents(snapshot, context, target, field_sources, files, dispositions, im
     predicates: dict[str, list[str]] = {identity: [] for identity in tile_meta}
     used_control_fields: set[tuple[str, str]] = set()
     for identity, (raw, path) in control_rows.items():
+        if scope and identity not in scope["required_control_ids"]:
+            continue
         setting = context.controls.get(identity)
         if setting is None:
             continue
+        if scope:
+            selected_targets = [item for item in setting.target_element_ids if item in scope["selected_chart_ids"]]
+            if not selected_targets:
+                dispositions[path]["reason"] = "Required upstream control has no supported selected presentation target."
+                continue
+            setting = setting.model_copy(update={"target_element_ids": selected_targets})
         try:
             if str(raw.get("type", "")).lower() not in {"list", "list-control", "dropdown", "string"}:
                 raise ValueError("This control type has no supported executable implementation.")
@@ -631,13 +745,13 @@ def _documents(snapshot, context, target, field_sources, files, dispositions, im
                 if tile_view.name != view.name or (element_id, field_name) in used_control_fields:
                     raise ValueError("Cross-view or duplicate-field control semantics require explicit implementation.")
                 scope[key] = field_name
-                if setting.values:
+                if setting.values and not semantic:
                     expression = _field_sql(field, {item.name: item for item in view.fields})
                     planned_predicates.append((element_id, expression + " IN (" + ", ".join(map(_literal, setting.values)) + ")"))
             key = "control_" + str(len(document["controls"]["data"]) + 1)
             document["controls"]["data"][key] = {
                 "config": {"id": key, "type": "string", "kind": "EQUALS", "values": setting.values,
-                           "fieldName": field_name, "topic": view.name, "base_view": view.name,
+                           "fieldName": field_name, "topic": semantic["topic_name"] if semantic else view.name, "base_view": view.name,
                            "label": str(raw.get("name") or identity)}, "map": scope}
             document["controls"]["data"][key]["config"].update({
                 option: raw[option] for option in ("description", "hidden", "required") if option in raw
@@ -656,6 +770,16 @@ def _documents(snapshot, context, target, field_sources, files, dispositions, im
     if not tile_meta:
         return
     for identity, (key, view, selected, setting, path) in tile_meta.items():
+        if semantic:
+            query_path = f"queries/{key}.json"
+            defaults = [{"field": control["map"][key], "kind": control["config"]["kind"], "values": control["config"]["values"]}
+                        for control in document["controls"]["data"].values() if control["map"][key] is not False]
+            files[query_path] = _json({"schema_version": "omni-existing-topic-query.v1", "model_id": target["model_id"],
+                                      "connection_id": target["connection_id"], "topic_name": semantic["topic_name"],
+                                      "inventory_sha256": target["existing_topic"]["inventory_sha256"],
+                                      "query": document["queryPresentations"]["data"][key]["query"], "control_defaults": defaults})
+            implemented(path, ["omni/document.create.json", "omni/document.patch.json", query_path], "queryPresentations.data." + key)
+            continue
         fields = {field.name: field for field in view.fields}
         projection, groups = [], []
         # Query.fields order is dimensions then measures; SQL aliases use full Omni field names.

@@ -104,7 +104,7 @@ def test_html_guide_links_are_bundled_and_contains_no_remote_assets():
             assert f'id="{link[1:]}"' in html
         elif link.startswith("https://"):
             assert urlsplit(link).hostname in {"www.python.org", "help.sigmacomputing.com",
-                                               "developers.openai.com"}
+                                               "developers.openai.com", "docs.omni.co"}
         else:
             assert link in selected
     assert "<script" not in html and "<iframe" not in html

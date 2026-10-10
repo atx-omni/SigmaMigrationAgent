@@ -37,6 +37,41 @@ required for an offline demonstration or local package generation. Live Sigma
 capture alone needs Sigma API credentials. Never ask the operator to paste
 credentials into chat; use their secure environment-variable workflow.
 
+## Configuration first
+
+```sh
+.venv/bin/sigma-migrate setup --directory migration-setup
+.venv/bin/sigma-migrate doctor --profile migration-setup/migration-profile.json --env-file migration-setup/.env
+```
+
+The operator answers source mode, direct/modeled route, allowed changes and target
+authentication. The generated checklist explains exactly where to find applicable
+values. Omit `--env-file` when none is required. Never read its secret values into
+the conversation. Setup resumes saved choices and never overwrites credentials.
+Do not automatically extract Keychain secrets, initiate OAuth consent, grant access,
+or change GitHub visibility. For private installation use authenticated download
+or the supplied customer ZIP. Keep all source evidence confidential.
+
+`doctor` validates the non-secret profile and local credential presence; it does not
+connect without explicit `--allow-source-read` / `--allow-target-read`. Those checks
+do not prove model permissions, semantic compatibility or migration acceptance.
+Optional authorized discovery saves model/connection identity and, when selected,
+Topic API evidence. OAuth and topic reads require a capable official Omni CLI;
+token-based model/connection discovery does not. The migrator never reads the CLI
+credential store. MCP login is not automatically a CLI login.
+
+```sh
+.venv/bin/sigma-migrate discover --profile migration-setup/migration-profile.json --env-file migration-setup/.env --output omni-discovery.json --allow-target-read
+```
+
+Use `--model-id` and optionally `--topic` for observed topic definitions in a new
+discovery file. Reuse requires a reviewed `omni-topic-inventory.v1` containing exact
+model/connection/topic/base-view IDs, definitions, visibility, grain, filters and
+evidence provenance. Normalize only observed fields; an unknown response shape or
+unproven relationship stays blocked. The runtime computes mapping hashes.
+Compatibility evidence for grain, filters, metrics and joins is required, not
+inferred from labels. Current reuse is single-base-view only.
+
 ## New fictional demonstration
 
 Use a new, unused run directory and retain `--synthetic`:
@@ -60,13 +95,19 @@ authorization and grants no target access:
 ```sh
 .venv/bin/sigma-migrate capture --api-url https://YOUR-SIGMA-API-HOST --trusted-api-host YOUR-SIGMA-API-HOST --workbook-id YOUR-WORKBOOK-ID --data-model-id YOUR-MODEL-ID --output source.json --allow-source-read
 .venv/bin/sigma-migrate inspect --source source.json
-.venv/bin/sigma-migrate configure --source source.json --output target.json
+.venv/bin/sigma-migrate configure --profile migration-setup/migration-profile.json --source source.json --output target.json
 ```
 
 `configure` asks for Omni model/connection UUIDs and exact warehouse relation and
 physical column mappings. Preserve case; ask for actual names instead of guessing.
 For the modeled route, also collect proposed modeled destination table names.
 This writes only local configuration and does not connect to the destination.
+With discovery, pass `--discovery omni-discovery.json` to select a model and its
+connection together. For dashboard-only, pass `--topic-inventory reviewed-topic.json`;
+do not collect physical warehouse mappings. Assessment-only stops before generation.
+Direct does not imply permission to change models. Topic-additions-only is unsupported.
+Alternatively capture using `--profile` and `--env-file`; these reuse setup's IDs
+and independently confirmed host instead of repeating the explicit flags above.
 
 For missing layout/control details, examine the example's `prepush_context`
 structure and the observed source evidence. Prepare only the supported observed
@@ -82,10 +123,23 @@ the original source as below. Missing context remains a blocker, not a reason to
 copy the fictional context onto real objects.
 
 ```sh
-.venv/bin/sigma-migrate init --run-dir my-migration --source source.json --target target.json
+.venv/bin/sigma-migrate init --profile migration-setup/migration-profile.json --run-dir my-migration --source source.json --target target.json
 ```
 
 ## Choice, human review, and local artifacts
+
+An init with a profile already records its explicit route. Do not ask again.
+For a pilot subset, run this before configure/init and use `pilot-source.json`:
+
+```sh
+.venv/bin/sigma-migrate scope --source enriched-source.json --workbook-id YOUR-WORKBOOK-ID --chart-id YOUR-CHART-ID --output pilot-source.json
+```
+
+Repeat chart IDs or select page IDs. This keeps the complete source/context and
+records selected/excluded charts, dependency closure, shared controls and assembly
+intent. Unknown lineage or stale scope blocks. All captured model objects remain;
+unrelated model blockers may still prevent a pass. This is local selection, not
+chart-only live acquisition or proof of lower API/token costs.
 
 Replace `demo-run` with the selected run directory for real work. With no prior
 choice, ask the operator the question in `SKILL.md` and let them choose. Record an
@@ -113,12 +167,17 @@ only with a current accepted proposal, construct and independently validate:
 .venv/bin/sigma-migrate status --run-dir demo-run
 .venv/bin/sigma-migrate build --run-dir demo-run
 .venv/bin/sigma-migrate validate --run-dir demo-run
+.venv/bin/sigma-migrate report --run-dir demo-run
 ```
 
 Direct output contains Omni view/Topic YAML, query SQL, and Documents v2 request
 bodies; no dbt artifacts. Modeled output adds supported dbt projection models,
 project/schema/macro files, and row-equivalence tests. Those files are not deployed.
 The advanced AI planner is not integrated into this deterministic compiler.
+Dashboard-only reuse instead emits typed semantic-query JSON and Documents v2
+proposals, with no model/view/Topic/dbt/SQL files. `report` gives actual per-chart
+local status, scope exclusions, discrepancies and bounded resume guidance. Live
+numbers, visual behavior, security and cost are not measured by that report.
 
 Inspect the returned status and issues, including when the command exits with
 code `2`. Read output paths from results; do not assume a fixed package-attempt

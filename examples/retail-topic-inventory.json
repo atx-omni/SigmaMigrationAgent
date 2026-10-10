@@ -1,0 +1,19 @@
+{
+  "schema_version": "omni-topic-inventory.v1",
+  "model_id": "11111111-1111-4111-8111-111111111111",
+  "connection_id": "22222222-2222-4222-8222-222222222222",
+  "topic_name": "retail",
+  "base_view": "sales",
+  "captured_at": "2026-10-09T00:00:00Z",
+  "evidence_ref": "synthetic-fixture://fictional-topic-not-a-live-capture",
+  "grain": "Fictional example: one row per order. Not customer evidence.",
+  "filters": [],
+  "fields": {
+    "sales.region": {"kind": "dimension", "hidden": false, "definition": {"sql": "${TABLE}.region"}},
+    "sales.amount": {"kind": "dimension", "hidden": false, "definition": {"sql": "${TABLE}.amount"}},
+    "sales.status": {"kind": "dimension", "hidden": true, "definition": {"sql": "${TABLE}.status"}},
+    "sales.display_region": {"kind": "dimension", "hidden": false, "definition": {"sql": "${sales.region}"}},
+    "sales.total_revenue": {"kind": "measure", "hidden": false, "definition": {"sql": "${sales.amount}", "aggregate_type": "sum"}},
+    "sales.completed_revenue": {"kind": "measure", "hidden": false, "definition": {"sql": "${sales.amount}", "aggregate_type": "sum", "filters": {"sales.status": {"is": "complete"}}}}
+  }
+}

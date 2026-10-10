@@ -24,7 +24,26 @@ Complete this as the migration owner with your delivery team. You may own severa
 - [ ] Fully modeled: plan warehouse/dbt modeling work before Omni.
 - [ ] Direct to Omni: reconstruct existing logic using existing warehouse data; no warehouse/dbt remodeling in this route.
 
-This worksheet records intent only. Use `sigma-migrate route` and `sigma-migrate review` to record the actual local choice and review against the exact source and target mapping. Hashes and identity bindings are calculated automatically; this worksheet is not an approval file. If scope changes, import the new source and review again.
+This worksheet records intent only. Use `sigma-migrate setup` and pass its profile
+to configure/init to retain the route; legacy runs may use `route`. Personally run
+`sigma-migrate review` against the exact source and target mapping. Hashes and
+identity bindings are automatic; this worksheet is not an approval file.
+
+## Allowed changes and pilot selection
+
+- [ ] Assessment only; no generated target artifacts.
+- [ ] Dashboard-only using an existing Topic; no model, Topic or dbt changes.
+- [ ] Model/Topic and dashboard proposals, plus supported dbt artifacts if modeled.
+- Selected chart/page IDs and reason:
+- Exclusions, required dependencies and shared controls:
+- Existing Topic name, model/connection references and evidence location:
+- Compatible grain, filters, metric definitions, joins and visibility:
+- Final document grouping/layout intent:
+- Source fidelity versus deliberate correction policy:
+
+Use `scope` to record subsets without deleting evidence. Source or target revisions
+invalidate review. Use `report` for actual local progress; live validation, runtime
+and cost are not measured by the local compiler.
 
 ## What must be preserved?
 

@@ -18,6 +18,9 @@ from typing import Any
 
 import yaml
 
+from omni_migrator.prepush.reuse import source_fields, validate_target as validate_reuse_target
+from omni_migrator.prepush.scope import validate_scope
+
 ROUTES = {"omni_semantic_reconstruction", "warehouse_first_refactor"}
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
@@ -344,13 +347,36 @@ def validate(package_dir: Path) -> dict[str, Any]:
 def _validate_artifacts(parsed, raw_files, build, route, issue):
     source = parsed.get("source.json", {})
     target = parsed.get("target.json", {})
-    if not any(name.startswith("omni/model/") and name.endswith(".view") for name in parsed):
+    reuse = isinstance(target, dict) and target.get("allowed_changes") == "dashboard_only"
+    policy = target.get("allowed_changes", "model_changes") if isinstance(target, dict) else None
+    if policy not in {"model_changes", "dashboard_only"}:
+        issue("unsupported_change_policy", "target.json", "Validation-only and topic-only permissions cannot authorize model or dashboard compilation.")
+    if reuse:
+        try:
+            validate_reuse_target(target, source)
+        except (ValueError, TypeError, KeyError, AttributeError):
+            issue("invalid_topic_evidence", "target.json", "Existing Topic evidence, fingerprints or compatibility mappings are invalid.")
+        if route != "omni_semantic_reconstruction":
+            issue("reuse_route_conflict", "target.json", "Dashboard-only reuse cannot authorize warehouse-first changes.")
+        for name in raw_files:
+            if (name not in {"manifest.json", "source.json", "target.json", "omni/document.create.json", "omni/document.patch.json"}
+                    and not re.fullmatch(r"queries/[1-9][0-9]*\.json", name)):
+                issue("forbidden_dashboard_only_artifact", name, "Dashboard-only reuse forbids model, view, topic, dbt and raw-SQL artifacts.")
+    elif not any(name.startswith("omni/model/") and name.endswith(".view") for name in parsed):
         issue("missing_model", "omni/model", "Package must contain concrete Omni model views.")
     if route == "omni_semantic_reconstruction" and any(name.startswith("dbt/") for name in raw_files):
         issue("direct_route_dbt", "dbt", "Direct reconstruction cannot contain dbt artifacts.")
-    if route == "warehouse_first_refactor" and not any(name.startswith("dbt/models/") and name.endswith(".sql") for name in raw_files):
+    if not reuse and route == "warehouse_first_refactor" and not any(name.startswith("dbt/models/") and name.endswith(".sql") for name in raw_files):
         issue("missing_data_layer", "dbt/models", "Modeled reconstruction requires concrete data-layer SQL.")
     denominator = _source_denominator(source, issue)
+    scope = None
+    try:
+        scope = validate_scope(source)
+        if scope and scope["issues"]:
+            issue("unresolved_scope", "source.json", "Selected pilot has unresolved dependency evidence.")
+    except (ValueError, TypeError, KeyError, AttributeError):
+        issue("invalid_scope", "source.json", "Scope selection, source revision or dependency closure is stale or modified.")
+    excluded = set(scope["excluded_source_paths"]) if scope else set()
     dispositions = build.get("dispositions")
     if not isinstance(dispositions, list):
         dispositions = []
@@ -367,7 +393,10 @@ def _validate_artifacts(parsed, raw_files, build, route, issue):
         if expected is None or any(row.get(key) != expected[key] for key in ("source_id", "source_kind")):
             issue("foreign_disposition", pointer, "Disposition identity does not match captured source scope.")
         paths = row.get("target_paths")
-        if row.get("status") != "implemented":
+        if pointer in excluded:
+            if row.get("status") != "excluded" or paths != []:
+                issue("invalid_exclusion", pointer, "Explicitly excluded source objects must retain exclusion status without target artifacts.")
+        elif row.get("status") != "implemented":
             issue("unresolved_source", pointer, "A scoped source object remains blocked or unsupported.")
         elif row.get("source_kind") not in {"connections", "dataModels", "workbooks", "pages", "elements", "columns", "metrics", "controls"}:
             issue("unsupported_disposition", pointer, "This source behavior has no validated implementation in the bounded package contract.")
@@ -394,6 +423,8 @@ def _validate_artifacts(parsed, raw_files, build, route, issue):
             issue("invalid_mapping", "manifest.json", "Source mapping identities and references must be strings.")
             continue
         expected = denominator.get(pointer)
+        if pointer in excluded:
+            issue("excluded_source_mapping", pointer, "Excluded source objects cannot produce target artifacts.")
         if expected is None or row.get("source_id") != expected["source_id"]:
             issue("foreign_mapping", str(pointer), "Mapping does not bind a captured source object.")
         if not isinstance(name, str) or name not in raw_files or not isinstance(reference, str) or not reference:
@@ -408,10 +439,21 @@ def _validate_artifacts(parsed, raw_files, build, route, issue):
     for pointer, row in accounted.items():
         if row.get("status") == "implemented" and pointer not in mapped:
             issue("missing_lineage", pointer, "Implemented source object lacks source-to-target lineage.")
-    views, topics = _validate_model(parsed, issue)
+    if reuse:
+        topic = target.get("existing_topic", {}).get("inventory", {})
+        fields = {key.split(".")[-1]: {**value.get("definition", {}), "hidden": value.get("hidden")}
+                  for key, value in topic.get("fields", {}).items() if isinstance(value, dict)}
+        views = {topic.get("base_view"): {"path": "target.json", "body": {}, "fields": fields}}
+        topics = {topic.get("topic_name"): {"base_view": topic.get("base_view")}}
+        _validate_reuse_lineage(source, target, mappings, issue)
+    else:
+        views, topics = _validate_model(parsed, issue)
     _validate_mapping_refs(mappings, parsed, denominator, views, issue)
     _validate_documents(parsed, raw_files, views, topics, target, mappings, denominator, issue)
-    _validate_queries(raw_files, parsed, target, views, route, issue)
+    if reuse:
+        _validate_reuse_queries(parsed, target, issue)
+    else:
+        _validate_queries(raw_files, parsed, target, views, route, issue)
     dependencies = build.get("dependencies")
     if not isinstance(dependencies, list):
         issue("invalid_dependencies", "manifest.json", "Build dependencies must be explicit.")
@@ -555,10 +597,25 @@ def _validate_mapping_refs(mappings, parsed, denominator, views, issue):
         if not isinstance(name, str) or not isinstance(reference, str):
             continue
         source = denominator.get(row.get("source_path"), {})
+        if name == "target.json" and parsed.get(name, {}).get("allowed_changes") == "dashboard_only":
+            inventory = parsed[name].get("existing_topic", {}).get("inventory", {})
+            if reference.startswith("existing-topic-field:"):
+                if reference.removeprefix("existing-topic-field:") not in inventory.get("fields", {}):
+                    issue("invalid_topic_mapping", name, "Mapping refers to an absent existing Topic field.")
+                continue
+            if reference == "existing-topic:" + str(inventory.get("topic_name")) and source.get("source_kind") == "elements":
+                continue
         if reference == "source-container" and source.get("source_kind") in {"dataModels", "pages"} and str(row.get("source_path")).startswith("/dataModels/"):
             continue
         if (reference.startswith("connection:") and source.get("source_kind") == "connections"
                 and reference == "connection:" + str(parsed.get("target.json", {}).get("connection_id"))):
+            continue
+        if (re.fullmatch(r"queries/[1-9][0-9]*\.json", name)
+                and parsed.get("target.json", {}).get("allowed_changes") == "dashboard_only"):
+            key = PurePosixPath(name).stem
+            if (reference != "queryPresentations.data." + key
+                    or key not in parsed.get("omni/document.create.json", {}).get("queryPresentations", {}).get("data", {})):
+                issue("invalid_document_mapping", name, "Typed query lineage does not bind its exact dashboard query presentation.")
             continue
         if name.endswith(".view"):
             alias = PurePosixPath(name).stem
@@ -683,10 +740,11 @@ def _validate_documents(parsed, raw_files, views, topics, target, mappings, deno
                             for child in value:
                                 visual_fields(child)
                     visual_fields(config)
-        query_path = f"queries/{key}.sql"
+        reuse = target.get("allowed_changes") == "dashboard_only"
+        query_path = f"queries/{key}.json" if reuse else f"queries/{key}.sql"
         if query_path not in raw_files:
-            issue("missing_query_sql", query_path, "Every query presentation requires executable SQL.")
-        else:
+            issue("missing_query_sql", query_path, "Every query presentation requires a concrete query artifact.")
+        elif not reuse:
             sql = raw_files[query_path].decode("utf-8")
             aliases = re.findall(r'\bAS\s+"([^"]+)"', sql, re.I)
             if aliases != fields:
@@ -773,7 +831,7 @@ def _validate_documents(parsed, raw_files, views, topics, target, mappings, deno
 def _validate_source_context(source, document, mappings, denominator, stacks, raw_files, issue):
     context = source.get("prepush_context") if isinstance(source, dict) else None
     if (not isinstance(context, dict) or context.get("schema_version") != "sigma-prepush-context.v1"
-            or context.get("source_sha256") != _canonical_sha({key: value for key, value in source.items() if key != "prepush_context"})):
+            or context.get("source_sha256") != _canonical_sha({key: value for key, value in source.items() if key not in {"prepush_context", "_migration_scope"}})):
         issue("stale_source_context", "source.json", "Display/control context must bind the exact captured source revision.")
         return
     by_source = {}
@@ -786,17 +844,25 @@ def _validate_source_context(source, document, mappings, denominator, stacks, ra
         if mapping.get("target_path") == "omni/document.create.json":
             by_source[native] = mapping.get("target_object_ref")
         match = re.fullmatch(r"/dataModels/(\d+)/spec/pages/(\d+)/elements/(\d+)/(columns|metrics)/(\d+)", pointer)
-        if match and str(mapping.get("target_path")).endswith(".view"):
+        reuse_ref = mapping.get("target_path") == "target.json" and str(mapping.get("target_object_ref")).startswith("existing-topic-field:")
+        if match and (str(mapping.get("target_path")).endswith(".view") or reuse_ref):
             di, pi, ei, kind, _ = match.groups()
             dm = source["dataModels"][int(di)]
             element = dm["spec"]["pages"][int(pi)]["elements"][int(ei)]
             dm_id, element_id = dm.get("dataModelId", dm.get("id")), element.get("elementId", element.get("id"))
             locator = f"data-model:{dm_id}/element:{element_id}/{'column' if kind == 'columns' else 'metric'}:{native}"
-            field_locators[locator] = mapping.get("target_object_ref")
+            reference = mapping.get("target_object_ref")
+            field_locators[locator] = reference.removeprefix("existing-topic-field:") if reuse_ref else reference
     tiles = document.get("queryPresentations", {}).get("data", {})
     controls = document.get("controls", {}).get("data", {})
+    try:
+        scope = validate_scope(source)
+    except (ValueError, TypeError, KeyError, AttributeError):
+        scope = None
     element_keys = {}
     for identity, setting in context.get("elements", {}).items():
+        if scope and identity not in scope["selected_chart_ids"]:
+            continue
         ref = by_source.get(identity)
         if not isinstance(setting, dict) or not isinstance(ref, str) or not ref.startswith("queryPresentations.data."):
             issue("unmapped_context_element", "source.json", "A reviewed element lacks its exact persisted query mapping.")
@@ -811,13 +877,18 @@ def _validate_source_context(source, document, mappings, denominator, stacks, ra
         if setting.get("layout") != stacks.get(key) or setting.get("chart_type") != tile.get("visConfig", {}).get("chartType"):
             issue("source_layout_changed", "source.json", "Persisted visual/layout differs from reviewed source intent.")
     for identity, setting in context.get("controls", {}).items():
+        if scope and identity not in scope["required_control_ids"]:
+            continue
         ref = by_source.get(identity)
         if not isinstance(setting, dict) or not isinstance(ref, str) or not ref.startswith("controls.data."):
             issue("unmapped_context_control", "source.json", "A reviewed control lacks its persisted target mapping.")
             continue
         control = controls.get(ref.removeprefix("controls.data."), {})
         field = field_locators.get(setting.get("field_locator"))
-        affected = {element_keys.get(identity) for identity in setting.get("target_element_ids", [])}
+        targets = setting.get("target_element_ids", [])
+        if scope:
+            targets = [identity for identity in targets if identity in scope["selected_chart_ids"]]
+        affected = {element_keys.get(identity) for identity in targets}
         expected_map = {key: field if key in affected else False for key in tiles}
         if (None in affected or field is None or control.get("map") != expected_map
                 or control.get("config", {}).get("fieldName") != field
@@ -837,6 +908,54 @@ def _validate_source_context(source, document, mappings, denominator, stacks, ra
             actual_filtered = any(token.upper() == "WHERE" for token in tokens)
             if bool(expected_filtered) != actual_filtered:
                 issue("query_control_effect_mismatch", f"queries/{key}.sql", "SQL business-filter presence differs from the explicit control-to-tile scope.")
+
+
+def _validate_reuse_lineage(source, target, mappings, issue):
+    """Check persisted lineage against the imported mappings, without compilation."""
+    fields = source_fields(source)
+    expected_by_path = {path: (locator, raw, kind) for locator, (path, raw, kind) in fields.items()}
+    profile = target.get("existing_topic", {}).get("field_mappings", {})
+    definitions = target.get("existing_topic", {}).get("inventory", {}).get("fields", {})
+    for mapping in mappings:
+        pointer = mapping.get("source_path")
+        if pointer not in expected_by_path:
+            continue
+        locator, raw, kind = expected_by_path[pointer]
+        binding = profile.get(locator, {})
+        reference = binding.get("target_field")
+        if (mapping.get("target_path") != "target.json"
+                or mapping.get("target_object_ref") != "existing-topic-field:" + str(reference)):
+            issue("inconsistent_topic_lineage", str(pointer), "Source field lineage differs from the exact reviewed existing Topic mapping.")
+        definition = definitions.get(reference, {})
+        if kind == "metrics" and definition.get("kind") != "measure":
+            issue("incompatible_topic_kind", str(pointer), "A captured metric cannot map to a target dimension.")
+        if "hidden" in raw and raw["hidden"] != definition.get("hidden"):
+            issue("visibility_changed", str(pointer), "Existing Topic visibility differs from the source field.")
+
+
+def _validate_reuse_queries(parsed, target, issue):
+    document = parsed.get("omni/document.create.json", {})
+    topic = target.get("existing_topic", {}).get("inventory", {})
+    tiles = document.get("queryPresentations", {}).get("data", {})
+    controls = document.get("controls", {}).get("data", {})
+    expected_paths = {f"queries/{key}.json" for key in tiles}
+    actual_paths = {name for name in parsed if name.startswith("queries/")}
+    if expected_paths != actual_paths or not expected_paths:
+        issue("existing_topic_query_inventory", "queries", "Existing-topic query artifacts must correspond exactly to persisted dashboard tiles.")
+    for key, tile in tiles.items():
+        path = f"queries/{key}.json"
+        query = parsed.get(path)
+        defaults = [{"field": control["map"][key], "kind": control["config"]["kind"], "values": control["config"]["values"]}
+                    for control in controls.values() if control.get("map", {}).get(key) is not False]
+        expected = {"schema_version": "omni-existing-topic-query.v1", "model_id": target.get("model_id"),
+                    "connection_id": target.get("connection_id"), "topic_name": topic.get("topic_name"),
+                    "inventory_sha256": target.get("existing_topic", {}).get("inventory_sha256"),
+                    "query": tile.get("query"), "control_defaults": defaults}
+        if query != expected:
+            issue("existing_topic_query_mismatch", path, "Typed query, target identities and control defaults must match the sealed dashboard and Topic evidence.")
+        if (tile.get("topicName") != topic.get("topic_name")
+                or tile.get("query", {}).get("table") != topic.get("base_view")):
+            issue("wrong_existing_topic", path, "Queries must use the exact imported Topic and its base view.")
 
 
 def _validate_queries(raw_files, parsed, target, views, route, issue):
