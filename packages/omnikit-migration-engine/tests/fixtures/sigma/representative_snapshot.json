@@ -140,6 +140,8 @@
       "sources": [
         {
           "sourceId": "model-source-orders",
+          "type": "table",
+          "tableId": "table-orders",
           "elementId": "model-orders",
           "connectionId": "conn-snowflake",
           "path": [
@@ -150,6 +152,8 @@
         },
         {
           "sourceId": "model-source-customers",
+          "type": "table",
+          "tableId": "table-customers",
           "elementId": "model-customers",
           "connectionId": "conn-snowflake",
           "path": [
@@ -219,6 +223,8 @@
       "sources": [
         {
           "sourceId": "workbook-source-orders",
+          "type": "data-model",
+          "elementIds": ["model-orders", "model-customers"],
           "dataModelId": "dm-orders",
           "connectionId": "conn-snowflake"
         }
@@ -490,6 +496,8 @@
       "sources": [
         {
           "sourceId": "workbook-source-sandbox",
+          "type": "data-model",
+          "elementIds": ["model-orders"],
           "dataModelId": "dm-orders",
           "connectionId": "conn-snowflake"
         }

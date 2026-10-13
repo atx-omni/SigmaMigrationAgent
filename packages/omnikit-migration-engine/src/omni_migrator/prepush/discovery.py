@@ -5,13 +5,20 @@ import json
 import os
 import re
 import shutil
-import subprocess
 from datetime import UTC, datetime
 
 import httpx
 
 from omni_migrator.prepush.session import private_write, reject_secrets
 from omni_migrator.prepush.settings import load_profile, resolve
+from omni_migrator.security.transport import (
+    ByteBudget,
+    ResourceLimitError,
+    bounded_process,
+    bounded_request,
+    check_json_structure,
+)
+from omni_migrator.security.workspace import assert_private_output
 
 
 class DiscoveryError(ValueError):
@@ -19,6 +26,11 @@ class DiscoveryError(ValueError):
 
 
 def safe_failure(exc: Exception) -> ValueError:
+    from omni_migrator.extractors.sigma.api import ConnectionLineageError
+    if isinstance(exc, ConnectionLineageError):
+        return ValueError(str(exc))
+    if isinstance(exc, ResourceLimitError):
+        return ValueError(str(exc))
     status = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
     labels = {401: "Credentials rejected or expired; update your local credential or complete browser login",
               403: "Authenticated read is not permitted for this identity; check its platform role and selected resource access",
@@ -30,6 +42,7 @@ def safe_failure(exc: Exception) -> ValueError:
 class OmniReader:
     def __init__(self, profile, values):
         self.profile, self.values, self.requests = profile, values, 0
+        self.byte_budget = ByteBudget()
 
     def read(self, path, command, params=None):
         self.requests += 1
@@ -38,10 +51,10 @@ class OmniReader:
         if self.profile["target_auth"] == "token" and path is not None:
             with httpx.Client(base_url=self.profile["omni_origin"], follow_redirects=False,
                               timeout=20, trust_env=False) as client:
-                response = client.get(path, params=params, headers={"Authorization": "Bearer " + self.values["OMNI_API_TOKEN"]})
+                response = bounded_request(client, "GET", path, params=params,
+                    headers={"Authorization": "Bearer " + self.values["OMNI_API_TOKEN"]},
+                    budget=self.byte_budget, timeout_seconds=20)
                 response.raise_for_status()
-                if len(response.content) > 5 * 1024 * 1024:
-                    raise DiscoveryError("Discovery response exceeds the supported size")
                 try:
                     return response.json()
                 except ValueError:
@@ -55,11 +68,10 @@ class OmniReader:
         args = ["omni", *command, "--base-url", self.profile["omni_origin"], "-o", "json"]
         if self.profile["target_auth"] == "oauth":
             args += ["--profile", self.profile["omni_profile"]]
-        result = subprocess.run(args, capture_output=True, text=True, timeout=30, env=env, check=False)
+        result = bounded_process(args, env=env, timeout=30, budget=self.byte_budget)
         if result.returncode:
             raise DiscoveryError("Omni CLI read failed. Confirm it supports whoami and browser login, then log in to the selected profile; output withheld")
-        if len(result.stdout) > 5 * 1024 * 1024:
-            raise DiscoveryError("CLI discovery response exceeds the supported size")
+        check_json_structure(result.stdout)
         try:
             return json.loads(result.stdout)
         except ValueError:
@@ -104,6 +116,7 @@ def check_connections(profile, env_file, *, source=False, target=False):
 def discover(args):
     if not args.allow_target_read:
         raise ValueError("Add --allow-target-read to authorize read-only Omni discovery")
+    assert_private_output(args.output)
     if args.output.exists() or args.output.is_symlink():
         raise ValueError("Discovery output exists; select a new file")
     profile = load_profile(args.profile)

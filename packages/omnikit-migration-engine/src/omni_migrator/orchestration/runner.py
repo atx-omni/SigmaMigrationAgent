@@ -27,7 +27,9 @@ from omni_migrator.orchestration.planner import (
     build_migration_work_graph,
     ready_work_package_ids,
 )
-from omni_migrator.orchestration.provider import ProposalProvider, SpecialistProposal
+from omni_migrator.orchestration.provider import (
+    EGRESS_DISABLED_REASON, FixtureProposalProvider, ProposalProvider, SpecialistProposal,
+)
 from omni_migrator.orchestration.sigma_planner import SigmaPlanningContext, build_sigma_work_graph
 
 
@@ -147,6 +149,9 @@ class MigrationRunner:
         *,
         control_store: AppendOnlyControlPlaneStore,
     ) -> "MigrationRunner":
+        from omni_migrator.security.scanner import assert_safe_value
+
+        assert_safe_value(config.model_dump(mode="json"))
         if isinstance(config.context, SigmaPlanningContext):
             from omni_migrator.orchestration.sigma_workflow import assert_sigma_route_current
 
@@ -158,6 +163,9 @@ class MigrationRunner:
             )
         else:
             packages = build_migration_work_graph(config.context)
+        from omni_migrator.security.workspace import assert_private_output
+
+        assert_private_output(Path(run_dir), directory=True)
         Path(run_dir).mkdir(mode=0o700, parents=False, exist_ok=False)
         db_path = Path(run_dir) / "runtime.sqlite3"
         descriptor = os.open(db_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -379,6 +387,9 @@ class MigrationRunner:
 
     def attach(self, evidence: EvidenceInput) -> None:
         """Operator-reviewed content; attachment grants no gate or artifact acceptance."""
+        from omni_migrator.security.scanner import assert_safe_value
+
+        assert_safe_value(evidence.model_dump(mode="json"))
         with self._exclusive(), sqlite3.connect(self.db_path) as db:
             previous = db.execute(
                 "SELECT body FROM evidence WHERE ref=?", (evidence.ref,)
@@ -391,6 +402,9 @@ class MigrationRunner:
             )
 
     def propose_next(self, provider: ProposalProvider, *, allow_model_calls: bool = False):
+        if type(provider) is not FixtureProposalProvider:
+            return {"state": "blocked", "reason": EGRESS_DISABLED_REASON,
+                    "provider_calls": 0, "production_egress_enabled": False}
         with self._exclusive():
             config, packages, resolver, completed = self._graph()
             if not allow_model_calls or not config.model_egress_approval_ref:
@@ -481,7 +495,7 @@ class MigrationRunner:
                 )
                 attempt_id = cursor.lastrowid
             try:
-                result = provider.propose(
+                result = FixtureProposalProvider.propose(provider,
                     instructions=instructions,
                     context=context,
                     max_output_tokens=budget.max_output_tokens,
@@ -511,6 +525,8 @@ class MigrationRunner:
                     "output_sha256": output_hash,
                     "proposal": proposal.model_dump(mode="json"),
                     "accepted": False,
+                    "synthetic": True,
+                    "production_egress_enabled": False,
                 }
             except Exception:
                 with sqlite3.connect(self.db_path) as db:

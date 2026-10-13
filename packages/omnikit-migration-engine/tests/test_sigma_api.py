@@ -31,7 +31,7 @@ def _handler(request: httpx.Request) -> httpx.Response:
     if path == "/v2/dataModels/dm1/sources":
         return httpx.Response(
             200,
-            json={"entries": [{"type": "table", "tableId": "table1"}]},
+            json={"entries": [{"type": "table", "tableId": "table1", "connectionId": "c1"}]},
         )
     if path == "/v2/dataModels/dm1/columns":
         return httpx.Response(
@@ -618,6 +618,8 @@ def test_snapshot_assembles_full_acquisition_and_enriches_page_elements():
         "selectedDataModelIds": ["dm1"],
         "selectedWorkbookIds": ["wb1"],
         "optional_endpoint_diagnostic_count": 0,
+        "connection_scope": "selected_source_lineage",
+        "connection_lineage_status": "resolved",
     }
 
     serialized = json.dumps(snapshot)
@@ -824,12 +826,10 @@ def test_get_retries_rate_limit_during_pagination():
 
 def test_optional_endpoint_failures_are_diagnostic_and_do_not_store_error_bodies():
     optional_paths = {
-        "/v2/dataModels/dm1/sources",
         "/v2/dataModels/dm1/columns",
         "/v2/dataModels/dm1/lineage",
         "/v2/dataModels/dm1/materializationSchedules",
         "/v2/grants",
-        "/v2/workbooks/wb1/sources",
         "/v2/workbooks/wb1/elements",
         "/v2/workbooks/wb1/columns",
         "/v2/workbooks/wb1/controls",

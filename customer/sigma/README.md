@@ -23,6 +23,6 @@ merge this package with an older migration package.
 
 Use the Sigma steps in this guide. Some shared data types retain historical names, but no Domo source adapter or Domo operator command is available in this distribution.
 
-Keep the original ZIP unchanged. Once you use real source evidence, treat the working folder and outputs as confidential. Do not send the whole working folder to support or another customer.
+Keep the original ZIP unchanged. Confirm its publisher through your trusted release channel before installation; its own checksums do not authenticate it. Follow setup to keep real evidence in a separate private workspace. The default export is only a minimal support summary; full confidential evidence requires the explicit migration export purpose and sharing review. Do not send the whole working folder to support or another customer.
 
 This is a supervised local pre-push pilot. The supported route generates actual model and dashboard artifacts; unsupported source behavior remains blocked. No live target deployment or migration acceptance is claimed. Use the guide's `sigma-migrate` workflow, not the legacy extraction-only `start.py`, for review and package generation.

@@ -9,8 +9,13 @@ from __future__ import annotations
 import json
 from typing import Literal, Protocol
 
-import httpx
 from pydantic import BaseModel, ConfigDict, Field
+
+EGRESS_DISABLED_REASON = (
+    "Production AI dispatch is disabled: an externally authenticated approval gateway "
+    "must enforce exact payload, provider/account, expiry, revocation and replay policy. "
+    "Local approval references do not authorize data transfer."
+)
 
 
 class DraftArtifact(BaseModel):
@@ -46,65 +51,46 @@ class ProposalProvider(Protocol):
 
 
 class OpenAIProposalProvider:
-    """Fixed official origin, no redirects/retries, no response body in exceptions."""
+    """Fail-closed compatibility stub; never retains credentials or creates a client."""
 
     def __init__(self, *, model: str, api_key: str, transport=None) -> None:
-        if not model.strip() or not api_key.strip():
-            raise ValueError("model and credential must be explicitly configured")
-        self.model = model
-        self._api_key = api_key
-        self._transport = transport
+        raise RuntimeError(EGRESS_DISABLED_REASON)
 
     def propose(self, *, instructions: str, context: str, max_output_tokens: int) -> ProviderResult:
-        try:
-            with httpx.Client(
-                timeout=40.0,
-                follow_redirects=False,
-                trust_env=False,
-                transport=self._transport,
-            ) as client:
-                response = client.post(
-                    "https://api.openai.com/v1/responses",
-                    headers={"Authorization": f"Bearer {self._api_key}"},
-                    json={
-                        "model": self.model,
-                        "store": False,
-                        "instructions": instructions,
-                        "input": [{"role": "user", "content": context}],
-                        "max_output_tokens": max_output_tokens,
-                        "text": {
-                            "format": {
-                                "type": "json_schema",
-                                "name": "migration_proposal",
-                                "strict": True,
-                                "schema": SpecialistProposal.model_json_schema(),
-                            }
-                        },
-                    },
-                )
-                response.raise_for_status()
-                body = response.json()
-            if body.get("status") != "completed":
-                raise ValueError("incomplete response")
-            contents = [
-                part
-                for item in body.get("output", [])
-                if item.get("type") == "message"
-                for part in item.get("content", [])
-            ]
-            if any(part.get("type") == "refusal" for part in contents):
-                raise ValueError("provider refusal")
-            value = json.loads(
-                "".join(part["text"] for part in contents if part.get("type") == "output_text")
-            )
-            usage = body["usage"]
-            return ProviderResult(
-                proposal=SpecialistProposal.model_validate(value),
-                input_tokens=usage["input_tokens"],
-                output_tokens=usage["output_tokens"],
-                response_id=body["id"],
-            )
-        except Exception:
-            raise RuntimeError(
-                "Model call failed or returned unusable output; no automatic retry."
-            ) from None
+        raise RuntimeError(EGRESS_DISABLED_REASON)
+
+
+class FixtureProposalProvider:
+    """Fixed offline test simulation, not a provider plug-in or production escape hatch.
+
+    No callable, transport, URL, credential, or arbitrary provider is accepted. The
+    runner checks this exact concrete type and calls its class method directly.
+    These drafts remain explicitly synthetic and can never prove live acceptance.
+    """
+
+    def __init_subclass__(cls, **kwargs):
+        raise TypeError("the offline fixture provider cannot be extended")
+
+    def __init__(self, *, forged: bool = False, fail: bool = False):
+        self.calls: list[dict] = []
+        self.forged = bool(forged)
+        self.fail = bool(fail)
+
+    def propose(self, *, instructions: str, context: str, max_output_tokens: int) -> ProviderResult:
+        raw = json.loads(context)
+        self.calls.append({"instructions": instructions, "context": raw})
+        if self.fail:
+            raise RuntimeError("synthetic offline provider failure")
+        package = raw["work_package"]
+        return ProviderResult(
+            response_id="synthetic-offline-fixture", input_tokens=100, output_tokens=50,
+            proposal=SpecialistProposal(
+                status="proposed", summary="Synthetic offline fixture; no migration acceptance.",
+                artifacts=[DraftArtifact(
+                    artifact_type=package["expected_artifacts"][0], title="Synthetic review draft",
+                    content="Synthetic fixture: retain lineage and require independent live evidence.",
+                    source_refs=["artifact-ref://forged"] if self.forged
+                    else sorted(raw["untrusted_evidence"]),
+                )], blockers=[], decision_requests=[],
+            ),
+        )

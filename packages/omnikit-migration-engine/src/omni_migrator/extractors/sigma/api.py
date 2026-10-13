@@ -33,17 +33,99 @@ from omni_migrator.extractors.sigma.source_contracts import (
     sigma_source_binding_key,
     sigma_source_bindings,
 )
+from omni_migrator.security.transport import AGGREGATE_BYTES, ByteBudget, ResourceLimitError, bounded_request
 
 MAX_GET_ATTEMPTS = 3
 MAX_RETRY_DELAY_SECONDS = 60.0
 MAX_CLIENT_BACKOFF_SECONDS = 2.0
-MAX_PAGINATION_PAGES = 10_000
+MAX_PAGINATION_PAGES = 100
+MAX_PAGINATION_RECORDS = 100_000
 MAX_SELECTED_DATA_MODELS = 100
 MAX_SELECTED_WORKBOOKS = 100
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 OPTIONAL_ENDPOINT_STATUS_CODES = {400, 403, 404, 405, 422, 501}
 
 _T = TypeVar("_T")
+
+
+class ConnectionLineageError(ValueError):
+    """Incomplete connection evidence never produces a publishable snapshot."""
+
+    def __init__(self, reason: str):
+        self.diagnostics = [{"operation": "selected_connection_lineage", "status": "incomplete",
+                             "reason": reason, "target_write_authority": False}]
+        super().__init__("Selected connection lineage is incomplete; capture verified source bindings before continuing")
+
+
+def _selected_connection_ids(data_models: list[dict], workbooks: list[dict]) -> set[str]:
+    """Resolve only explicit connection identities on selected, typed source edges.
+
+Never infer a connection from a name, SQL, arbitrary recursive metadata, or the
+fact that only one connection was visible. Unknown table/dataset connections and
+uncaptured upstream model dependencies require additional source evidence.
+"""
+    models = {_row_id(model, "dataModelId", "id"): model for model in data_models}
+    resolved: dict[str, set[str]] = {}
+    visiting: set[str] = set()
+
+    def model_connections(model_id: str) -> set[str]:
+        if model_id in resolved:
+            return resolved[model_id]
+        if model_id in visiting or model_id not in models:
+            raise ConnectionLineageError("upstream_model_missing_or_cyclic")
+        visiting.add(model_id)
+        values = sources_connections(models[model_id], "data_model")
+        visiting.remove(model_id)
+        resolved[model_id] = values
+        return values
+
+    def sources_connections(document: dict, owner: str) -> set[str]:
+        sources = document.get("sources")
+        if not isinstance(sources, list) or not sources:
+            raise ConnectionLineageError("source_bindings_missing")
+        values: set[str] = set()
+        for raw in sources:
+            try:
+                source = parse_sigma_source(raw, owner=owner)
+            except (TypeError, ValueError):
+                raise ConnectionLineageError("source_binding_unsupported") from None
+            if source.type == "data-model":
+                upstream = model_connections(source.dataModelId)
+                if "connectionId" in raw and raw["connectionId"] not in upstream:
+                    raise ConnectionLineageError("source_connection_conflict")
+                values.update(upstream)
+            else:
+                connection_id = raw.get("connectionId")
+                if not isinstance(connection_id, str) or not _SAFE_OBSERVABLE_ID.fullmatch(connection_id):
+                    raise ConnectionLineageError("physical_source_connection_missing")
+                values.add(connection_id)
+        return values
+
+    values: set[str] = set()
+    for model_id in models:
+        if model_id is None:
+            raise ConnectionLineageError("selected_model_identity_missing")
+        values.update(model_connections(model_id))
+    for workbook in workbooks:
+        values.update(sources_connections(workbook, "workbook"))
+    return values
+
+
+def _minimized_connections(rows: list[dict], required_ids: set[str], *, include_all: bool) -> list[dict]:
+    """Retain source identity and dialect only; never host, user, name, or settings."""
+    by_id: dict[str, dict] = {}
+    for row in rows:
+        connection_id = _row_id(row, "connectionId", "id")
+        if not connection_id or connection_id in by_id:
+            raise ConnectionLineageError("connection_inventory_identity_ambiguous")
+        by_id[connection_id] = row
+    if required_ids - by_id.keys():
+        raise ConnectionLineageError("required_connection_not_visible")
+    selected = by_id.keys() if include_all else required_ids
+    return [{"connectionId": connection_id, **{
+        key: by_id[connection_id][key] for key in ("type", "connectionType", "dialect")
+        if isinstance(by_id[connection_id].get(key), str)
+    }} for connection_id in sorted(selected)]
 
 _OBSERVABLE_ID_KEYS = frozenset(
     {
@@ -433,10 +515,12 @@ class SigmaApi:
     _refresh_token: str | None = field(init=False, default=None, repr=False)
     _request_count: int = field(init=False, default=0, repr=False)
     _endpoint_request_counts: dict[str, int] = field(init=False, default_factory=dict, repr=False)
+    _byte_budget: ByteBudget = field(init=False, default_factory=ByteBudget, repr=False)
 
     def __post_init__(self) -> None:
         self._http = httpx.Client(
-            base_url=self.base_url.rstrip("/"), transport=self.transport, timeout=60.0
+            base_url=self.base_url.rstrip("/"), transport=self.transport, timeout=60.0,
+            follow_redirects=False, trust_env=False,
         )
 
     # --- auth and transport ---
@@ -463,7 +547,8 @@ class SigmaApi:
         response: httpx.Response | None = None
         for attempt in range(MAX_GET_ATTEMPTS):
             self._consume_request_budget("/v2/auth/token")
-            response = self._http.post("/v2/auth/token", data=data)
+            response = bounded_request(self._http, "POST", "/v2/auth/token", data=data,
+                                       budget=self._byte_budget)
             if response.status_code not in RETRYABLE_STATUS_CODES:
                 response.raise_for_status()
                 return response
@@ -535,14 +620,14 @@ class SigmaApi:
         response: httpx.Response | None = None
         for attempt in range(MAX_GET_ATTEMPTS):
             self._consume_request_budget(path)
-            response = self._http.get(path, **kwargs)
+            response = bounded_request(self._http, "GET", path, budget=self._byte_budget, **kwargs)
             if self.observation_sink is not None:
                 self.observation_sink(_safe_response_observation(response, attempt=attempt + 1))
             if response.status_code == 401 and not refreshed:
                 self.refresh()
                 refreshed = True
                 self._consume_request_budget(path)
-                response = self._http.get(path, **kwargs)
+                response = bounded_request(self._http, "GET", path, budget=self._byte_budget, **kwargs)
                 if self.observation_sink is not None:
                     self.observation_sink(_safe_response_observation(response, attempt=attempt + 1))
             if response.status_code not in RETRYABLE_STATUS_CODES:
@@ -703,6 +788,8 @@ class SigmaApi:
         for _ in range(MAX_PAGINATION_PAGES):
             response = self._get(request_path, params=request_params)
             rows, continuation, has_more, total = self._page_parts(response.json(), path)
+            if len(results) + len(rows) > MAX_PAGINATION_RECORDS:
+                raise ResourceLimitError("Sigma pagination record limit exceeded; narrow the capture")
             results.extend(rows)
             if total is not None:
                 expected_total = total
@@ -1036,15 +1123,20 @@ class SigmaApi:
         *,
         data_model_ids: list[str] | None = None,
         workbook_ids: list[str] | None = None,
+        include_all_connections: bool = False,
     ) -> dict:
         """Acquire a bounded, source-faithful, secret-free Sigma evidence snapshot.
 
         Data Model ``/spec`` responses are the authoritative modeling representation. Workbook
         endpoints contribute content, query, lineage, grant, and schedule evidence only; this
         collector deliberately does not call or claim a workbook ``/spec`` endpoint.
+        Connection metadata is minimized to explicitly resolved selected-source
+        dependencies. A separate explicit inventory option may include other IDs
+        and dialects, but never relaxes lineage verification or property minimization.
         """
         diagnostics: list[dict] = []
-        connections = self.list_connections()
+        if not isinstance(include_all_connections, bool):
+            raise ValueError("Broad connection inventory requires an explicit boolean choice")
 
         selected_data_models = self._select_inventory(
             self.list_data_models(),
@@ -1313,7 +1405,12 @@ class SigmaApi:
             )
             workbooks.append(workbook)
 
-        return {
+        required_connections = _selected_connection_ids(data_models, workbooks)
+        connections = _minimized_connections(
+            self.list_connections() if required_connections or include_all_connections else [],
+            required_connections, include_all=include_all_connections,
+        )
+        snapshot = {
             "connections": connections,
             "dataModels": data_models,
             "workbooks": workbooks,
@@ -1335,5 +1432,13 @@ class SigmaApi:
                     if (item := _row_id(workbook, "workbookId", "id")) is not None
                 ],
                 "optional_endpoint_diagnostic_count": len(diagnostics),
+                "connection_scope": "explicit_minimized_inventory" if include_all_connections else "selected_source_lineage",
+                "connection_lineage_status": "resolved",
             },
         }
+        size = 0
+        for part in json.JSONEncoder(ensure_ascii=True).iterencode(snapshot):
+            size += len(part.encode("utf-8"))
+            if size > AGGREGATE_BYTES:
+                raise ResourceLimitError("Final snapshot size limit exceeded; narrow the capture")
+        return snapshot

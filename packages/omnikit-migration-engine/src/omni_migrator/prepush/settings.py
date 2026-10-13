@@ -68,6 +68,8 @@ def validate_profile(value: dict) -> dict:
 
 
 def write_private_text(path: Path, text: str) -> None:
+    from omni_migrator.security.workspace import assert_private_output
+    assert_private_output(path)
     if any(parent.is_symlink() for parent in (path, *path.parents)):
         raise ValueError("Symbolic links are not accepted for setup files")
     path.parent.mkdir(parents=True, exist_ok=True)

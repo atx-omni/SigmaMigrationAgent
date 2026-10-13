@@ -19,9 +19,12 @@ Python 3.11+ on macOS or Linux is required. Windows users need a Linux environme
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install -e 'packages/omnikit-migration-engine[dev]'
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r packages/omnikit-migration-engine/requirements-build.lock
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r packages/omnikit-migration-engine/requirements-dev.lock
+.venv/bin/python -m pip install --no-deps --no-build-isolation -e packages/omnikit-migration-engine
 .venv/bin/sigma-migrate --help
-.venv/bin/sigma-migrate setup --directory migration-setup
+MIGRATION_WORKSPACE="$HOME/.sigma-migrate/workspaces/migration"
+.venv/bin/sigma-migrate setup --directory "$MIGRATION_WORKSPACE"
 ```
 
 Start with guided `setup`, then `doctor`, optional read-only `discover`,
@@ -35,7 +38,7 @@ and immutable bindings are generated automatically. No target apply command exis
 
 The maintained skill is
 [sigma-to-omni-migration](.agents/skills/sigma-to-omni-migration/SKILL.md), aligned
-with runtime **0.3.0**. It replaces the older bespoke POC instructions; it does not
+with runtime **0.4.0**. It replaces the older bespoke POC instructions; it does not
 require Sigma/Omni MCP, Omni CLI, or an AI-provider key for local preparation.
 Optional OAuth and live topic discovery use the official Omni CLI. Token-based
 model/connection discovery does not require it. Discovery is read-only.
@@ -44,8 +47,8 @@ Setup writes a private, conditional `.env` template and a step-by-step local
 checklist. It never asks for secrets in chat or overwrites existing credentials.
 Choose dashboard-only reuse to preserve an existing Topic; this emits query and
 document proposals without model or dbt changes. Reviewed target field evidence
-is still required. See [the configuration-first audit](docs/GUIDED-SETUP-AUDIT.md)
-for delivered features and remaining limits.
+is still required. See [the operator guide](customer/sigma/SETUP-AND-USAGE.md)
+for the supported workflow and remaining limits.
 
 Open this checkout as your Codex project. Its repository-scoped skill lives in
 `.agents/skills`, following [official Codex skill discovery](https://developers.openai.com/codex/skills).
@@ -77,17 +80,38 @@ supported output while its overall status remains blocked.
 - Model/dataset source captures do not contain every layout, control and action detail; source-bound supplemental context may be required.
 - Local approval trusts the OS account. It is not shared-service authentication and cannot distinguish a human from another process running as that same account.
 
-See [the plan audit](docs/IMPLEMENTATION-AUDIT.md) for completed work, focused test
-evidence and remaining gates. The original synthetic corpus remains in
+See [the release notes](CHANGELOG.md) and [security policy](SECURITY.md) for
+delivered controls and remaining gates. The original synthetic corpus remains in
 `tests/synthetic_preflight`; checks verify actual output instead of invented phase names.
 
 ## Provenance and isolation
 
 Sigma source and selected shared runtime components were separated from a preserved
 development snapshot. [The import inventory](IMPORT-MANIFEST.json) records original
-file hashes; [software notices](SOFTWARE-NOTICES.md) explain shared ownership and
-excluded surfaces. Shared data types still use some historical Domo names, but no
+file hashes; it is historical provenance, not the current file inventory. Internal
+plans and work logs are excluded from deployment. [Software notices](SOFTWARE-NOTICES.md)
+explain shared ownership and excluded surfaces. Shared data types still use some historical Domo names, but no
 Domo extractor or Domo operator command is available in this distribution.
 
 No customer data, credentials or local run outputs belong in Git. The package's
 Apache-2.0 license and upstream provenance are retained.
+
+## Security hardening in 0.4.0
+
+Operational files now belong in a private workspace outside the checkout. Existing
+evidence is never moved, deleted, or silently re-permissioned. Git-trackable and
+shared output directories are refused. All exports use one maintained secret
+scanner; a credential finding blocks export even when semantic blockers are allowed.
+Default exports contain a minimal support summary; full confidential source and
+target artifacts require `export --purpose migration` and separate sharing review.
+
+The advanced AI proposal path is disabled pending an independently authenticated
+egress gateway. An approval reference or local review cannot re-enable it. This
+does not disable deterministic offline migration preparation. Capture and discovery
+enforce streaming byte, request, and time limits and keep only required source
+connections. Install from the hash-locked dependency files above.
+
+See [the release notes](CHANGELOG.md) and [security/release policy](SECURITY.md)
+for delivered controls, upgrade steps, and external
+release-signing and repository-control gates. A draft ZIP and its checksums are
+not an authenticated customer release.

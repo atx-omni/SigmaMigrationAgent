@@ -50,7 +50,7 @@ def test_skill_walkthrough_commands_parse_against_public_cli():
             operations.add(args.operation)
             if args.operation == "route":
                 modes.add(args.mode)
-            if args.operation == "init" and args.run_dir == Path("demo-run"):
+            if args.operation == "init" and args.run_dir.name == "demo-run":
                 assert args.synthetic is True
                 assert (ROOT / args.source).is_file() and (ROOT / args.target).is_file()
     assert modes == set(MODES)

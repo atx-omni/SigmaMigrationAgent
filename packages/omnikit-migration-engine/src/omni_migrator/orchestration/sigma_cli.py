@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import json
-import os
-import re
 from pathlib import Path
 
 from omni_migrator.control_plane.store import AppendOnlyControlPlaneStore
 from omni_migrator.extractors.sigma.capability_contracts import SigmaCapabilitySpikeBundle
 from omni_migrator.extractors.sigma.semantic_routing import prompt_for_sigma_semantic_route
-from omni_migrator.orchestration.provider import OpenAIProposalProvider
+from omni_migrator.orchestration.provider import EGRESS_DISABLED_REASON
 from omni_migrator.orchestration.runner import EvidenceInput, MigrationRunConfig, MigrationRunner
 from omni_migrator.orchestration.sigma_planner import SigmaPlanningContext
 from omni_migrator.orchestration.sigma_workflow import (
@@ -21,10 +18,10 @@ from omni_migrator.orchestration.sigma_workflow import (
 )
 
 
-def _read(path: Path):
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > 25 * 1024 * 1024:
-        raise ValueError("expected bounded regular local input file")
-    return json.loads(path.read_text())
+def _read(path: Path, *, allow_array: bool = False):
+    from omni_migrator.prepush.session import read_json
+
+    return read_json(path, allow_array=allow_array)
 
 
 def add_sigma_workflow_commands(commands):
@@ -58,6 +55,10 @@ def add_sigma_workflow_commands(commands):
 
 
 def run_sigma_workflow_command(args):
+    # Containment occurs before reading run/configuration files or credential state.
+    if args.operation == "sigma-run-step":
+        return {"state": "blocked", "reason": EGRESS_DISABLED_REASON,
+                "provider_calls": 0, "production_egress_enabled": False}
     if args.operation == "sigma-run-init":
         raw = _read(args.config)
         if not raw.get("context", {}).get("decision"):
@@ -76,7 +77,7 @@ def run_sigma_workflow_command(args):
             bundle=SigmaCapabilitySpikeBundle.model_validate(_read(args.bundle)),
             route_approval=approval,
             source_approvals=[SigmaPlanningApproval.model_validate(item)
-                              for item in _read(args.source_approvals)],
+                              for item in _read(args.source_approvals, allow_array=True)],
             human_reviewers=config.human_reviewers,
             expected_sigma_organization_ref=args.expected_sigma_organization_ref,
         )
@@ -96,15 +97,6 @@ def run_sigma_workflow_command(args):
     if args.operation == "sigma-run-status":
         return {**runner.status(), "planning_only": True, "migration_accepted": False,
                 "semantic_mode": config.context.decision.payload.mode}
-    if args.operation == "sigma-run-step":
-        if not args.allow_model_call or not config.model_egress_approval_ref:
-            return {"state": "blocked", "reason": "explicit model call and source-egress approval required"}
-        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", args.api_key_env):
-            raise ValueError("invalid credential environment reference")
-        if not runner.status()["ready_package_ids"]:
-            return {"state": "blocked", "reason": "no ready work; inspect approvals, inputs and attempts"}
-        provider = OpenAIProposalProvider(model=config.model, api_key=os.environ[args.api_key_env])
-        return runner.propose_next(provider, allow_model_calls=True)
     if args.operation == "sigma-run-attach":
         runner.attach(EvidenceInput.model_validate(_read(args.evidence)))
         return {"state": "evidence_attached_not_accepted"}

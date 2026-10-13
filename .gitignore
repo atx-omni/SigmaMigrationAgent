@@ -9,5 +9,16 @@ __pycache__/
 dist/
 runs/
 evidence/
+.sigma-work/
+migration-setup/
+my-migration/
+demo-run/
+/source.json
+/target.json
+/omni-discovery.json
+/enriched-source.json
+/pilot-source.json
+/observed-context.json
+/reviewed-topic.json
 *.zip
 *.sqlite*

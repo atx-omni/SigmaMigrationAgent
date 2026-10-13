@@ -3732,7 +3732,9 @@ class AppendOnlyControlPlaneStore:
 
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
-        self.root.mkdir(parents=True, exist_ok=True)
+        from omni_migrator.security.workspace import assert_private_output
+        assert_private_output(self.root, directory=True)
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
 
     def _partition_path(self, tenant_ref: str, run_id: str) -> Path:
         validate_reference(tenant_ref)

@@ -201,10 +201,11 @@ def test_api_snapshot_preserves_complete_dependency_evidence(acquired_snapshot: 
         "selectedDataModelIds": ["dm-orders"],
         "selectedWorkbookIds": ["wb-exec", "wb-sandbox"],
         "optional_endpoint_diagnostic_count": 0,
+        "connection_scope": "selected_source_lineage",
+        "connection_lineage_status": "resolved",
     }
     assert {item["connectionId"] for item in snapshot["connections"]} == {
         "conn-snowflake",
-        "conn-bigquery",
     }
 
     (model,) = snapshot["dataModels"]

@@ -57,7 +57,7 @@ def test_public_review_build_resume_validate_export(tmp_path, monkeypatch, mode)
     assert any(name.endswith(".view") for name in names)
     assert any(name.startswith("dbt/") for name in names) == (mode == "warehouse_first_refactor")
     output = tmp_path / "reviewed.zip"
-    assert main(["export", "--run-dir", str(run), "--output", str(output)]) == 0
+    assert main(["export", "--run-dir", str(run), "--output", str(output), "--purpose", "migration"]) == 0
     with ZipFile(output) as archive:
         assert set(archive.namelist()) == names | {"manifest.json"}
     assert main(["export", "--run-dir", str(run), "--output", str(output)]) == 2

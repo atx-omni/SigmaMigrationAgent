@@ -20,6 +20,12 @@ import yaml
 
 from omni_migrator.prepush.reuse import source_fields, validate_target as validate_reuse_target
 from omni_migrator.prepush.scope import validate_scope
+from omni_migrator.security.scanner import (
+    POLICY_VERSION,
+    SecurityScanError,
+    assert_safe_bytes,
+    assert_safe_value,
+)
 
 ROUTES = {"omni_semantic_reconstruction", "warehouse_first_refactor"}
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
@@ -28,6 +34,14 @@ _REFERENCE = re.compile(r"\$\{([^{}]+)\}")
 _MAX_FILE_BYTES = 10 * 1024 * 1024
 _MAX_PACKAGE_BYTES = 50 * 1024 * 1024
 _MAX_FILES = 1000
+_UNSAFE_EXPORT_CODES = frozenset({
+    "unsafe_package_path", "unreadable_package", "package_limit", "symlink",
+    "unsafe_file", "unreadable_file", "invalid_manifest", "manifest_version",
+    "invalid_inventory", "unsafe_manifest_path", "invalid_file_hash", "missing_file",
+    "file_hash_mismatch", "unlisted_file", "unsupported_file", "invalid_document",
+    "missing_bound_input", "input_hash_mismatch", "missing_review", "stale_review",
+    "invalid_authority", "stale_proposal_review", "unreadable_proposal",
+})
 
 
 def _sha(data: bytes) -> str:
@@ -82,7 +96,8 @@ def _yaml(raw: bytes) -> Any:
     text = raw.decode("utf-8")
     if any(isinstance(event, yaml.events.AliasEvent) for event in yaml.parse(text)):
         raise ValueError("YAML aliases are not supported in pre-push packages")
-    return yaml.load(text, Loader=_UniqueSafeLoader)
+    # SafeLoader subclass also rejects duplicate keys; no unsafe YAML constructors.
+    return yaml.load(text, Loader=_UniqueSafeLoader)  # nosec B506
 
 
 def _relative(value: Any) -> bool:
@@ -102,24 +117,6 @@ def _strings(value: Any):
     elif isinstance(value, list):
         for child in value:
             yield from _strings(child)
-
-
-def _scan_sensitive(value: Any, path: str, issue) -> None:
-    credential_keys = {"password", "passwd", "client_secret", "clientsecret",
-                       "api_key", "apikey", "access_token", "refresh_token",
-                       "authorization", "private_key"}
-    if isinstance(value, dict):
-        for key, child in value.items():
-            if str(key).lower() in credential_keys and child not in (None, "", "[REDACTED]"):
-                issue("embedded_credential", path, "Package contains credential-shaped material.")
-            _scan_sensitive(child, path, issue)
-    elif isinstance(value, list):
-        for child in value:
-            _scan_sensitive(child, path, issue)
-    elif isinstance(value, str) and re.search(
-        r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\bBearer\s+[A-Za-z0-9._~+/=-]{12,}", value
-    ):
-        issue("embedded_credential", path, "Package contains credential-shaped material.")
 
 
 def _sql_tokens(sql: str) -> list[str]:
@@ -198,6 +195,7 @@ def _sqlite_sql(sql: str) -> str:
 def validate(package_dir: Path) -> dict[str, Any]:
     """Reopen a local package and return an honest offline-only verdict."""
     issues: list[dict[str, str]] = []
+    security_failed = False
 
     def issue(code: str, path: str, message: str) -> None:
         entry = {"code": code, "path": path, "message": message}
@@ -209,12 +207,30 @@ def validate(package_dir: Path) -> dict[str, Any]:
             "schema_version": "sigma-prepush-validation.v1",
             "status": "blocked" if issues else "offline_preflight_passed",
             "issues": issues,
+            "security_status": "blocked" if security_failed or any(
+                entry["code"] in _UNSAFE_EXPORT_CODES for entry in issues
+            ) else "passed",
+            "security_policy": POLICY_VERSION,
             "migration_accepted": False,
             "target_write_authority": False,
             "production_ready": False,
             "live_validation": "not_performed",
             "source_freshness": "not_verified_by_package_validator",
         }
+
+    def scan(raw: bytes, name: str) -> bool:
+        nonlocal security_failed
+        try:
+            assert_safe_bytes(raw, filename=name)
+            return True
+        except SecurityScanError:
+            security_failed = True
+            # Names, source strings and engine errors must not enter diagnostics.
+            issue("embedded_credential", ".", "Security scan blocked; inspect credential material privately.")
+            return False
+
+    if not scan(b"", "artifact"):
+        return result()
 
     root = Path(package_dir)
     if root.is_symlink() or not root.is_dir():
@@ -233,6 +249,8 @@ def validate(package_dir: Path) -> dict[str, Any]:
     total = 0
     for entry in entries:
         name = entry.relative_to(root).as_posix()
+        if not scan(b"", name):
+            return result()
         if entry.is_symlink():
             issue("symlink", name, "Package symlinks are forbidden.")
             continue
@@ -247,7 +265,18 @@ def validate(package_dir: Path) -> dict[str, Any]:
             if size > _MAX_FILE_BYTES or total > _MAX_PACKAGE_BYTES:
                 issue("package_limit", name, "Package exceeds the local size limit.")
                 continue
-            raw_files[name] = entry.read_bytes()
+            with entry.open("rb") as stream:
+                raw = stream.read(_MAX_FILE_BYTES + 1)
+            if len(raw) > _MAX_FILE_BYTES:
+                issue("package_limit", ".", "Package content grew beyond the local size limit.")
+                return result()
+            total += len(raw) - size
+            if total > _MAX_PACKAGE_BYTES:
+                issue("package_limit", ".", "Package exceeds the local size limit.")
+                return result()
+            raw_files[name] = raw
+            if not scan(raw_files[name], name):
+                return result()
         except OSError:
             issue("unreadable_file", name, "Package member could not be read.")
     if len(raw_files) > _MAX_FILES:
@@ -304,8 +333,12 @@ def validate(package_dir: Path) -> dict[str, Any]:
         except (ValueError, UnicodeError, RecursionError, yaml.YAMLError):
             issue("invalid_document", name, "Document is malformed, unsafe, or contains duplicate keys.")
         if name in parsed:
-            _scan_sensitive(parsed[name], name, issue)
-    _scan_sensitive(manifest, "manifest.json", issue)
+            try:
+                assert_safe_value(parsed[name])
+            except SecurityScanError:
+                security_failed = True
+                issue("embedded_credential", ".", "Security scan blocked; inspect credential material privately.")
+                return result()
     for name, key in (("source.json", "source_sha256"), ("target.json", "target_sha256")):
         if name not in inventory or not isinstance(parsed.get(name), dict):
             issue("missing_bound_input", name, "Package requires an inventoried input object.")

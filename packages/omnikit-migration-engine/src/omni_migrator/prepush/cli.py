@@ -26,6 +26,8 @@ def parser():
             p.add_argument("--file", type=Path, required=True)
         elif name == "export":
             p.add_argument("--output", type=Path, required=True)
+            p.add_argument("--purpose", choices=("support", "migration"), default="support",
+                           help="Default minimized support summary; migration explicitly exports confidential evidence")
         elif name == "revoke":
             p.add_argument("--reason", choices=("source_changed", "route_changed", "approval_withdrawn"), required=True)
     capture = commands.add_parser("capture", help="Read-only Sigma snapshot acquisition; no target access")
@@ -51,7 +53,8 @@ def parser():
     context.add_argument("--context", type=Path, required=True)
     context.add_argument("--output", type=Path, required=True)
     setup = commands.add_parser("setup", help="Guided, resumable local setup; creates only applicable credential placeholders")
-    setup.add_argument("--directory", type=Path, required=True)
+    from omni_migrator.security.workspace import default_workspace
+    setup.add_argument("--directory", type=Path, default=default_workspace(), help="Private operational workspace; defaults outside the checkout")
     doctor = commands.add_parser("doctor", help="Check profile locally; live connection checks require explicit flags")
     doctor.add_argument("--profile", type=Path, required=True)
     doctor.add_argument("--env-file", type=Path)
@@ -154,7 +157,7 @@ def run(args):
         _, result = session.validate_package()
         return result
     if args.operation == "export":
-        return session.export(args.output)
+        return session.export(args.output, purpose=args.purpose)
     if args.operation == "revoke":
         session.revoke(args.reason)
     return session.status()

@@ -3,7 +3,7 @@ name: sigma-to-omni-migration
 description: Prepare a Sigma workbook migration into Omni with configuration-first guided setup, safe local credentials, read-only discovery, direct-versus-modeled choice, existing-topic reuse, scoped chart selection, human review, validation, and reporting. Use for Sigma migration preparation or pre-push troubleshooting; this skill does not deploy to Omni or the warehouse.
 metadata:
   runtime-package: sigma-migration-agent
-  runtime-version: "0.3.0"
+  runtime-version: "0.4.0"
 ---
 
 # Sigma-to-Omni migration preparation
@@ -25,6 +25,8 @@ existing explicit choice; do not repeatedly ask for decisions already provided.
    step-by-step checklist. Never read or display secret values in chat. The user
    edits the private file locally. Do not run shell `source` on it, extract Apple
    Keychain entries, change repository visibility, or create/revoke platform keys.
+   Use the private default workspace outside the checkout for all captured data,
+   mappings, runs and exports. Do not weaken file permissions or Git protection.
 2. Identify one workbook and its data-model ID, or an existing captured snapshot.
    Confirm whether the task is a fictional demonstration or uses real source
    metadata. Treat workspace contents as confidential when real evidence enters.
@@ -68,7 +70,7 @@ copying this skill alone does not install the Python software or its examples.
   reuse path accepts a reviewed single-base-view inventory and computes hashes.
 - Use `scope` for chart/page subsets, never delete source evidence to clear a
   blocker. Scope preserves full inputs and dependency/control accounting. Large
-  source capture is still bounded, not a streaming or chart-only live extraction.
+   source capture uses bounded response streaming, not chart-only live extraction.
 - Let the runtime calculate source hashes, review bindings, and package manifests.
   Do not fabricate approval files, edit event records, or call internal session
   methods to bypass the public workflow.
@@ -109,7 +111,9 @@ identity boundary, not an independent human-authentication service.
 Use the independent validator's actual result and per-object dispositions.
 `offline_preflight_passed` means local checks passed; `blocked` means remediation
 is needed. Both have no target-write authority. A blocked package may be exported
-for review if integrity checks permit, never described as ready to deploy.
+for review only if credential and integrity checks permit, never as ready to deploy.
+Default export is a minimized support summary. Full confidential artifacts require
+explicit `--purpose migration`; retain separate user authorization to share them.
 
 Report the chosen route, source scope, output paths, actual validation status,
 implemented versus blocked coverage, and next human action. Review exported source
@@ -126,3 +130,7 @@ skill's boundary and hand off the reviewed artifacts to a separately authorized
 live development workflow. Do not construct an ad hoc API/Omni CLI bypass. Live
 readback, numeric/control/visual/security comparisons, warehouse deployment when
 applicable, and platform-owner acceptance remain separate gates.
+
+Production advanced AI dispatch is disabled pending an independently authenticated
+egress gateway. Local approval references, review prompts and redaction labels
+cannot authorize a provider call. Never bypass this through another tool or API.

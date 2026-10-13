@@ -178,7 +178,8 @@ def test_resealed_credentials_and_authority_claims_are_rejected(package):
     manifest = read_json(package / "manifest.json")
     manifest["migration_accepted"] = True
     seal(package, manifest)
-    assert {"embedded_credential", "invalid_authority"} <= codes(package)
+    # Security rejection precedes potentially sensitive semantic diagnostics.
+    assert "embedded_credential" in codes(package)
 
 
 def test_stale_review_and_unsealed_bytes_are_rejected(package):

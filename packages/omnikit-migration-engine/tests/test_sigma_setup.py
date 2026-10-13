@@ -139,8 +139,8 @@ def test_read_only_token_discovery_paginates_and_saves_no_secrets(tmp_path, monk
 
 def test_oauth_delegates_fixed_read_command_without_ambient_credentials(monkeypatch):
     monkeypatch.setenv("OMNI_API_TOKEN", "ambient-secret")
-    runner = Mock(return_value=argparse.Namespace(returncode=0, stdout='{"keyScope":"user"}', stderr=""))
-    monkeypatch.setattr("subprocess.run", runner)
+    runner = Mock(return_value=argparse.Namespace(returncode=0, stdout=b'{"keyScope":"user"}', stderr=b""))
+    monkeypatch.setattr("omni_migrator.prepush.discovery.bounded_process", runner)
     monkeypatch.setattr("shutil.which", lambda _: "/fictional/omni")
     reader = OmniReader(profile(target_auth="oauth", omni_origin="https://tenant.example.com", omni_profile="migration"), {})
     reader.read("/api/v1/whoami", ["whoami", "whoami"])

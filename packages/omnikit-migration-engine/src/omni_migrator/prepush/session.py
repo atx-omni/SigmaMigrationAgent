@@ -18,6 +18,14 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 
+from omni_migrator.security.scanner import (
+    POLICY_VERSION,
+    SecurityScanError,
+    assert_safe_bytes,
+    assert_safe_value,
+)
+from omni_migrator.security.workspace import assert_private_output, prepare_workspace
+
 MODES = ("omni_semantic_reconstruction", "warehouse_first_refactor")
 LIMIT = 25 * 1024 * 1024
 
@@ -40,21 +48,27 @@ def _pairs(pairs):
     return result
 
 
-def read_json(path):
+def read_json(path, *, allow_array=False):
     path = Path(path).absolute()
     if any(p.is_symlink() for p in (path, *path.parents)):
         raise ValueError("Symbolic links are not accepted for migration inputs")
     if not path.is_file() or path.stat().st_size > LIMIT:
         raise ValueError("Input must be a regular JSON file no larger than 25 MB")
-    value = json.loads(path.read_text(), object_pairs_hook=_pairs,
+    with path.open("rb") as stream:
+        data = stream.read(LIMIT + 1)
+    assert_safe_bytes(data, filename=path.name)
+    value = json.loads(data, object_pairs_hook=_pairs,
                        parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Nonfinite JSON")))
-    if not isinstance(value, dict):
-        raise TypeError("Input must contain one JSON object")
+    if not isinstance(value, dict) and not (allow_array and isinstance(value, list)):
+        raise TypeError("Input must contain one JSON object" if not allow_array
+                        else "Input must contain one JSON object or array")
     return value
 
 
 def private_write(path, value):
     data = value if isinstance(value, bytes) else encoded(value)
+    assert_private_output(Path(path))
+    assert_safe_bytes(data, filename=Path(path).name)
     fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "wb") as handle:
         handle.write(data)
@@ -68,20 +82,8 @@ def actor():
 
 
 def reject_secrets(value):
-    # Inputs remain untrusted data, never instructions. Prevent accidental secret exports.
-    if isinstance(value, dict):
-        for key, child in value.items():
-            normalized = re.sub(r"[^a-z]", "", str(key).lower())
-            if (normalized in {"token", "secret", "cookie", "refreshtoken", "idtoken", "sessiontoken"}
-                    or any(marker in normalized for marker in ("password", "clientsecret", "apikey", "accesstoken", "authorization", "privatekey"))):
-                if child not in (None, "", {"redacted": "secret"}):
-                    raise ValueError("Remove credential-bearing properties before import")
-            reject_secrets(child)
-    elif isinstance(value, list):
-        for child in value:
-            reject_secrets(child)
-    elif isinstance(value, str) and re.search(r"-----BEGIN .*PRIVATE KEY|\bgh[pousr]_[A-Za-z0-9]{30,}|\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}|\bBearer\s+\S+", value, re.I):
-        raise ValueError("Possible embedded credential; sanitize the source before import")
+    """Backward-compatible entry point for the shared credential policy."""
+    assert_safe_value(value)
 
 
 def synthetic_taint(value):
@@ -116,9 +118,11 @@ class Session:
         if not source.get("dataModels") or not source.get("workbooks"):
             raise ValueError("Source must contain captured dataModels and workbooks")
         root = Path(root).absolute()
+        assert_private_output(root, directory=True)
         if any(p.is_symlink() for p in (root, *root.parents)):
             raise ValueError("Run directory cannot use symbolic links")
         root.mkdir(mode=0o700, parents=False)
+        prepare_workspace(root)
         session = cls(root)
         (root / "objects").mkdir(mode=0o700)
         (root / "events").mkdir(mode=0o700)
@@ -274,16 +278,18 @@ class Session:
                     raise ValueError("Unsafe output path")
                 files[name] = content.encode()
             for name, content in files.items():
+                assert_safe_bytes(content, filename=name)
                 path = destination / name
-                path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                 private_write(path, content)
             manifest = {"schema_version": "sigma-prepush-package.v1", "route": state["route"],
+                        "classification": "confidential_customer_migration_evidence",
                         "source_sha256": state["source_sha256"], "target_sha256": state["target_sha256"],
                         "synthetic": state["synthetic"], "review": review,
                         "files": {name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
                         "build": {key: value for key, value in proposal.items() if key != "files"},
                         "target_write_authority": False, "migration_accepted": False,
                         "live_validation": "not_performed"}
+            assert_safe_bytes(encoded(manifest), filename="manifest.json")
             private_write(destination / "manifest.json", manifest)
             from omni_migrator.prepush.validate import validate
             result = validate(destination)
@@ -300,40 +306,89 @@ class Session:
         from omni_migrator.prepush.validate import validate
         return path, validate(path)
 
-    def export(self, output):
+    def export(self, output, *, purpose="support"):
+        """Share a minimized support summary, or explicitly request confidential evidence.
+
+        Both routes revalidate package integrity and all sealed evidence. Semantic
+        blockers may accompany a review package; security blockers never may.
+        """
+        if purpose not in {"support", "migration"}:
+            raise ValueError("Choose support or migration export purpose")
         with self.lock():
             path, result = self.validate_package()
-            # Blocked artifacts may be exported for review, clearly not deployable.
+            if result.get("security_status") != "passed":
+                raise SecurityScanError("Package security or integrity validation failed; no export was created.")
             output = Path(output).absolute()
+            assert_private_output(output)
             if any(p.is_symlink() for p in (output, *output.parents)):
                 raise ValueError("Export path cannot use symbolic links")
             if output.suffix.lower() != ".zip":
                 raise ValueError("Export filename must end in .zip")
             manifest = read_json(path / "manifest.json")
-            verified_bytes = {"manifest.json": (path / "manifest.json").read_bytes()}
+            with (path / "manifest.json").open("rb") as stream:
+                manifest_bytes = stream.read(25 * 1024 * 1024 + 1)
+            if len(manifest_bytes) > 25 * 1024 * 1024:
+                raise ValueError("Package manifest exceeds the bounded export size")
+            verified_bytes = {"manifest.json": manifest_bytes}
             if digest(json.loads(verified_bytes["manifest.json"])) != self.state()["package"]["manifest_sha256"]:
                 raise ValueError("Package manifest changed during export")
-            # A blocked semantic package is shareable for review; corrupt or
-            # redirected bytes are not. Never follow links while making a ZIP.
+            if len(manifest["files"]) > 1000:
+                raise ValueError("Package exceeds the bounded export inventory")
+            total = len(verified_bytes["manifest.json"])
+            # Read once, hash once, scan once, then publish those SAME bytes.
             for name, expected in manifest["files"].items():
                 entry = PurePosixPath(name)
                 if entry.is_absolute() or ".." in entry.parts or "\\" in name:
                     raise ValueError("Unsafe package inventory")
                 item = path / name
                 if (any(p.is_symlink() for p in (item, *item.parents)) or not item.is_file()
-                        or item.stat().st_size > LIMIT):
+                        or item.stat().st_size > 10 * 1024 * 1024):
                     raise ValueError("Package content changed; rebuild before export")
-                data = item.read_bytes()
+                with item.open("rb") as stream:
+                    data = stream.read(10 * 1024 * 1024 + 1)
+                total += len(data)
+                if len(data) > 10 * 1024 * 1024 or total > 50 * 1024 * 1024:
+                    raise ValueError("Package exceeds the bounded export size")
                 if hashlib.sha256(data).hexdigest() != expected:
                     raise ValueError("Package content changed; rebuild before export")
                 verified_bytes[name] = data
+            for name, data in verified_bytes.items():
+                assert_safe_bytes(data, filename=name)
+            if purpose == "support":
+                # Do not copy identifiers, issue paths/messages, SQL, formulas,
+                # source names, caller strings, OS identities, or manifest hashes.
+                # Even diagnostic messages may contain customer-controlled text.
+                build = manifest.get("build", {})
+                coverage = build.get("dispositions", [])
+                summary = {
+                    "schema_version": "sigma-support-summary.v1",
+                    "export_purpose": "support",
+                    "classification": "minimized_support_diagnostics",
+                    "security_policy": POLICY_VERSION,
+                    "status": "blocked" if result["status"] == "blocked" else "offline_preflight_passed",
+                    "issue_count": len(result.get("issues", [])),
+                    "artifact_count": len(manifest["files"]),
+                    "source_object_count": len(coverage) if isinstance(coverage, list) else 0,
+                    "synthetic": bool(manifest.get("synthetic")),
+                    "target_write_authority": False,
+                    "migration_accepted": False,
+                    "live_validation": "not_performed",
+                }
+                verified_bytes = {"support-summary.json": encoded(summary)}
+            for name, data in verified_bytes.items():
+                assert_safe_bytes(data, filename=name)
             with output.open("xb") as handle:
                 os.fchmod(handle.fileno(), 0o600)
                 with zipfile.ZipFile(handle, "w", zipfile.ZIP_DEFLATED) as archive:
                     for name, data in sorted(verified_bytes.items()):
                         archive.writestr(name, data)
-            self.append("export", {"package": path.name, "actor": actor(), "status": result["status"]})
-            return {"output": str(output), **result}
+            self.append("export", {"package": path.name, "actor": actor(), "status": result["status"],
+                                   "purpose": purpose, "security_policy": POLICY_VERSION})
+            # Support command output is minimized too, not only the ZIP payload.
+            response = summary if purpose == "support" else {
+                **result, "classification": "confidential_customer_migration_evidence"
+            }
+            return {"output": str(output), "export_purpose": purpose, **response}
 
     def status(self):
         state = self.state()

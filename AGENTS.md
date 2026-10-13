@@ -2,8 +2,8 @@
 
 This is the independent `atx-omni/SigmaMigrationAgent` product repository.
 Do not change, stage or publish files in sibling Domo/recovery checkouts.
-Treat the root README, current operator guide and implementation audit as current;
-retained legacy planning documents are historical design context, not publication directions.
+Treat the root README, current operator guide, SECURITY.md and CHANGELOG.md as
+current. Internal plans and work logs are kept outside the deployed repository.
 
 Preserve both explicit human-selected routes, with no default. Direct mode must
 never generate upstream dbt changes. Unsupported source behavior remains blocked

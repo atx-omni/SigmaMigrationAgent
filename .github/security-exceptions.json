@@ -1,0 +1,147 @@
+{
+  "schema_version": "sigma-security-exceptions.v1",
+  "entries": [
+    {
+      "path": "customer/sigma/examples/fictional-sigma-snapshot.json",
+      "sha256": "de3de0f91367ef363eadae306b725f7493964b618de9ccb0d5bdd83ce0df1ffb",
+      "rules": [
+        "confidential_artifact"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "examples/retail-supported.json",
+      "sha256": "b390abb15c0f4e906e3b0878536d204d8f453c484f6dd2e8ba85b5fee9e8727d",
+      "rules": [
+        "confidential_artifact"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "examples/retail-topic-inventory.json",
+      "sha256": "8c5f6a6c5d589cd3498c0d85c615f6e62e70d7b5991a66b2496facaba5cd892f",
+      "rules": [
+        "confidential_artifact"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "examples/target.json",
+      "sha256": "22b4cf4714e1aa424464ee61c76d2391c484f8508016e0bd6bb33cdab19724c8",
+      "rules": [
+        "confidential_artifact"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/fixtures/sigma/representative_snapshot.json",
+      "sha256": "f6549e373813a663c30104b98086cc3849a94621ce5e5f1ed8ae14d3975c9394",
+      "rules": [
+        "confidential_artifact"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma.py",
+      "sha256": "bd2ac987e9d0f347fc28eac39909ab1a7f5b3e930af85f536e7fcf5a4dbf4891",
+      "rules": [
+        "credential_format",
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_api.py",
+      "sha256": "344902b67e3526a02e2d56303112a226b27ba5787c7af4b1a4abe649d7230b8e",
+      "rules": [
+        "credential_format",
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_capability_spike.py",
+      "sha256": "7293a71c418e847fb23e000fa84e6146ea0914655ce0fb10fc5a354d7b776439",
+      "rules": [
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_end_to_end.py",
+      "sha256": "e54d8a7ae517988ee4fe46a6877817767c5188019c58427f21ea6ebbf194de9d",
+      "rules": [
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_planner.py",
+      "sha256": "3f487bf2a8f57211b9a1ae3e8fd38e88b42de954d2bd6483a1c1b8c8fe00b04c",
+      "rules": [
+        "confidential_artifact"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_prepush_session.py",
+      "sha256": "3012b853c2725c75f25bec4e53971c17cd54b7d8a34d06e5bf8a6f4e0f4c97b0",
+      "rules": [
+        "credential_format",
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_prepush_validate.py",
+      "sha256": "668cda926d672f26afc3bc23c7cc3d8a8f2c55c01bd0cae184592bc5c181af2c",
+      "rules": [
+        "credential_assignment"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_security_scanner.py",
+      "sha256": "2a03e4266020f3a3e28607cd04466a08832f74b7f8efc724cdb930b6b6ab7385",
+      "rules": [
+        "credential_format",
+        "credential_url"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_setup.py",
+      "sha256": "a661cb404781c9a67b0d74afb25647799fa71dd245863dcaaae6dd06f7cef9af",
+      "rules": [
+        "credential_format",
+        "credential_property",
+        "credential_url"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "tests/synthetic_preflight/artifacts/fixture-suite.json",
+      "sha256": "be9eff5a7b12f3fca06e689695577152a103a8cc988fcf8b1f46346b1d9f6a63",
+      "rules": [
+        "credential_assignment",
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
+      "expires": "2027-01-10"
+    }
+  ]
+}

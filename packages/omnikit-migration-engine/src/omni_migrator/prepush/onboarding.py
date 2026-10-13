@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 import shutil
+import shlex
 
 from omni_migrator.prepush.session import private_write
 from omni_migrator.prepush.settings import POLICIES, ROUTES, load_profile, origin, required_keys, write_private_text
 
-GUIDANCE = {
-    "SIGMA_API_URL": "Sigma: Administration > Developer access. Copy the API base URL shown for this organization/region.",
-    "SIGMA_CLIENT_ID": "On the same page, create REST API credentials, select the intended owner, then copy Client ID.",
-    "SIGMA_CLIENT_SECRET": "Copy the newly created Client Secret into the local .env. Save it securely; Sigma shows it once.",
-    "OMNI_BASE_URL": "Copy the intended Omni organization origin, for example https://your-org.omniapp.co, without a workbook path.",
-    "OMNI_API_TOKEN": "Omni: User profile > Manage account > Generate token. Use a personal token with the needed read access; put it only in your local .env.",
-}
+GUIDANCE = dict((item["variable"], item["instruction"]) for item in (
+    {"variable": "SIGMA_API_URL", "instruction": "Sigma: Administration > Developer access. Copy the API base URL shown for this organization/region."},
+    {"variable": "SIGMA_CLIENT_ID", "instruction": "On the same page, create REST API credentials, select the intended owner, then copy Client ID."},
+    {"variable": "SIGMA_CLIENT_SECRET", "instruction": "Copy the newly created Client Secret into the local .env. Save it securely; Sigma shows it once."},
+    {"variable": "OMNI_BASE_URL", "instruction": "Copy the intended Omni organization origin, for example https://your-org.omniapp.co, without a workbook path."},
+    {"variable": "OMNI_API_TOKEN", "instruction": "Omni: User profile > Manage account > Generate token. Use a personal token with the needed read access; put it only in your local .env."},
+))
 
 
 def choose(ask, question, values, labels):
@@ -28,8 +29,8 @@ def choose(ask, question, values, labels):
 def setup(args, ask):
     if any(path.is_symlink() for path in (args.directory, *args.directory.parents)):
         raise ValueError("Symbolic links are not accepted for setup directories")
-    directory = args.directory.resolve()
-    directory.mkdir(parents=True, exist_ok=True)
+    from omni_migrator.security.workspace import prepare_workspace
+    directory = prepare_workspace(args.directory)
     profile_path, env_path = directory / "migration-profile.json", directory / ".env"
     if profile_path.exists() or profile_path.is_symlink():
         profile = load_profile(profile_path)
@@ -63,11 +64,6 @@ def setup(args, ask):
         private_write(profile_path, profile)
         resumed = False
     keys = required_keys(profile)
-    ignore_path = directory / ".gitignore"
-    ignore_created = False
-    if not ignore_path.exists() and not ignore_path.is_symlink():
-        write_private_text(ignore_path, "# Local migration credentials and private working files\n.env\n.env.*\n*.local.json\n")
-        ignore_created = True
     created_env = False
     if keys and not env_path.exists() and not env_path.is_symlink():
         lines = ["# Private local credentials. Do not commit, share, source, or paste this file into chat.",
@@ -80,19 +76,26 @@ def setup(args, ask):
         created_env = True
     guide_path = directory / "SETUP-NEXT-STEPS.txt"
     if not guide_path.exists():
-        lines = ["YOUR MIGRATION SETUP", "", "1. Confirm the non-secret migration-profile.json choices."]
+        lines = ["YOUR MIGRATION SETUP", "", f"Private workspace: {directory}",
+                 "Keep all snapshots, mappings, context, runs and exports here, outside the source checkout.",
+                 "Do not commit any operational evidence or paste credentials into chat.",
+                 "Run commands from the installed software folder, not this workspace.",
+                 "1. Confirm the non-secret migration-profile.json choices."]
         if keys:
             lines += ["2. Open .env locally and replace REPLACE_LOCALLY values. Keep this file private."]
             lines += [f"   {key}: {GUIDANCE[key]}" for key in keys]
         if profile["target_auth"] == "oauth":
             lines += ["Use a current official Omni CLI. Complete its browser login yourself:",
-                      f"omni config init --name {profile['omni_profile']} --endpoint {profile['omni_origin']} --auth oauth",
-                      f"For an existing profile: omni config login {profile['omni_profile']}",
+                      f"omni config init --name {shlex.quote(profile['omni_profile'])} --endpoint {shlex.quote(profile['omni_origin'])} --auth oauth",
+                      f"For an existing profile: omni config login {shlex.quote(profile['omni_profile'])}",
                       "Tokens stay with the Omni CLI; this migrator never reads its credential store."]
-        lines += ["3. Run sigma-migrate doctor --profile migration-profile.json for local setup status.",
-                  "4. To test connections explicitly, add --env-file .env and --allow-source-read and/or --allow-target-read as applicable.",
+        lines += [f"3. Run .venv/bin/sigma-migrate doctor --profile {shlex.quote(str(profile_path))} for local setup status.",
+                  f"4. To test connections explicitly, add --env-file {shlex.quote(str(env_path))} (only if created) and --allow-source-read and/or --allow-target-read as applicable.",
                   "5. Capture/import your source; inspect it and choose a small pilot scope.",
+                  f"   Use --output {shlex.quote(str(directory / 'source.json'))} for capture and private workspace paths for every other output.",
                   "6. Configure reviewed mappings, initialize a run, personally review, build, validate, and export.",
+                  "   Export defaults to a minimal support summary. Full confidential source/target export requires --purpose migration and separate sharing review.",
+                  "   Secret-scan findings block export; do not remove safety gates or edit the immutable source evidence.",
                   "Assessment-only stops before artifact build. Nothing here writes to Omni or your warehouse.",
                   "Re-run setup with the same directory to resume. Existing .env/profile files are never overwritten.",
                   "For changed choices, create a new setup directory; existing runs require import and fresh review.",
@@ -102,7 +105,7 @@ def setup(args, ask):
     return {"status": "setup_resumed" if resumed else "setup_created", "profile": str(profile_path),
             "env_file": str(env_path) if keys else None, "env_created": created_env,
             "required_variables": keys, "guide": str(guide_path), "connections": "not_checked",
-            "ignore_protection": "created" if ignore_created else "existing_gitignore_preserved_verify_env_is_ignored",
+            "workspace": str(directory), "ignore_protection": "all_operational_files_ignored",
             "target_write_authority": False}
 
 

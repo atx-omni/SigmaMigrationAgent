@@ -9,6 +9,8 @@ from omni_migrator.prepush.session import private_write, reject_secrets
 def capture(args):
     if not args.allow_source_read:
         raise ValueError("Add --allow-source-read to authorize the selected Sigma metadata read")
+    from omni_migrator.security.workspace import assert_private_output
+    assert_private_output(args.output)
     profile_path = getattr(args, "profile", None)
     env_file = getattr(args, "env_file", None)
     if profile_path:

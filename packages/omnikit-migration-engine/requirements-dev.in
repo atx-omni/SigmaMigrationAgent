@@ -1,0 +1,8 @@
+-r requirements-runtime.in
+-r requirements-build.in
+pytest==9.1.1
+ruff==0.16.6
+jsonschema==4.26.0
+pip-tools==7.6.2
+pip-audit==2.10.1
+bandit==1.9.4

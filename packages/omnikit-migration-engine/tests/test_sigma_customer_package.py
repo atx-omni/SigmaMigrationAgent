@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import pytest
 
@@ -83,7 +83,7 @@ def test_scanner_rejects_private_values_and_symbolic_links_without_echoing(tmp_p
     # Generated fixture is deliberately not a usable credential or a customer value.
     fake_value = "sk-" + "A" * 36
     secret.write_text(f"key = '{fake_value}'\n")
-    with pytest.raises(ValueError, match="provider_key") as error:
+    with pytest.raises(ValueError, match="Security scan blocked") as error:
         PACKAGER.read_safe(tmp_path, secret, "source.py")
     assert fake_value not in str(error.value)
     secret.write_text("safe source\n")
@@ -121,3 +121,25 @@ def test_operator_html_matches_the_complete_authored_guide():
     markdown = renderer.SOURCE.read_text()
     assert renderer.TARGET.read_text() == renderer.render(markdown)
     assert markdown.count("\n## ") >= 12
+
+
+@pytest.mark.parametrize("member", [".env.local", "a//b.txt", "a/../b.txt", "a\\b.txt"])
+def test_verifier_rejects_unsafe_member_before_manifest(tmp_path, member):
+    import stat
+    path = tmp_path / "unsafe.zip"
+    with ZipFile(path, "w") as archive:
+        entry = ZipInfo("Sigma-to-Omni-Pilot/" + member)
+        entry.external_attr = (stat.S_IFREG | 0o600) << 16
+        archive.writestr(entry, "not secret")
+    with pytest.raises(ValueError, match="unsafe archive member"):
+        PACKAGER.verify(path)
+
+
+def test_central_directory_limit_precedes_zip_parsing(tmp_path, monkeypatch):
+    path = tmp_path / "many.zip"
+    with ZipFile(path, "w") as archive:
+        for number in range(1001):
+            archive.writestr(str(number), b"")
+    monkeypatch.setattr(PACKAGER, "ZipFile", lambda *_: pytest.fail("unbounded parser invoked"))
+    with pytest.raises(ValueError, match="directory exceeds"):
+        PACKAGER.verify(path)

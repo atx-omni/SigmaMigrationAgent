@@ -10,7 +10,7 @@ from omni_migrator.control_plane.canonical import sha256_json
 from omni_migrator.control_plane.records import ArtifactEnvelope
 from omni_migrator.control_plane.store import AppendOnlyConflict, AppendOnlyControlPlaneStore
 from omni_migrator.extractors.sigma.semantic_routing import create_sigma_semantic_routing_decision
-from omni_migrator.orchestration.provider import DraftArtifact, ProviderResult, SpecialistProposal
+from omni_migrator.orchestration.provider import FixtureProposalProvider as Provider
 from omni_migrator.orchestration.runner import EvidenceInput, MigrationRunConfig, MigrationRunner
 from omni_migrator.orchestration.sigma_planner import SigmaPlanningContext
 from omni_migrator.orchestration.sigma_workflow import (
@@ -89,30 +89,6 @@ def initialize(tmp_path, mode="omni_semantic_reconstruction"):
     return MigrationRunner.initialize(tmp_path / "run", config, control_store=store), material
 
 
-class Provider:
-    def __init__(self, forged=False):
-        self.calls = []
-        self.forged = forged
-
-    def propose(self, *, instructions, context, max_output_tokens):
-        self.calls.append((instructions, json.loads(context)))
-        assert "UNTRUSTED DATA" in instructions
-        raw = json.loads(context)
-        package = raw["work_package"]
-        return ProviderResult(
-            response_id="synthetic-response", input_tokens=100, output_tokens=50,
-            proposal=SpecialistProposal(
-                status="proposed", summary="Review draft; no migration acceptance.",
-                artifacts=[DraftArtifact(
-                    artifact_type=package["expected_artifacts"][0], title="Reviewable draft",
-                    content="Keep formula context; request live comparison evidence.",
-                    source_refs=["artifact-ref://forged"] if self.forged
-                    else sorted(raw["untrusted_evidence"]),
-                )], blockers=[], decision_requests=[],
-            ),
-        )
-
-
 def reviewed_output(runner, package_id, *, include_predecessors=True, complete=True):
     config, packages, resolver, completed = runner._graph()
     package = next(item for item in packages if item.work_package_id == package_id)
@@ -150,16 +126,16 @@ def test_captured_source_human_route_and_durable_proposal_handoff(tmp_path, mode
     result = runner.propose_next(provider, allow_model_calls=True)
     assert result["state"] == "proposed"
     assert result["accepted"] is False
-    assert "Sigma-to-Omni" in provider.calls[0][0]
-    assert "Domo-to-Omni" not in provider.calls[0][0]
-    assert "no dbt" in provider.calls[0][0] if mode == "omni_semantic_reconstruction" else True
+    assert "Sigma-to-Omni" in provider.calls[0]["instructions"]
+    assert "Domo-to-Omni" not in provider.calls[0]["instructions"]
+    assert "no dbt" in provider.calls[0]["instructions"] if mode == "omni_semantic_reconstruction" else True
     reopened = MigrationRunner(runner.run_dir, control_store=runner.control)
     assert not reopened.status()["ready_package_ids"]  # no automatic repeated model call
     envelope = reviewed_output(reopened, result["package"])
     next_provider = Provider()
     next_result = reopened.propose_next(next_provider, allow_model_calls=True)
     assert next_result["state"] == "proposed"
-    assert envelope.ref in next_provider.calls[0][1]["untrusted_evidence"]
+    assert envelope.ref in next_provider.calls[0]["context"]["untrusted_evidence"]
     downstream = reviewed_output(reopened, next_result["package"])
     assert envelope.artifact_id in {item["artifact_id"] for item in downstream.input_artifacts}
     assert_sigma_route_current(runner.control, material[1])

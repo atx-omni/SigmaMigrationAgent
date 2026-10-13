@@ -1,0 +1,6 @@
+# Build dependencies are installed before --no-build-isolation --no-deps installation.
+hatchling==1.27.0
+editables==0.6
+pip==26.2.1
+setuptools==83.0.0
+wheel==0.48.0

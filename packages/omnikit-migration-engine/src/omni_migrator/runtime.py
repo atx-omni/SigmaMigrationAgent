@@ -114,7 +114,11 @@ def _run_extract(request_path: Path | None) -> int:
 
 
 def _write_new_private_file(path: Path, value: str) -> None:
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    from omni_migrator.security.scanner import assert_safe_bytes
+    from omni_migrator.security.workspace import assert_private_output
+    assert_safe_bytes((value + "\n").encode(), filename=path.name)
+    assert_private_output(path)
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
         handle.write(value)
         handle.write("\n")
@@ -163,6 +167,9 @@ def _run_sigma_capability_spike(
         raise ValueError("credential environment names are invalid")
     if output_path is not None and output_path.exists():
         raise FileExistsError("Sigma capability output already exists")
+    from omni_migrator.security.workspace import assert_private_output
+    if output_path is not None:
+        assert_private_output(output_path)
     request = SigmaCapabilitySpikeRequest.model_validate_json(request_path.read_text())
     if request.evidence_mode != "live_tenant":
         raise ValueError("the live CLI accepts evidence_mode=live_tenant only")
@@ -200,6 +207,8 @@ def _run_sigma_capability_spike(
     finally:
         api.close()
     serialized = result.model_dump_json(indent=2)
+    from omni_migrator.security.scanner import assert_safe_bytes
+    assert_safe_bytes(serialized.encode(), filename="capability-result.json")
     if output_path is None:
         sys.stdout.write(serialized)
         sys.stdout.write("\n")

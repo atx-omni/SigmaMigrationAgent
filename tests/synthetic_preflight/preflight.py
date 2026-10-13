@@ -10,7 +10,6 @@ from dataclasses import replace
 from datetime import UTC, datetime
 import json
 from pathlib import Path
-import socket
 import sys
 from unittest.mock import patch
 
@@ -29,9 +28,10 @@ from omni_migrator.extractors.sigma.capability_contracts import (
 )
 from omni_migrator.extractors.sigma.capability_spike import run_sigma_capability_spike
 from omni_migrator.extractors.sigma.semantic_routing import (
-    advance_sigma_semantic_routing, create_sigma_semantic_routing_decision,
+    advance_sigma_semantic_routing as advance_sigma_semantic_routing,
+    create_sigma_semantic_routing_decision,
 )
-from omni_migrator.orchestration.provider import DraftArtifact, ProviderResult, SpecialistProposal
+from omni_migrator.orchestration.provider import FixtureProposalProvider as StubProvider
 from omni_migrator.orchestration.runner import EvidenceInput, MigrationRunConfig, MigrationRunner
 from omni_migrator.orchestration.sigma_planner import SigmaPlanningContext
 from omni_migrator.orchestration.sigma_workflow import (
@@ -201,38 +201,6 @@ def initialize(bundle, mode, directory):
     )
     runner = MigrationRunner.initialize(directory / "run", config, control_store=store)
     return runner, (context, approval, source_approvals)
-
-
-class StubProvider:
-    """Tests orchestration/lineage, never model quality or semantic correctness."""
-    def __init__(self, *, forged=False, fail=False):
-        self.calls = []
-        self.forged = forged
-        self.fail = fail
-
-    def propose(self, *, instructions, context, max_output_tokens):
-        raw = json.loads(context)
-        self.calls.append({"instructions": instructions, "context": raw})
-        assert "UNTRUSTED DATA" in instructions and "Sigma-to-Omni" in instructions
-        if self.fail:
-            raise RuntimeError("synthetic provider failure")
-        package = raw["work_package"]
-        content = {
-            **PROVENANCE, "phase": package["phase"],
-            "review_note": "Synthetic planning response only. Do not execute or approve semantics.",
-            "required_follow_up": ["live source comparison", "real human review",
-                                   "Sigma target-build integration", "Omni readback"],
-        }
-        refs = ["artifact-ref://invented-out-of-scope"] if self.forged else sorted(raw["untrusted_evidence"])
-        return ProviderResult(
-            response_id=f"synthetic-response-{len(self.calls)}", input_tokens=100, output_tokens=80,
-            proposal=SpecialistProposal(
-                status="proposed", summary="Synthetic orchestration test, not a migration.",
-                artifacts=[DraftArtifact(artifact_type=package["expected_artifacts"][0],
-                    title="Synthetic planning stub", content=json.dumps(content), source_refs=refs)],
-                blockers=[], decision_requests=[],
-            ),
-        )
 
 
 def simulate_review(runner, package_id, *, include_predecessors=True, complete=True):

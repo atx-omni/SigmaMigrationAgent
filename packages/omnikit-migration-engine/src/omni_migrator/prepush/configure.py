@@ -37,6 +37,8 @@ def import_context(args):
 
 
 def configure(args, ask):
+    from omni_migrator.security.workspace import assert_private_output
+    assert_private_output(args.output)
     from omni_migrator.extractors.sigma.extractor import _build_bundle
     source = read_json(args.source)
     bundle = _build_bundle(source)

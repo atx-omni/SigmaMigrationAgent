@@ -9,10 +9,14 @@ import importlib.util
 import json
 import re
 import stat
-import subprocess
+import struct
+import os
 import tempfile
 from pathlib import Path, PurePosixPath
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+
+from omni_migrator.security.scanner import assert_safe_bytes
+from omni_migrator.security.transport import bounded_process
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,7 +27,8 @@ CUSTOMER_FILES = (
     "README.md", "START-HERE.html", "SETUP-AND-USAGE.md", "PILOT-WORKSHEET.md",
     "SOFTWARE-NOTICES.md", "start.py", "examples/fictional-sigma-snapshot.json",
 )
-ENGINE_FILES = ("pyproject.toml", "LICENSE", "PROVENANCE.json", "requirements-tested.txt")
+ENGINE_FILES = ("pyproject.toml", "LICENSE", "PROVENANCE.json", "requirements-tested.txt",
+                "requirements-runtime.lock", "requirements-build.lock", "requirements-dev.lock")
 SKILL_FILES = (
     ".agents/skills/sigma-to-omni-migration/SKILL.md",
     ".agents/skills/sigma-to-omni-migration/agents/openai.yaml",
@@ -34,11 +39,6 @@ BLOCKED_PARTS = {".git", ".codex", ".venv", "__pycache__", "tests", "evals", "ev
 SCAN_RULES = {
     "personal_local_path": re.compile(r"/Users/[^/\s]+/|[A-Z]:\\Users\\[^\\\s]+\\"),
     "internal_chat_link": re.compile(r"https://exploreomni\.slack\.com/"),
-    "private_key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
-    "provider_key": re.compile(r"\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{32,}"),
-    "github_token": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,})"),
-    "slack_token": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}"),
-    "aws_access_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
 }
 MODIFICATION_NOTICE = (
     "# Distribution adaptation notice: supplied in the modified Sigma-to-Omni pilot engine.\n"
@@ -89,7 +89,11 @@ def read_safe(root: Path, path: Path, archive_name: str) -> bytes:
         raise ValueError(f"symbolic link excluded: {archive_name}")
     if not path.is_file() or path.stat().st_size > 8_000_000:
         raise ValueError(f"missing or oversized package input: {archive_name}")
-    data = path.read_bytes()
+    with path.open("rb") as stream:
+        data = stream.read(8_000_001)
+    if len(data) > 8_000_000:
+        raise ValueError("package input exceeds size limit")
+    assert_safe_bytes(data, filename=archive_name)
     content = data.decode("utf-8")
     for rule, pattern in SCAN_RULES.items():
         if pattern.search(content):
@@ -113,8 +117,12 @@ def with_notice(name: str, data: bytes) -> bytes:
 
 
 def git_value(root: Path, *args: str) -> str:
-    return subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True,
-                          text=True, timeout=10).stdout.strip()
+    result = bounded_process(["git", "--no-optional-locks", "-c", "core.fsmonitor=false", "-C", str(root), *args],
+                             env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
+                             timeout=10, stdout_limit=1024 * 1024, stderr_limit=8192)
+    if result.returncode:
+        raise ValueError("Cannot safely establish package source state")
+    return result.stdout.decode().strip()
 
 
 def build(root: Path, destination: Path, release_id: str) -> dict:
@@ -136,9 +144,17 @@ def build(root: Path, destination: Path, release_id: str) -> dict:
     dirty = bool(git_value(root, "status", "--porcelain", "--untracked-files=normal"))
     content = {}
     records = []
-    for name, path in sorted(selection(root).items()):
+    selected = selection(root)
+    if len(selected) > 998:
+        raise ValueError("package inventory exceeds size limit")
+    total = 0
+    for name, path in sorted(selected.items()):
         raw = read_safe(root, path, name)
         shipped = with_notice(name, raw)
+        assert_safe_bytes(shipped, filename=name)
+        total += len(shipped)
+        if len(shipped) > 8_000_000 or total > 128 * 1024 * 1024:
+            raise ValueError("package inventory exceeds size limit")
         content[name] = shipped
         records.append({"path": name, "size_bytes": len(shipped), "sha256": digest(shipped),
                         "source_path": path.relative_to(root).as_posix(),
@@ -152,6 +168,7 @@ def build(root: Path, destination: Path, release_id: str) -> dict:
         "scope": "Sigma source acquisition and reviewed local pre-push generation; no accepted target migration",
         "runtime_dependencies_included": False,
         "manifest_is_signature": False,
+        "publisher_authenticated": False,
         "files": records,
     }
     content["PACKAGE-MANIFEST.json"] = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
@@ -164,6 +181,10 @@ def build(root: Path, destination: Path, release_id: str) -> dict:
             raise ValueError("source changed during packaging; rebuild from a stable snapshot")
     if git_value(root, "rev-parse", "HEAD") != snapshot_head:
         raise ValueError("source commit changed during packaging; rebuild")
+    for name, data in content.items():
+        assert_safe_bytes(data, filename=name)
+    if sum(map(len, content.values())) > 128 * 1024 * 1024:
+        raise ValueError("package inventory exceeds size limit")
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="sigma-package-", dir=destination.parent) as scratch:
         temporary = Path(scratch) / "package.zip"
@@ -174,26 +195,51 @@ def build(root: Path, destination: Path, release_id: str) -> dict:
                 entry.external_attr = (stat.S_IFREG | 0o644) << 16
                 entry.compress_type = ZIP_DEFLATED
                 archive.writestr(entry, data)
+        verify(temporary)
         # Exclusive creation: never overwrite a package already at the destination.
         destination.hardlink_to(temporary)
-    verify(destination)
     return {"output": str(destination.resolve()), "package_id": release_id,
             "files": len(content), "bytes": destination.stat().st_size,
             "sha256": digest(destination.read_bytes()), "source_snapshot": manifest["source_snapshot"]}
 
 
+def _bounded_zip_directory(path: Path) -> None:
+    """Bound central-directory parsing before ZipFile allocates member objects."""
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > 64 * 1024 * 1024:
+        raise ValueError("archive exceeds verification limit")
+    with path.open("rb") as stream:
+        stream.seek(max(0, path.stat().st_size - 65557))
+        tail = stream.read(65558)
+    position = tail.rfind(b"PK\x05\x06")
+    if position < 0 or len(tail) - position < 22:
+        raise ValueError("archive directory is missing or unsupported")
+    _, disk, start_disk, disk_count, count, size, offset, comment_size = struct.unpack(
+        "<4s4H2IH", tail[position:position + 22])
+    if (disk or start_disk or disk_count != count or count > 1000 or size > 2 * 1024 * 1024
+            or size == 0xFFFFFFFF or offset == 0xFFFFFFFF or len(tail) - position != 22 + comment_size):
+        raise ValueError("archive directory exceeds verification limit")
+
+
 def verify(path: Path) -> dict:
+    _bounded_zip_directory(path)
     with ZipFile(path) as archive:
         names = archive.namelist()
+        if (len(names) > 1000 or any(item.file_size > 8_000_000 for item in archive.infolist())
+                or sum(item.file_size for item in archive.infolist()) > 128 * 1024 * 1024):
+            raise ValueError("archive exceeds verification limit")
         if len(names) != len(set(names)) or archive.testzip() is not None:
             raise ValueError("archive integrity failure")
         prefix = f"{PACKAGE_NAME}/"
         for name in names:
             normalized = PurePosixPath(name)
-            if not name.startswith(prefix) or normalized.is_absolute() or ".." in normalized.parts:
+            if (not name.startswith(prefix) or normalized.is_absolute() or ".." in normalized.parts
+                    or normalized.as_posix() != name or "\\" in name
+                    or any(part.startswith(".env") for part in normalized.parts)):
                 raise ValueError("unsafe archive member")
-            if BLOCKED_PARTS.intersection(normalized.parts) or stat.S_ISLNK(archive.getinfo(name).external_attr >> 16):
+            if (BLOCKED_PARTS.intersection(normalized.parts)
+                    or not stat.S_ISREG(archive.getinfo(name).external_attr >> 16)):
                 raise ValueError("excluded archive member")
+            assert_safe_bytes(archive.read(name), filename=name)
         manifest = json.loads(archive.read(prefix + "PACKAGE-MANIFEST.json"))
         expected = {prefix + item["path"] for item in manifest["files"]}
         expected.update({prefix + "PACKAGE-MANIFEST.json", prefix + "CHECKSUMS.sha256"})
@@ -207,13 +253,14 @@ def verify(path: Path) -> dict:
             expected_hash, name = row.split("  ", 1)
             if digest(archive.read(prefix + name)) != expected_hash:
                 raise ValueError("checksum inventory mismatch")
-        return {"verified": True, "package_id": manifest["package_id"], "files": len(names)}
+        return {"verified": True, "verification_scope": "integrity_and_secret_scan_only",
+                "publisher_authenticated": False, "package_id": manifest["package_id"], "files": len(names)}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--release-id", default="2026-10-09-guided-setup.1")
+    parser.add_argument("--release-id", default="0.4.0-security-hardening-draft")
     parser.add_argument("--verify", type=Path)
     args = parser.parse_args()
     if bool(args.output) == bool(args.verify):
