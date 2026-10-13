@@ -318,6 +318,14 @@ Credential or integrity findings block both export types; semantic blockers rema
 visible in a permitted remediation export. Existing ZIPs are never overwritten.
 There is no Omni push command.
 
+Before sharing an export made with an older version, update the runtime and skill
+together through your reviewed installation process. Run `validate` on the original
+run, read its current result, and export again using a new filename. A previous
+passed report does not clear the package under the newer credential checks, and
+installing the update does not change an existing ZIP. Keep the original inputs,
+ZIPs and history private and unchanged. If you only have the old ZIP, pause sharing
+and arrange a private security/integrity review; the tool does not import ZIPs.
+
 ## 11. Resume, update or withdraw review
 
 ```sh
@@ -340,6 +348,11 @@ links, correct that input and retry. The tool refuses unsafe paths and duplicate
 JSON keys. Existing run names and ZIP filenames are not overwritten; choose a new
 name. A build interrupted before completion is not a successful package; rebuild
 after checking status.
+
+Live capture and discovery require UTF-8 JSON. If a source or CLI returns UTF-16,
+UTF-32 or invalid JSON, correct that producer's output and capture again; do not
+convert a sealed capture in place or weaken the size/structure limits. Unicode
+names and labels remain supported in UTF-8.
 
 For an existing 0.3.0 run, preserve its originals and history. If the new version
 refuses its location or permissions, do not delete the evidence, force-add it to
@@ -373,7 +386,7 @@ walkthrough is claimed by the synthetic checks delivered with this tool.
 
 The current `sigma-to-omni-migration` skill is included in
 `.agents/skills/sigma-to-omni-migration`. It guides the same steps above and is
-aligned with runtime version 0.4.0. It does not add an Omni push capability.
+aligned with runtime version 0.4.1. It does not add an Omni push capability.
 Using the terminal directly remains an option; an AI assistant is not required.
 
 After installing Python and the runtime in step 3, open the extracted package

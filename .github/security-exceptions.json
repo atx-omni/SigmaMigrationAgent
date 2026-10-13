@@ -47,6 +47,25 @@
       "expires": "2027-01-10"
     },
     {
+      "path": "packages/omnikit-migration-engine/tests/test_security_capture.py",
+      "sha256": "4092cc0e7b81b9bbe5ea9e52fa5f69cf136a83d15da66c6584d6b02a1a0fc0de",
+      "rules": [
+        "credential_property"
+      ],
+      "reason": "Reviewed synthetic transport fixtures use fictional Omni API-token values; no live credentials or customer evidence. Exact bytes only.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_security_json.py",
+      "sha256": "1556410fc3ec8e9360558f444c8b7b14f887fd2531c598fc1518b32e6a693ee6",
+      "rules": [
+        "credential_assignment",
+        "credential_property"
+      ],
+      "reason": "Reviewed JSON encoding regression fixtures use synthetic token values and mocked services; no live credentials or customer evidence. Exact bytes only.",
+      "expires": "2027-01-10"
+    },
+    {
       "path": "packages/omnikit-migration-engine/tests/test_sigma.py",
       "sha256": "bd2ac987e9d0f347fc28eac39909ab1a7f5b3e930af85f536e7fcf5a4dbf4891",
       "rules": [
@@ -114,9 +133,11 @@
     },
     {
       "path": "packages/omnikit-migration-engine/tests/test_sigma_security_scanner.py",
-      "sha256": "2a03e4266020f3a3e28607cd04466a08832f74b7f8efc724cdb930b6b6ab7385",
+      "sha256": "705aa6f8a2323afe59f90746b9b47ab32c9ba80bb43f93fbd819f0f2acb90b3f",
       "rules": [
+        "credential_assignment",
         "credential_format",
+        "credential_property",
         "credential_url"
       ],
       "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
@@ -126,6 +147,7 @@
       "path": "packages/omnikit-migration-engine/tests/test_sigma_setup.py",
       "sha256": "a661cb404781c9a67b0d74afb25647799fa71dd245863dcaaae6dd06f7cef9af",
       "rules": [
+        "credential_assignment",
         "credential_format",
         "credential_property",
         "credential_url"

@@ -1,7 +1,6 @@
 """Explicit, bounded, read-only connection probes. No target write operations."""
 from __future__ import annotations
 
-import json
 import os
 import re
 import shutil
@@ -13,10 +12,12 @@ from omni_migrator.prepush.session import private_write, reject_secrets
 from omni_migrator.prepush.settings import load_profile, resolve
 from omni_migrator.security.transport import (
     ByteBudget,
+    JsonResponseError,
     ResourceLimitError,
     bounded_process,
     bounded_request,
-    check_json_structure,
+    parse_json_bytes,
+    response_json,
 )
 from omni_migrator.security.workspace import assert_private_output
 
@@ -29,7 +30,7 @@ def safe_failure(exc: Exception) -> ValueError:
     from omni_migrator.extractors.sigma.api import ConnectionLineageError
     if isinstance(exc, ConnectionLineageError):
         return ValueError(str(exc))
-    if isinstance(exc, ResourceLimitError):
+    if isinstance(exc, (ResourceLimitError, JsonResponseError)):
         return ValueError(str(exc))
     status = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
     labels = {401: "Credentials rejected or expired; update your local credential or complete browser login",
@@ -56,8 +57,8 @@ class OmniReader:
                     budget=self.byte_budget, timeout_seconds=20)
                 response.raise_for_status()
                 try:
-                    return response.json()
-                except ValueError:
+                    return response_json(response)
+                except JsonResponseError:
                     raise DiscoveryError("Omni returned invalid JSON; response details withheld") from None
         # Use only the documented fixed read commands; never read the CLI's credential store.
         if not shutil.which("omni"):
@@ -71,10 +72,9 @@ class OmniReader:
         result = bounded_process(args, env=env, timeout=30, budget=self.byte_budget)
         if result.returncode:
             raise DiscoveryError("Omni CLI read failed. Confirm it supports whoami and browser login, then log in to the selected profile; output withheld")
-        check_json_structure(result.stdout)
         try:
-            return json.loads(result.stdout)
-        except ValueError:
+            return parse_json_bytes(result.stdout)
+        except JsonResponseError:
             raise DiscoveryError("Omni CLI returned invalid JSON; output withheld") from None
 
 

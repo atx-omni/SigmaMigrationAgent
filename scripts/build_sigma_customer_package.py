@@ -260,7 +260,7 @@ def verify(path: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--release-id", default="0.4.0-security-hardening-draft")
+    parser.add_argument("--release-id", default="0.4.1-security-followup-draft")
     parser.add_argument("--verify", type=Path)
     args = parser.parse_args()
     if bool(args.output) == bool(args.verify):

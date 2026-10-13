@@ -3,7 +3,7 @@ name: sigma-to-omni-migration
 description: Prepare a Sigma workbook migration into Omni with configuration-first guided setup, safe local credentials, read-only discovery, direct-versus-modeled choice, existing-topic reuse, scoped chart selection, human review, validation, and reporting. Use for Sigma migration preparation or pre-push troubleshooting; this skill does not deploy to Omni or the warehouse.
 metadata:
   runtime-package: sigma-migration-agent
-  runtime-version: "0.4.0"
+  runtime-version: "0.4.1"
 ---
 
 # Sigma-to-Omni migration preparation
@@ -114,6 +114,10 @@ is needed. Both have no target-write authority. A blocked package may be exporte
 for review only if credential and integrity checks permit, never as ready to deploy.
 Default export is a minimized support summary. Full confidential artifacts require
 explicit `--purpose migration`; retain separate user authorization to share them.
+Older validation results do not clear a package under the current scanner policy.
+Before sharing an older export, validate its original run with the matching updated
+runtime and export to a new filename. Preserve sealed evidence and history; never
+edit credential-bearing evidence or weaken checks to obtain a pass.
 
 Report the chosen route, source scope, output paths, actual validation status,
 implemented versus blocked coverage, and next human action. Review exported source

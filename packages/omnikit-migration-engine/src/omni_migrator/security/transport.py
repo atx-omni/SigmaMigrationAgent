@@ -6,6 +6,7 @@ capture is supported only on POSIX, where a private process group can be reaped.
 """
 from __future__ import annotations
 
+import json
 import os
 import selectors
 import signal
@@ -14,6 +15,7 @@ import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from email.message import Message
 from typing import Any
 
 import httpx
@@ -25,6 +27,10 @@ CHUNK_BYTES = 16 * 1024
 
 class ResourceLimitError(ValueError):
     """A safe, content-free resource boundary diagnostic."""
+
+
+class JsonResponseError(ValueError):
+    """Invalid remote JSON; messages never contain response content."""
 
 
 @dataclass
@@ -71,29 +77,82 @@ already active alarm fail closed rather than weaken another caller's deadline.
         signal.signal(signal.SIGALRM, previous)
 
 
-def check_json_structure(data: bytes | bytearray, *, max_depth: int = 64, max_items: int = 100_000) -> None:
-    """Bound structural JSON work before decoding; the real parser checks syntax."""
+def _decode_json_utf8(data: bytes | bytearray, *, content_type: str | None = None) -> str:
+    """Use one explicit encoding, never HTTPX/Python's byte auto-detection."""
+    if content_type is not None:
+        header = Message()
+        header["content-type"] = content_type
+        charsets = [value for key, value in header.get_params()[1:] if key.lower() == "charset"]
+        if len(charsets) > 1 or any(
+            not isinstance(value, str) or value.lower() not in {"utf-8", "utf8"}
+            for value in charsets
+        ):
+            raise JsonResponseError("JSON response must declare UTF-8 or omit its charset; details withheld")
+    if b"\x00" in data:
+        raise JsonResponseError("JSON response contains raw NUL bytes; details withheld")
+    try:
+        text = data.decode("utf-8", errors="strict")
+    except UnicodeDecodeError:
+        raise JsonResponseError("JSON response must be valid UTF-8; details withheld") from None
+    # Accept one leading UTF-8 BOM explicitly, without normalizing retained bytes.
+    if text.startswith("\ufeff"):
+        text = text[1:]
+        if text.startswith("\ufeff"):
+            raise JsonResponseError("JSON response has repeated leading byte-order marks; details withheld")
+    return text
+
+
+def check_json_structure(data: str | bytes | bytearray, *, max_depth: int = 64, max_items: int = 100_000) -> None:
+    """Bound decoded JSON work before parsing; the real parser checks syntax.
+
+    Byte callers use the same strict UTF-8 policy as parsing callers. Checking raw
+    bytes and later auto-detecting UTF-16/32 would give quote/escape state a different
+    meaning and allow the parser to bypass these limits.
+    """
+    text = _decode_json_utf8(data) if isinstance(data, (bytes, bytearray)) else data
     depth = items = 0
     quoted = escaped = False
-    for byte in data:
+    for character in text:
         if quoted:
             if escaped:
                 escaped = False
-            elif byte == 92:
+            elif character == "\\":
                 escaped = True
-            elif byte == 34:
+            elif character == '"':
                 quoted = False
-        elif byte == 34:
+        elif character == '"':
             quoted = True
-        elif byte in (123, 91):
+        elif character in ("{", "["):
             depth += 1
             items += 1
-        elif byte in (125, 93):
+        elif character in ("}", "]"):
             depth -= 1
-        elif byte == 44:
+        elif character == ",":
             items += 1
         if depth > max_depth or items > max_items:
             raise ResourceLimitError("JSON structure limit exceeded; narrow the capture")
+
+
+def parse_json_bytes(
+    data: bytes | bytearray, *, content_type: str | None = None,
+    max_depth: int = 64, max_items: int = 100_000,
+) -> Any:
+    """Check and parse the same decoded text while leaving source bytes intact.
+
+    HTTP/process callers must enforce their independent byte/deadline budgets
+    before invoking this parser; structural limits do not replace transfer caps.
+    """
+    text = _decode_json_utf8(data, content_type=content_type)
+    check_json_structure(text, max_depth=max_depth, max_items=max_items)
+    try:
+        return json.loads(text)
+    except (ValueError, RecursionError):
+        raise JsonResponseError("Response contains invalid JSON; details withheld") from None
+
+
+def response_json(response: httpx.Response) -> Any:
+    """Read buffered HTTP JSON without HTTPX's encoding auto-detection."""
+    return parse_json_bytes(response.content, content_type=response.headers.get("content-type"))
 
 
 def bounded_request(
@@ -150,7 +209,12 @@ def bounded_request(
             output.extend(chunk)
         if time.monotonic() > deadline:
             raise ResourceLimitError("Response elapsed-time limit exceeded")
-        check_json_structure(output)
+        # Errors can be empty, HTML, or binary: preserve status/retry behavior
+        # without decoding their content. Every status still uses the byte and
+        # deadline limits above. Data readers validate successful JSON syntax.
+        if response.is_success:
+            text = _decode_json_utf8(output, content_type=response.headers.get("content-type"))
+            check_json_structure(text)
         return httpx.Response(
             response.status_code, headers=response.headers, content=bytes(output),
             request=response.request, extensions=response.extensions,

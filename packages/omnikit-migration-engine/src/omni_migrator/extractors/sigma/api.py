@@ -33,7 +33,7 @@ from omni_migrator.extractors.sigma.source_contracts import (
     sigma_source_binding_key,
     sigma_source_bindings,
 )
-from omni_migrator.security.transport import AGGREGATE_BYTES, ByteBudget, ResourceLimitError, bounded_request
+from omni_migrator.security.transport import AGGREGATE_BYTES, ByteBudget, ResourceLimitError, bounded_request, response_json
 
 MAX_GET_ATTEMPTS = 3
 MAX_RETRY_DELAY_SECONDS = 60.0
@@ -424,7 +424,7 @@ def _safe_response_observation(response: httpx.Response, *, attempt: int) -> dic
     """Summarize one HTTP response for a secret-free immutable observation artifact."""
 
     try:
-        body: object = response.json()
+        body: object = response_json(response)
         json_valid = True
     except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
         body = None
@@ -566,7 +566,7 @@ class SigmaApi:
                 "client_secret": self.client_secret,
             }
         )
-        body = response.json()
+        body = response_json(response)
         self._token = body["access_token"]
         self._refresh_token = body.get("refresh_token")
         self._http.headers["Authorization"] = f"Bearer {self._token}"
@@ -579,7 +579,7 @@ class SigmaApi:
         response = self._post_token(
             {"grant_type": "refresh_token", "refresh_token": self._refresh_token}
         )
-        body = response.json()
+        body = response_json(response)
         self._token = body["access_token"]
         self._refresh_token = body.get("refresh_token", self._refresh_token)
         self._http.headers["Authorization"] = f"Bearer {self._token}"
@@ -787,7 +787,7 @@ class SigmaApi:
 
         for _ in range(MAX_PAGINATION_PAGES):
             response = self._get(request_path, params=request_params)
-            rows, continuation, has_more, total = self._page_parts(response.json(), path)
+            rows, continuation, has_more, total = self._page_parts(response_json(response), path)
             if len(results) + len(rows) > MAX_PAGINATION_RECORDS:
                 raise ResourceLimitError("Sigma pagination record limit exceeded; narrow the capture")
             results.extend(rows)
@@ -825,7 +825,7 @@ class SigmaApi:
 
     # --- inventory and data models ---
     def whoami(self) -> dict:
-        return self._get("/v2/whoami").json()
+        return response_json(self._get("/v2/whoami"))
 
     def list_connections(self) -> list[dict]:
         return self._paginate("/v2/connections")
@@ -836,14 +836,14 @@ class SigmaApi:
 
     def get_data_model(self, data_model_id: str) -> dict:
         model = _path_segment(data_model_id, label="data model ID")
-        return self._get(f"/v2/dataModels/{model}").json()
+        return response_json(self._get(f"/v2/dataModels/{model}"))
 
     def data_model_spec(self, data_model_id: str, *, document_version: int | None = None) -> dict:
         model = _path_segment(data_model_id, label="data model ID")
         params: dict[str, object] = {"format": "json"}
         if document_version is not None:
             params["documentVersion"] = document_version
-        return self._get(f"/v2/dataModels/{model}/spec", params=params).json()
+        return response_json(self._get(f"/v2/dataModels/{model}/spec", params=params))
 
     def data_model_sources(self, data_model_id: str) -> list[dict]:
         model = _path_segment(data_model_id, label="data model ID")
@@ -864,7 +864,7 @@ class SigmaApi:
     def data_model_element_query(self, data_model_id: str, element_id: str) -> dict:
         model = _path_segment(data_model_id, label="data model ID")
         element = _path_segment(element_id, label="element ID")
-        return self._get(f"/v2/dataModels/{model}/elements/{element}/query").json()
+        return response_json(self._get(f"/v2/dataModels/{model}/elements/{element}/query"))
 
     def data_model_lineage(self, data_model_id: str) -> list[dict]:
         model = _path_segment(data_model_id, label="data model ID")
@@ -892,7 +892,7 @@ class SigmaApi:
 
     def get_workbook(self, workbook_id: str) -> dict:
         workbook = _path_segment(workbook_id, label="workbook ID")
-        return self._get(f"/v2/workbooks/{workbook}").json()
+        return response_json(self._get(f"/v2/workbooks/{workbook}"))
 
     def workbook_sources(self, workbook_id: str) -> list[dict]:
         workbook = _path_segment(workbook_id, label="workbook ID")
@@ -936,7 +936,7 @@ class SigmaApi:
     def workbook_element_query(self, workbook_id: str, element_id: str) -> dict:
         workbook = _path_segment(workbook_id, label="workbook ID")
         element = _path_segment(element_id, label="element ID")
-        return self._get(f"/v2/workbooks/{workbook}/elements/{element}/query").json()
+        return response_json(self._get(f"/v2/workbooks/{workbook}/elements/{element}/query"))
 
     def workbook_lineage(self, workbook_id: str) -> list[dict]:
         workbook = _path_segment(workbook_id, label="workbook ID")
@@ -945,7 +945,7 @@ class SigmaApi:
     def workbook_element_lineage(self, workbook_id: str, element_id: str) -> dict:
         workbook = _path_segment(workbook_id, label="workbook ID")
         element = _path_segment(element_id, label="element ID")
-        return self._get(f"/v2/workbooks/{workbook}/lineage/elements/{element}").json()
+        return response_json(self._get(f"/v2/workbooks/{workbook}/lineage/elements/{element}"))
 
     def list_grants(self, inode_id: str) -> list[dict]:
         return self._paginate("/v2/grants", params={"inodeId": inode_id})

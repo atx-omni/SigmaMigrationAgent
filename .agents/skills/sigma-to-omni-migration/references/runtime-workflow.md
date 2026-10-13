@@ -204,6 +204,15 @@ approval to share remain separate from approval to generate it. Credential and
 integrity findings block both export purposes; semantic blockers remain visible.
 Do not treat a scanner pass as clearance to send customer business metadata.
 
+After an explicitly reviewed runtime upgrade, re-run `validate` on the original
+run and export to a new filename before sharing an older package. The current
+scanner policy applies even if an older report passed. Preserve original bytes,
+recorded paths and event history; do not rewrite seals, suppress findings or assume
+installing a patch changes an existing ZIP. If only the old ZIP remains, stop
+sharing and arrange private integrity/security revalidation; the run-based CLI
+does not import ZIPs. Actual credential exposure needs separate platform rotation
+and recipient review, not automatic deletion of the evidence.
+
 Production `sigma-run-*` AI dispatch is disabled. A local review, redaction label,
 approval reference, or prepared egress manifest is not authenticated permission to
 send source data. Never recreate that path with direct API calls or the assistant's

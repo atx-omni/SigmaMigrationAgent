@@ -1,6 +1,6 @@
 # Security and release policy
 
-Version 0.4.0 is a supervised, local preparation tool. It does not apply changes to
+Version 0.4.1 is a supervised, local preparation tool. It does not apply changes to
 Omni or the warehouse. Offline validation is not live security acceptance.
 
 ## Working data and upgrades
@@ -20,6 +20,15 @@ new private workspace; do not edit recorded paths or rewrite history to resume.
 Never paste `.env`, raw snapshots or confidential ZIPs into an issue or chat.
 If actual exposure is suspected, rotate affected credentials through their owning
 platform, review recipients/history, and coordinate remediation separately.
+
+The `sigma-secret-policy.v2` scanner adds API-token and credentials aliases. An old
+passed report is not current clearance. After a reviewed runtime upgrade, validate
+the original run and export to a new filename before sharing. Keep old ZIPs private
+pending review: the update neither scans them automatically nor changes their
+bytes. If only a ZIP remains, arrange private integrity/security revalidation;
+the public CLI validates runs, not ZIP imports. Never rewrite sealed evidence,
+recorded paths or hashes to bypass the updated policy. Clean older packages remain
+eligible for current validation without rewriting their historical evidence.
 
 ## Data leaving the tool
 
@@ -59,6 +68,13 @@ rejected. Hard HTTP deadlines require the POSIX main thread with no existing ala
 CLI output uses bounded concurrent stdout/stderr draining and process-group cleanup.
 These are local macOS/Linux controls, not a multi-tenant sandbox.
 
+JSON acquisition uses strict UTF-8 (one optional leading UTF-8 BOM), rejects raw
+NULs and unsupported encodings, and checks structure before parsing that same
+decoded text. UTF-16/32 and charset-driven decoding cannot bypass these limits.
+Original response bytes remain unchanged for lineage hashes. Malformed successful
+responses block acquisition; bounded HTTP error responses retain sanitized status
+handling without exposing response content.
+
 ## Commit and CI gates
 
 Before proposing source changes, run:
@@ -91,6 +107,39 @@ code with publishing credentials. The GitHub repository owner must separately
 configure required status checks/reviews and restrict changes to security policy,
 locks and workflows. A workflow file does not enable branch protection or licensed
 GitHub security features. Git-history clearance requires a separate scoped review.
+
+### GitHub protection setup
+
+The 2026-10-13 configuration check found `atx-omni` is a personal account, this repository
+is private, and `main` is unprotected. GitHub returned a plan restriction. Keep the
+repository private: GitHub Pro supports private branch protection for personal
+accounts. The owner must approve any plan change and select a second trusted
+collaborator with write access; an author cannot independently approve their own
+pull request. [Protection availability](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
+
+Once eligible, open repository **Settings → Branches → Add classic branch
+protection rule**, and target exactly `main`:
+
+1. Require pull requests and one approval; dismiss stale approvals after new changes.
+2. Require passing checks and an up-to-date branch. Select the following check names
+   from **GitHub Actions**, confirmed against actual check runs:
+   - `security`
+   - `offline (3.11, macos-latest)`
+   - `offline (3.11, ubuntu-latest)`
+   - `offline (3.12, macos-latest)`
+   - `offline (3.12, ubuntu-latest)`
+3. Enable **Do not allow bypassing the above settings** so administrators are covered.
+4. Leave force pushes and deletions disabled, then save.
+
+Check names must match fresh runs if the workflow changes. Do not invent a reviewer
+or disable review because a second reviewer is unavailable. Account changes,
+collaborator invitations and rule changes need separate owner authorization.
+[GitHub setup instructions](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule).
+
+Read back the effective settings and verify a fresh pull request is blocked without
+its review/checks, without merging it or attempting destructive pushes. Only then
+mark enforcement verified. A local hook, passing workflow, or this document alone
+does not protect `main`.
 
 ## Dependencies and authenticated customer releases
 

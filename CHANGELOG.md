@@ -1,5 +1,31 @@
 # Release notes
 
+## 0.4.1 — Credential and JSON boundary fixes
+
+- Scanner policy v2 recognizes API-token and credentials aliases consistently in
+  structured properties, text assignments and URL parameters. Older validation
+  results do not exempt current validation or export scanning.
+- Full-export checks inspect exact archived bytes. Credential findings block both
+  support and migration exports without modifying sealed source evidence.
+- Sigma and Omni JSON acquisition requires UTF-8, allowing one leading UTF-8 BOM;
+  structural checks and parsing use the same decoded text. UTF-16/32 bypasses are
+  rejected while byte ceilings, deadlines and original response hashes remain intact.
+- Runtime, bundled skill and operator guide are aligned at 0.4.1. Older exports
+  need current revalidation before sharing; they are not changed automatically.
+- Security policy includes owner-operated GitHub protection setup with the actual
+  required check names. Billing, collaborator access and repository settings are
+  separate owner actions, not changes made by this release.
+
+Local verification: 792 combined offline tests passed, including actual ZIP-byte
+and old-package regressions. The repository artifact gate passed 241 files;
+locked dependency consistency, installation, project-configured lint and static
+security checks passed. The dependency audit found no known vulnerabilities at
+check time. The rendered guide and bundled skill match the runtime.
+
+Source publication, remote CI, effective GitHub protection, authenticated customer
+release signing and live migration acceptance are separate evidence. No target
+apply capability or production AI dispatch is added.
+
 ## 0.4.0 — Security hardening
 
 - One pinned offline scanner checks imported/persisted evidence and exact outgoing

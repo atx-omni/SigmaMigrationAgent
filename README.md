@@ -38,7 +38,7 @@ and immutable bindings are generated automatically. No target apply command exis
 
 The maintained skill is
 [sigma-to-omni-migration](.agents/skills/sigma-to-omni-migration/SKILL.md), aligned
-with runtime **0.4.0**. It replaces the older bespoke POC instructions; it does not
+with runtime **0.4.1**. It replaces the older bespoke POC instructions; it does not
 require Sigma/Omni MCP, Omni CLI, or an AI-provider key for local preparation.
 Optional OAuth and live topic discovery use the official Omni CLI. Token-based
 model/connection discovery does not require it. Discovery is read-only.
@@ -96,7 +96,7 @@ Domo extractor or Domo operator command is available in this distribution.
 No customer data, credentials or local run outputs belong in Git. The package's
 Apache-2.0 license and upstream provenance are retained.
 
-## Security hardening in 0.4.0
+## Security hardening in 0.4.1
 
 Operational files now belong in a private workspace outside the checkout. Existing
 evidence is never moved, deleted, or silently re-permissioned. Git-trackable and
@@ -115,3 +115,10 @@ See [the release notes](CHANGELOG.md) and [security/release policy](SECURITY.md)
 for delivered controls, upgrade steps, and external
 release-signing and repository-control gates. A draft ZIP and its checksums are
 not an authenticated customer release.
+
+The follow-up scanner policy covers API-token and credentials properties across
+structured data, assignments and URLs. Acquisition accepts UTF-8 JSON only and
+checks structure on the same decoded text it parses, while preserving raw evidence
+hashes. Revalidate older runs and create a new export before sharing; installing
+this update does not clear existing ZIPs. GitHub protection remains separately
+configured; see the setup steps in [SECURITY.md](SECURITY.md#github-protection-setup).

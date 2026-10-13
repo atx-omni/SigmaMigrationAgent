@@ -5,6 +5,7 @@ import hashlib
 import json
 import socket
 from pathlib import Path
+from urllib.parse import quote
 from zipfile import ZipFile
 
 import pytest
@@ -36,6 +37,84 @@ def samples():
         "The operator supplied " + "password=" + "not-a-real-password",
         "Authorization: " + "Bearer " + "not-a-real-access-value",
     ]
+
+
+@pytest.mark.parametrize("alias", [
+    "api_token", "API_TOKEN", "apiToken", "api-token", "api.token", "api token",
+    "Api__Token", "OMNI_API_TOKEN", "credentials", "client_secret_backup", "access_token_value",
+])
+def test_v2_aliases_share_structured_text_and_url_policy(alias):
+    secret = "fictional-credential-value"
+    surfaces = [
+        json.dumps({alias: secret}).encode(),
+        (f'Operator note: "{alias}" = "{secret}"').encode(),
+        ("https://warehouse.invalid/?" + quote(alias, safe="") + "=" + quote(secret)).encode(),
+    ]
+    for data in surfaces:
+        findings = scanner.scan_bytes(data)
+        assert findings, alias
+        assert secret not in repr(findings)
+        with pytest.raises(scanner.SecurityScanError) as captured:
+            scanner.assert_safe_bytes(data)
+        assert secret not in str(captured.value)
+
+
+def test_encoded_aliases_and_credential_containers_are_not_extension_bypasses():
+    secret = "fictional-credential-value"
+    encoded = "api" + r"\u005f" + "token"
+    surfaces = [
+        (json.dumps({"api_token": secret}).replace("api_token", encoded).encode(), "input.json"),
+        (f'"{encoded}": "{secret}"'.encode(), "input.yaml"),
+        (f'{encoded}={secret}'.encode(), "note.txt"),
+        (("https://warehouse.invalid/?" + quote(quote("api_token", safe=""), safe="")
+          .replace("_", "%255f") + "=" + secret).encode(), "note.txt"),
+        (json.dumps({"credentials": {"value": secret}}).encode(), "renamed.py"),
+        (f'credentials:\n  value: "{secret}"\n'.encode(), "input.yaml"),
+    ]
+    for data, name in surfaces:
+        assert scanner.scan_bytes(data, filename=name), name
+    assert scanner.POLICY_VERSION == "sigma-secret-policy.v2"
+
+
+def test_environment_references_redactions_and_normal_text_stay_benign():
+    source = b'api_token = os.environ["OMNI_API_TOKEN"]\ncredentials = {"api_token": os.getenv("OMNI_API_TOKEN")}\n'
+    assert not scanner.scan_bytes(source, filename="reference.py")
+    for value in ("${OMNI_API_TOKEN}", "$OMNI_API_TOKEN", "[REDACTED]", {"redacted": "secret"}):
+        scanner.assert_safe_value({"api_token": value, "credentials": value})
+    for text in ("api_token=${OMNI_API_TOKEN}", "API_TOKEN=$OMNI_API_TOKEN",
+                 "https://warehouse.invalid/?api_token=%24%7BOMNI_API_TOKEN%7D",
+                 "SELECT label LIKE '%E9%'", r"A regex character is \xZZ", "tokenizer=word"):
+        assert not scanner.scan_bytes(text.encode())
+    # A reference with a literal fallback is not a reference-only credential.
+    assert scanner.scan_bytes(('api_token=${OMNI_API_TOKEN:-' + 'literal-value}').encode())
+    for name in ("input.json", "renamed.py"):
+        assert scanner.scan_bytes(b'{"credentials":{"fictional_credential_as_key":null}}', filename=name)
+
+
+def test_opaque_containers_cannot_hide_in_notes_or_mixed_python_expressions():
+    secret = "synthetic-opaque-material"
+    samples = [
+        (f'credentials: {{"value":"{secret}"}}'.encode(), "notes.txt"),
+        (f'api_token = ["{secret}"]'.encode(), "notes.txt"),
+        (f'credentials = {{"value":"{secret}", "reference": os.getenv("OTHER")}}'.encode(), "dump.py"),
+    ]
+    for data, filename in samples:
+        assert scanner.scan_bytes(data, filename=filename)
+    for data, filename in [
+        (b'credentials = {"reference": os.getenv("OTHER")}', "reference.py"),
+        (b'credentials:\n  redacted: secret\n', "redacted.yaml"),
+        (b'credentials: {redacted: secret}', "redacted.yaml"),
+        (b'credentials: {"redacted": "secret"}', "notes.txt"),
+        (b'credentials: {\n"redacted": "secret"\n}', "notes.txt"),
+    ]:
+        assert not scanner.scan_bytes(data, filename=filename)
+
+
+def test_url_detector_does_not_misclassify_regex_source_as_query_parameters():
+    source = br'''_SECRET_VALUE_RE = r'(?:api[_-]?key|token|secret|password|authorization)\s*[:=]\s*\S+)' '''
+    assert not scanner.scan_bytes(source, filename="policy.py")
+    value = "synthetic-opaque-material"
+    assert scanner.scan_bytes(("https://warehouse.invalid/?API%5fTOKEN=" + value).encode())
 
 
 @pytest.mark.parametrize("text", samples())
@@ -125,9 +204,101 @@ def reseal_for_test(session, package):
         path.relative_to(package).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in package.rglob("*") if path.is_file() and path.name != "manifest.json"
     }
+    for name in ("source", "target"):
+        manifest[name + "_sha256"] = digest(json.loads((package / (name + ".json")).read_text()))
+    manifest["review"].update({key: manifest[key] for key in ("route", "source_sha256", "target_sha256")})
+    proposal = {**manifest["build"], "files": {
+        name: (package / name).read_text() for name in manifest["files"]
+        if name not in {"source.json", "target.json"}
+    }}
+    manifest["review"]["proposal_sha256"] = digest(proposal)
     (package / "manifest.json").write_bytes(encoded(manifest))
     session.append("build", {"path": package.name, "manifest_sha256": digest(manifest),
-                             "validation": {"status": "offline_preflight_passed"}})
+                             "validation": {"status": "offline_preflight_passed",
+                                            "security_status": "passed",
+                                            "security_policy": "sigma-secret-policy.v1"}})
+
+
+@pytest.mark.parametrize("alias", ["api_token", "credentials"])
+def test_new_aliases_block_actual_initialization_before_creating_run(tmp_path, alias, capsys):
+    source = json.loads((ROOT / "examples/retail-supported.json").read_text())
+    secret = "fictional-credential-value"
+    source["metadata"] = {alias: secret if alias == "api_token" else {"value": secret}}
+    path = tmp_path / "source.json"
+    path.write_text(json.dumps(source))
+    with pytest.raises(scanner.SecurityScanError) as captured:
+        Session.initialize(tmp_path / "run", path, ROOT / "examples/target.json", synthetic=True)
+    assert not (tmp_path / "run").exists()
+    assert secret not in str(captured.value) + capsys.readouterr().out
+
+
+def test_generated_api_token_is_blocked_at_actual_build_boundary(tmp_path, monkeypatch):
+    session = prepared(tmp_path)
+    from omni_migrator.prepush import build as module
+    original = module.build
+    secret = "fictional-credential-value"
+
+    def contaminated(*args, **kwargs):
+        proposal = original(*args, **kwargs)
+        proposal["files"]["queries/1.sql"] += "\n-- API_TOKEN=" + secret
+        return proposal
+
+    monkeypatch.setattr(module, "build", contaminated)
+    session.review("accept", expected_proposal_hash=digest(session.proposal()))
+    with pytest.raises(scanner.SecurityScanError):
+        session.build_package()
+    assert all(secret.encode() not in path.read_bytes() for path in session.root.rglob("*") if path.is_file())
+
+
+@pytest.mark.parametrize("purpose", ["support", "migration"])
+@pytest.mark.parametrize("alias", ["api_token", "credentials"])
+def test_v1_resealed_contamination_blocks_validation_and_both_exports(tmp_path, purpose, alias, capsys):
+    session = prepared(tmp_path)
+    package, prior = session.validate_package()
+    source_path = package / "source.json"
+    value = json.loads(source_path.read_text())
+    secret = "fictional-credential-value"
+    value["metadata"] = {alias: secret if alias == "api_token" else {"value": secret}}
+    source_path.write_text(json.dumps(value))
+    reseal_for_test(session, package)
+    before = {p.relative_to(package).as_posix(): p.read_bytes() for p in package.rglob("*") if p.is_file()}
+    assert prior["security_status"] == "passed"
+    result = validate(package)
+    assert result["security_policy"] == "sigma-secret-policy.v2"
+    assert result["security_status"] == "blocked"
+    output = tmp_path / "blocked.zip"
+    with pytest.raises(scanner.SecurityScanError) as captured:
+        session.export(output, purpose=purpose)
+    assert not output.exists()
+    assert secret not in json.dumps(result) + str(captured.value) + capsys.readouterr().out
+    assert before == {p.relative_to(package).as_posix(): p.read_bytes() for p in package.rglob("*") if p.is_file()}
+
+
+def test_clean_old_policy_package_reopens_and_exports_without_rewriting(tmp_path):
+    session = prepared(tmp_path)
+    package, _ = session.validate_package()
+    manifest_path = package / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    # The original package schema predates classification/policy fields. The
+    # history fixture deliberately records the older policy's accepted verdict.
+    manifest.pop("classification", None)
+    manifest_path.write_text(json.dumps(manifest))
+    reseal_for_test(session, package)
+    evidence = {p.relative_to(package).as_posix(): p.read_bytes() for p in package.rglob("*") if p.is_file()}
+    history = {p.name: p.read_bytes() for p in (session.root / "events").iterdir()}
+    path, result = Session(session.root).validate_package()
+    assert path == package
+    assert result["status"] == "offline_preflight_passed"
+    assert result["security_policy"] == "sigma-secret-policy.v2"
+    session.export(tmp_path / "old-support.zip")
+    session.export(tmp_path / "old-migration.zip", purpose="migration")
+    with ZipFile(tmp_path / "old-migration.zip") as archive:
+        assert {name: archive.read(name) for name in archive.namelist()} == evidence
+    with ZipFile(tmp_path / "old-support.zip") as archive:
+        assert archive.namelist() == ["support-summary.json"]
+        assert json.loads(archive.read("support-summary.json"))["security_policy"] == "sigma-secret-policy.v2"
+    assert evidence == {p.relative_to(package).as_posix(): p.read_bytes() for p in package.rglob("*") if p.is_file()}
+    assert all((session.root / "events" / name).read_bytes() == data for name, data in history.items())
 
 
 @pytest.mark.parametrize("name", ["queries/1.sql", "omni/model/extra.view", "source.json", "manifest.json"])
@@ -192,16 +363,18 @@ def test_manifest_and_source_names_are_scanned_before_diagnostic_output(tmp_path
     assert name not in json.dumps(result)
 
 
-def test_export_rechecks_exact_bytes_after_validator(tmp_path, monkeypatch):
+@pytest.mark.parametrize("purpose", ["support", "migration"])
+@pytest.mark.parametrize("field", ["description", "api_token"])
+def test_export_rechecks_exact_bytes_after_validator(tmp_path, monkeypatch, purpose, field):
     session = prepared(tmp_path)
     package, result = session.validate_package()
     path = package / "source.json"
     value = json.loads(path.read_text())
-    value["description"] = samples()[0]
+    value[field] = samples()[0] if field == "description" else "fictional-credential-value"
     path.write_text(json.dumps(value))
     reseal_for_test(session, package)
     # Even a stale or replaced validation verdict cannot authorize unsafe output.
     monkeypatch.setattr(session, "validate_package", lambda: (package, result))
     with pytest.raises(scanner.SecurityScanError):
-        session.export(tmp_path / "stale-validator.zip", purpose="migration")
+        session.export(tmp_path / "stale-validator.zip", purpose=purpose)
     assert not (tmp_path / "stale-validator.zip").exists()
