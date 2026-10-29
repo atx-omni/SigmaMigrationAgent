@@ -14,6 +14,10 @@
 - Keeps terminal review, dependency activation and target publication boundaries.
   Source-only isolated checks are distinct from dependency-backed transport tests,
   installation, release publication and live tenant qualification.
+- Updates the reviewed locks to certifi 2026.10.19, filelock 4.2.1 and setuptools
+  84.1.0 after the release dependency audit flagged their prior versions. Other
+  dependency versions and the fail-closed audit policy remain unchanged.
+- Keeps the portable skill's source-operation reference usable outside a checkout.
 
 
 ## 0.4.1 — Credential and JSON boundary fixes

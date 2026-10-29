@@ -92,7 +92,7 @@ identity boundary, not an independent human-authentication service.
 ## Source-only host handoff
 
 For a host-managed check, inventory, snapshot or tagged visual capture, use the
-fixed [source-operation contract](../../../docs/source-operations.md) and pin the
+fixed [source-operation contract](https://github.com/atx-omni/SigmaMigrationAgent/blob/e1a37409601a325383f9c10f9573089dc26832ef/docs/source-operations.md) and pin the
 reported runtime closure plus interpreter/entrypoint. Read/query grants remain
 separate. Workbook-only acquisition may retain unresolved model dependencies;
 it does not waive semantic-build prerequisites. Optional contents Beta is current
