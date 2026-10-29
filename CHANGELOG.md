@@ -1,5 +1,21 @@
 # Release notes
 
+## Unreleased — Source-operation compatibility extension
+
+- Adds a credential-free capabilities probe and fixed source-only check, inventory,
+  snapshot and capture operations with pinned requests and immutable receipts.
+- Workbook acquisition can omit an associated model while retaining unresolved
+  dependency evidence. Existing semantic build/review prerequisites stay intact.
+- Optional workbook contents Beta is retained separately from tagged evidence,
+  with documented omissions; opaque text is never evaluated.
+- Visual request v2 adds page PNG and optional associated-model selection. Resume
+  verifies final source observations and exact attachment identities; uncertain
+  export submissions are never automatically repeated.
+- Keeps terminal review, dependency activation and target publication boundaries.
+  Source-only isolated checks are distinct from dependency-backed transport tests,
+  installation, release publication and live tenant qualification.
+
+
 ## 0.4.1 — Credential and JSON boundary fixes
 
 - Scanner policy v2 recognizes API-token and credentials aliases consistently in

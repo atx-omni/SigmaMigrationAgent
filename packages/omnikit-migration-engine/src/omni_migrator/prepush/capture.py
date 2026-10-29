@@ -20,7 +20,7 @@ def capture(args):
             raise ValueError("This setup uses local source snapshots, not Sigma API capture")
         values = resolve(profile, env_file, source=True)
         for attr, key in (("api_url", "sigma_origin"), ("workbook_id", "workbook_id"), ("data_model_id", "data_model_id")):
-            setattr(args, attr, getattr(args, attr, None) or profile[key])
+            setattr(args, attr, getattr(args, attr, None) or profile.get(key))
         # Do not permit an origin override to silently redirect profile credentials.
         from omni_migrator.prepush.settings import origin
         if origin(args.api_url) != origin(profile["sigma_origin"]):
@@ -31,8 +31,8 @@ def capture(args):
         if env_file:
             raise ValueError("Use --profile when explicitly loading a .env file")
         client_id, secret = os.environ.get("SIGMA_CLIENT_ID"), os.environ.get("SIGMA_CLIENT_SECRET")
-    if not all((args.api_url, args.trusted_api_host, args.workbook_id, args.data_model_id)):
-        raise ValueError("Select a setup profile or provide API URL, trusted host, workbook ID, and data-model ID")
+    if not all((args.api_url, args.trusted_api_host, args.workbook_id)):
+        raise ValueError("Select a setup profile or provide API URL, trusted host and workbook ID")
     url = urlsplit(args.api_url)
     host = args.trusted_api_host.lower()
     # This independent operator argument prevents source files choosing credential destinations.
@@ -42,8 +42,8 @@ def capture(args):
         raise ValueError("Use an exact HTTPS Sigma API origin and matching trusted-api-host")
     if args.output.exists() or args.output.is_symlink():
         raise ValueError("Capture output already exists; use a new filename")
-    if not args.workbook_id.strip() or not args.data_model_id.strip():
-        raise ValueError("Select exactly one workbook and its data model")
+    if not args.workbook_id.strip() or (args.data_model_id is not None and not args.data_model_id.strip()):
+        raise ValueError("Select exactly one workbook and an optional explicit data model")
     if not client_id or not secret:
         raise ValueError("Set SIGMA_CLIENT_ID and SIGMA_CLIENT_SECRET in this terminal")
     from omni_migrator.extractors.sigma.api import SigmaApi
@@ -52,7 +52,9 @@ def capture(args):
         raise ValueError("Request budget must be between 5 and 1000; use a small pilot first")
     api = SigmaApi(base_url=args.api_url, client_id=client_id, client_secret=secret, request_budget=budget)
     try:
-        result = api.snapshot(workbook_ids=[args.workbook_id], data_model_ids=[args.data_model_id])
+        result = api.snapshot(workbook_ids=[args.workbook_id],
+                              data_model_ids=[args.data_model_id] if args.data_model_id else [],
+                              allow_unresolved_dependencies=not args.data_model_id)
         # Capture is metadata, not evidence of full UI/security behavior or version acceptance.
         result["_prepush_capture"] = {"source": "sigma_read_only_api", "live_validation": "not_performed",
                                      "version_freeze_validated": False, "target_write_authority": False}

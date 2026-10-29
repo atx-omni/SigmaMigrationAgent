@@ -57,9 +57,12 @@ def validate_profile(value: dict) -> dict:
         raise ValueError("Dashboard-only reuse requires the direct route")
     if value["source_mode"] == "api":
         origin(value.get("sigma_origin", ""))
-        for name in ("workbook_id", "data_model_id"):
+        for name in ("workbook_id",):
             if not isinstance(value.get(name), str) or not re.fullmatch(r"[A-Za-z0-9_.~-]+", value[name]):
                 raise ValueError(f"Profile requires a valid {name}")
+        if value.get("data_model_id") is not None and (type(value["data_model_id"]) is not str or
+                not re.fullmatch(r"[A-Za-z0-9_.~-]+", value["data_model_id"])):
+            raise ValueError("Profile data_model_id must be an explicit ID or null")
     if value["target_auth"] != "offline":
         origin(value.get("omni_origin", ""))
     if value["target_auth"] == "oauth" and not re.fullmatch(r"[A-Za-z0-9_-]+", value.get("omni_profile", "")):

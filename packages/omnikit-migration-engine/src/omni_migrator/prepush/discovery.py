@@ -89,8 +89,11 @@ def check_connections(profile, env_file, *, source=False, target=False):
                        client_secret=values["SIGMA_CLIENT_SECRET"], request_budget=6)
         try:
             api.get_workbook(profile["workbook_id"])
-            api.get_data_model(profile["data_model_id"])
-            result["source_connection"] = "selected_workbook_and_data_model_readable_lineage_not_verified"
+            if profile.get("data_model_id"):
+                api.get_data_model(profile["data_model_id"])
+                result["source_connection"] = "selected_workbook_and_data_model_readable_lineage_not_verified"
+            else:
+                result["source_connection"] = "selected_workbook_readable_no_data_model_selected_dependencies_unverified"
         except Exception as exc:
             raise safe_failure(exc) from None
         finally:

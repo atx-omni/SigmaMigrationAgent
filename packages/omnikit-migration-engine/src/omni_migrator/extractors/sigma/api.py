@@ -894,6 +894,15 @@ class SigmaApi:
         workbook = _path_segment(workbook_id, label="workbook ID")
         return response_json(self._get(f"/v2/workbooks/{workbook}"))
 
+    def workbook_contents(self, workbook_id: str) -> dict:
+        """Optional workbooks-as-code Beta evidence; current workbook, never a tagged spec.
+
+        Returned JSON/YAML/expression text is retained as data, not evaluated or
+        interpreted as an API request, permission, or complete behavior contract.
+        """
+        workbook = _path_segment(workbook_id, label="workbook ID")
+        return response_json(self._get(f"/v2/workbooks/{workbook}", params={"includeContents": "true"}))
+
     def workbook_sources(self, workbook_id: str) -> list[dict]:
         workbook = _path_segment(workbook_id, label="workbook ID")
         return self._paginate(f"/v2/workbooks/{workbook}/sources")
@@ -968,6 +977,81 @@ class SigmaApi:
     def workbook_tags(self, workbook_id: str) -> list[dict]:
         workbook = _path_segment(workbook_id, label="workbook ID")
         return self._paginate(f"/v2/workbooks/{workbook}/tags")
+
+    def workbook_snapshot(self, workbook_id: str, *, tag: str) -> dict:
+        """Capture selected tagged layout with drift detection, not an atomic freeze.
+
+        Only endpoints with a documented tag parameter are included. Untagged queries,
+        controls, grants and sources are deliberately not mixed into this representation.
+        """
+        if not isinstance(tag, str) or not tag.strip():
+            raise ValueError("An explicit workbook tag is required")
+        before = {"workbook": self.get_workbook(workbook_id), "tags": self.workbook_tags(workbook_id)}
+        pages = []
+        for raw_page in self.workbook_pages(workbook_id, tag=tag):
+            page = dict(raw_page)
+            page_id = _row_id(page, "pageId", "id")
+            if page_id is None:
+                raise ValueError("Sigma workbook page omitted pageId")
+            page["elements"] = self.workbook_page_elements(workbook_id, page_id, tag=tag)
+            pages.append(page)
+        elements = self.workbook_elements(workbook_id, tag_name=tag)
+        after = {"workbook": self.get_workbook(workbook_id), "tags": self.workbook_tags(workbook_id)}
+        if sha256_json(before) != sha256_json(after):
+            raise ValueError("Sigma workbook or tag changed during capture; recapture required")
+        return {"workbookId": workbook_id, "tag": tag, "pages": pages, "elements": elements,
+                "revisionEvidence": before, "revisionEvidenceSha256": sha256_json(before),
+                "coherence": "unchanged_before_after_not_atomic",
+                "gaps": ["untagged_queries_controls_grants_sources_not_captured",
+                         "tag_existence_and_effective_version_require_tenant_validation"],
+                "translation_ready": False}
+
+    def export_workbook(self, workbook_id: str, *, tag: str, format: dict,
+                        page_id: str | None = None, element_id: str | None = None,
+                        parameters: dict[str, str] | None = None,
+                        row_limit: int | None = None) -> dict:
+        """Request an export job once. May execute queries; caller must authorize it.
+
+        No automatic replay after ambiguous POST outcomes and no external send route.
+        """
+        workbook = _path_segment(workbook_id, label="workbook ID")
+        if not isinstance(tag, str) or not tag.strip():
+            raise ValueError("An explicit export tag is required")
+        if page_id and element_id:
+            raise ValueError("Select a page or an element, not both")
+        if not isinstance(format, dict) or format.get("type") not in {"png", "pdf", "csv", "json", "xlsx"}:
+            raise ValueError("Unsupported export format")
+        body = {"tag": tag, "format": format, "parameters": parameters or {}}
+        if row_limit is not None:
+            if (type(row_limit) is not int or not 1 <= row_limit <= 1_000_000
+                    or not element_id or format["type"] not in {"csv", "json", "xlsx"}):
+                raise ValueError("A bounded row limit requires an element data export")
+            body["rowLimit"] = row_limit
+        if page_id:
+            body["pageId"] = _path_segment(page_id, label="page ID")
+        if element_id:
+            body["elementId"] = _path_segment(element_id, label="element ID")
+        path = f"/v2/workbooks/{workbook}/export"
+        self._ensure_auth()
+        self._consume_request_budget(path)
+        response = bounded_request(self._http, "POST", path, budget=self._byte_budget, json=body)
+        response.raise_for_status()
+        result = response_json(response)
+        if not isinstance(result, dict) or not isinstance(result.get("queryId"), str) or not result["queryId"]:
+            raise ValueError("Sigma export response omitted queryId; do not replay the export")
+        return result
+
+    def download_export(self, query_id: str) -> httpx.Response:
+        """One bounded binary download; caller retains pending/error/expiry statuses.
+
+        No guessed polling contract, redirect following, filesystem writes or repeated
+        export creation. A 404 alone does not distinguish expiry from an unknown query.
+        """
+        query = _path_segment(query_id, label="query ID")
+        path = f"/v2/query/{query}/download"
+        self._ensure_auth()
+        self._consume_request_budget(path)
+        return bounded_request(self._http, "GET", path, budget=self._byte_budget, expect_json=False)
 
     def workbook_bookmarks(self, workbook_id: str) -> list[dict]:
         workbook = _path_segment(workbook_id, label="workbook ID")
@@ -1096,6 +1180,8 @@ class SigmaApi:
         label: str,
         limit: int,
     ) -> list[dict]:
+        if selected_ids == []:
+            return []  # An explicit empty selection must never widen to the whole catalog.
         selected = list(
             dict.fromkeys(str(item) for item in (selected_ids or []) if str(item).strip())
         )
@@ -1124,6 +1210,7 @@ class SigmaApi:
         data_model_ids: list[str] | None = None,
         workbook_ids: list[str] | None = None,
         include_all_connections: bool = False,
+        allow_unresolved_dependencies: bool = False,
     ) -> dict:
         """Acquire a bounded, source-faithful, secret-free Sigma evidence snapshot.
 
@@ -1137,16 +1224,18 @@ class SigmaApi:
         diagnostics: list[dict] = []
         if not isinstance(include_all_connections, bool):
             raise ValueError("Broad connection inventory requires an explicit boolean choice")
+        if type(allow_unresolved_dependencies) is not bool:
+            raise ValueError("Dependency evidence policy must be explicit")
 
         selected_data_models = self._select_inventory(
-            self.list_data_models(),
+            self.list_data_models() if data_model_ids is None or data_model_ids else [],
             data_model_ids,
             id_keys=("dataModelId", "id"),
             label="data models",
             limit=MAX_SELECTED_DATA_MODELS,
         )
         selected_workbooks = self._select_inventory(
-            self.list_workbooks(),
+            self.list_workbooks() if workbook_ids is None or workbook_ids else [],
             workbook_ids,
             id_keys=("workbookId", "id"),
             label="workbooks",
@@ -1405,7 +1494,17 @@ class SigmaApi:
             )
             workbooks.append(workbook)
 
-        required_connections = _selected_connection_ids(data_models, workbooks)
+        connection_status = "resolved"
+        try:
+            required_connections = _selected_connection_ids(data_models, workbooks)
+        except ConnectionLineageError as error:
+            if not allow_unresolved_dependencies:
+                raise
+            # Retain the original source edges and explicit gap. Never infer or
+            # broaden a connection/model selection to make the capture appear ready.
+            required_connections = set()
+            connection_status = "incomplete"
+            diagnostics.extend(error.diagnostics)
         connections = _minimized_connections(
             self.list_connections() if required_connections or include_all_connections else [],
             required_connections, include_all=include_all_connections,
@@ -1433,7 +1532,7 @@ class SigmaApi:
                 ],
                 "optional_endpoint_diagnostic_count": len(diagnostics),
                 "connection_scope": "explicit_minimized_inventory" if include_all_connections else "selected_source_lineage",
-                "connection_lineage_status": "resolved",
+                "connection_lineage_status": connection_status,
             },
         }
         size = 0

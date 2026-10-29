@@ -6,12 +6,18 @@ import json
 import sys
 from pathlib import Path
 
-from omni_migrator.prepush.session import MODES, Session, digest
-
 
 def parser():
+    from omni_migrator.prepush.session import MODES
     root = argparse.ArgumentParser(prog="sigma-migrate", description="Prepare and review a Sigma migration locally. Never pushes to Omni.")
     commands = root.add_subparsers(dest="operation", required=True)
+    commands.add_parser("capabilities", help="Source compatibility contract and implementation pins; no credentials")
+    source = commands.add_parser("source-operation", help="Fixed source-only check/inventory/snapshot/capture")
+    source.add_argument("--request", type=Path, required=True)
+    source.add_argument("--directory", type=Path, required=True)
+    source.add_argument("--allow-source-read", action="store_true")
+    source.add_argument("--allow-source-query", action="store_true")
+    source.add_argument("--resume", action="store_true")
     for name in ("init", "route", "review", "build", "validate", "export", "status", "report", "import-source", "import-target", "revoke"):
         p = commands.add_parser(name)
         p.add_argument("--run-dir", type=Path, required=True)
@@ -40,6 +46,12 @@ def parser():
     capture.add_argument("--request-budget", type=int, default=100)
     capture.add_argument("--output", type=Path, required=True)
     capture.add_argument("--allow-source-read", action="store_true")
+    visual = commands.add_parser("capture-visual", help="Capture a tagged element PNG/JSON or v2 page PNG; source only")
+    visual.add_argument("--request", type=Path, required=True)
+    visual.add_argument("--directory", type=Path, required=True)
+    visual.add_argument("--allow-source-read", action="store_true")
+    visual.add_argument("--allow-source-query", action="store_true")
+    visual.add_argument("--resume", action="store_true", help="Resume known export jobs; never replay an uncertain POST")
     configure = commands.add_parser("configure", help="Create reviewed target mappings with guided prompts; no target connection")
     configure.add_argument("--source", type=Path, required=True)
     configure.add_argument("--output", type=Path, required=True)
@@ -83,6 +95,12 @@ def terminal_answer(prompt):
 
 
 def run(args):
+    if args.operation == "capabilities":
+        from omni_migrator.prepush.source_protocol import capabilities
+        return capabilities()
+    if args.operation == "source-operation":
+        from omni_migrator.prepush.source_operations import run_cli
+        return run_cli(args)
     if args.operation == "setup":
         from omni_migrator.prepush.onboarding import setup
         return setup(args, terminal_answer)
@@ -113,6 +131,10 @@ def run(args):
     if args.operation == "capture":
         from omni_migrator.prepush.capture import capture
         return capture(args)
+    if args.operation == "capture-visual":
+        from omni_migrator.prepush.visual_capture import capture
+        return capture(args)
+    from omni_migrator.prepush.session import MODES, Session, digest
     if args.operation == "init":
         profile = None
         if args.profile:
@@ -164,7 +186,13 @@ def run(args):
 
 
 def main(argv=None):
-    args = parser().parse_args(argv)
+    # This probe needs no scanner/client or third-party dependency activation.
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments == ["capabilities"]:
+        from omni_migrator.prepush.source_protocol import capabilities
+        print(json.dumps(capabilities(), indent=2, ensure_ascii=True))
+        return 0
+    args = parser().parse_args(arguments)
     try:
         result = run(args)
         print(json.dumps(result, indent=2, ensure_ascii=True))

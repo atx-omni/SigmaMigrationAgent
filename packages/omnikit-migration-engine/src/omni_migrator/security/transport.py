@@ -163,6 +163,7 @@ def bounded_request(
     budget: ByteBudget | None = None,
     max_bytes: int = RESPONSE_BYTES,
     timeout_seconds: float = 60.0,
+    expect_json: bool = True,
     **request_kwargs: Any,
 ) -> httpx.Response:
     """Read at most the configured bytes before returning an inert buffered response.
@@ -212,7 +213,7 @@ def bounded_request(
         # Errors can be empty, HTML, or binary: preserve status/retry behavior
         # without decoding their content. Every status still uses the byte and
         # deadline limits above. Data readers validate successful JSON syntax.
-        if response.is_success:
+        if response.is_success and expect_json:
             text = _decode_json_utf8(output, content_type=response.headers.get("content-type"))
             check_json_structure(text)
         return httpx.Response(

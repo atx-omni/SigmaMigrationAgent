@@ -34,6 +34,14 @@ pass its profile to configure/init so you are not asked twice.
 You can also import a previously captured snapshot. Review is interactive; hashes
 and immutable bindings are generated automatically. No target apply command exists.
 
+For a tagged chart/table's PNG, JSON results and configuration evidence, see
+[source-only visual capture](docs/source-visual-capture.md). `capture-visual`
+uses explicit source read/query authorization and resumable export records.
+Version 2 adds page PNG and explicitly unselected model support. For fixed host
+check/inventory/snapshot/capture requests, implementation pins and optional workbook
+contents Beta, see [source operations](docs/source-operations.md). Local checks do
+not establish live capture qualification; no target apply command is added.
+
 ## Use the current agent skill
 
 The maintained skill is

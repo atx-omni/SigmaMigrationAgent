@@ -164,6 +164,35 @@
       ],
       "reason": "Reviewed synthetic regression inputs and deliberate negative security fixtures; no customer evidence. Exact bytes only; any edit requires renewed review.",
       "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_capture_contract.py",
+      "sha256": "dcb19f791e4176afacb80a162367aac2dc7c2eb5044349fcfd6093bc9e2aa410",
+      "rules": [
+        "credential_assignment",
+        "credential_format"
+      ],
+      "reason": "Reviewed synthetic source-capture transport fixtures assign fictional authentication values to an in-memory HTTP mock; no live credentials or tenant data. Exact bytes only.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_visual_capture.py",
+      "sha256": "af9208e1e6eb17faecd74a34ddf142ccce89f0ce7e8e94e7a0fc6d35ce7a9a7e",
+      "rules": [
+        "credential_assignment"
+      ],
+      "reason": "Reviewed synthetic visual-capture fixtures assign a fictional token to an in-memory HTTP mock; no live credentials or tenant data. Exact bytes only.",
+      "expires": "2027-01-10"
+    },
+    {
+      "path": "packages/omnikit-migration-engine/tests/test_sigma_source_operations_stdlib.py",
+      "sha256": "a4173ee8e935b856a47454b41db9adb8f153cfc1d2ced8252087ca509fabb01e",
+      "rules": [
+        "credential_assignment",
+        "credential_url"
+      ],
+      "reason": "Reviewed negative source-operation contract fixtures contain fictional password and token-query strings to verify rejection; no live credentials or tenant data. Exact bytes only.",
+      "expires": "2027-01-10"
     }
   ]
 }

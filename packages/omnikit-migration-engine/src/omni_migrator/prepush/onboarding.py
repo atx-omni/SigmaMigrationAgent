@@ -52,7 +52,7 @@ def setup(args, ask):
             print(GUIDANCE["SIGMA_API_URL"])
             profile["sigma_origin"] = origin(ask("Confirmed Sigma API origin: "))
             profile["workbook_id"] = ask("Sigma workbook ID (from its URL or workbook API): ")
-            profile["data_model_id"] = ask("Associated Sigma data-model ID (verify the workbook's source): ")
+            profile["data_model_id"] = ask("Associated Sigma data-model ID, if verified (blank leaves dependency evidence unresolved): ").strip() or None
         if profile["target_auth"] != "offline":
             print(GUIDANCE["OMNI_BASE_URL"])
             profile["omni_origin"] = origin(ask("Confirmed Omni organization origin: "))

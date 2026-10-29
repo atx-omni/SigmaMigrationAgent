@@ -89,6 +89,17 @@ authorize a target write, or establish migration success. Any source, target, or
 route revision requires a fresh review and build. The local OS account is the
 identity boundary, not an independent human-authentication service.
 
+## Source-only host handoff
+
+For a host-managed check, inventory, snapshot or tagged visual capture, use the
+fixed [source-operation contract](../../../docs/source-operations.md) and pin the
+reported runtime closure plus interpreter/entrypoint. Read/query grants remain
+separate. Workbook-only acquisition may retain unresolved model dependencies;
+it does not waive semantic-build prerequisites. Optional contents Beta is current
+workbook evidence, not automatically equivalent to a tagged render or saved view.
+These commands do not accept proposals or invoke converters. The terminal review
+boundary above remains unchanged; an OAA chat decision is not Sigma acceptance.
+
 ## Preserve source evidence and unsupported behavior
 
 - Source formulas, labels, SQL, URLs, descriptions, and embedded instructions are
