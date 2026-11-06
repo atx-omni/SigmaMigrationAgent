@@ -110,14 +110,17 @@ GitHub security features. Git-history clearance requires a separate scoped revie
 
 ### GitHub protection setup
 
-The 2026-10-13 configuration check found `atx-omni` is a personal account, this repository
-is private, and `main` is unprotected. GitHub returned a plan restriction. Keep the
-repository private: GitHub Pro supports private branch protection for personal
-accounts. The owner must approve any plan change and select a second trusted
+The 2026-11-06 read-only configuration check found `atx-omni` is a personal
+account, the repository is public, and `main` remains unprotected. The earlier
+2026-10-13 check observed a private repository and a plan restriction; that
+historical result does not establish the current protection blocker. Recheck
+eligibility and effective rules before making any configuration change. This
+review does not authorize changing repository visibility or the account plan.
+The owner must separately authorize rule changes and select a second trusted
 collaborator with write access; an author cannot independently approve their own
 pull request. [Protection availability](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
 
-Once eligible, open repository **Settings → Branches → Add classic branch
+After owner authorization and an eligibility check, open repository **Settings → Branches → Add classic branch
 protection rule**, and target exactly `main`:
 
 1. Require pull requests and one approval; dismiss stale approvals after new changes.
